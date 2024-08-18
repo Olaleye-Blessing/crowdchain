@@ -12,9 +12,9 @@ error CrowdFunding_CampaignClaimed();
 contract CrowdFunding {
     struct Campaign {
         uint256 id;
-        uint256 goal;
-        uint256 deadline;
-        uint256 amountRaised;
+        uint32 goal; // 200 ETH
+        uint32 amountRaised; // 195 ETH
+        uint256 deadline; // 1724006777 in seconds
         address owner;
         string title;
         string description;
@@ -23,7 +23,7 @@ contract CrowdFunding {
         address[] donorAddresses;
     }
 
-    uint32 private constant ONE_DAY = 1 * 24 * 60 seconds;
+    uint16 private constant ONE_DAY = 1 * 24 * 60 seconds;
 
     Campaign[] private campaigns;
     mapping(address => uint256[]) private campaignsOwner;
@@ -36,9 +36,7 @@ contract CrowdFunding {
         _;
     }
 
-    function createCampaign(string memory _title, string memory _description, uint256 _goal, uint256 _duration)
-        public
-    {
+    function createCampaign(string memory _title, string memory _description, uint32 _goal, uint64 _duration) public {
         if (msg.sender == address(0)) {
             revert CrowdFunding_Campaign_Creation("Invalid sender address");
         }
@@ -126,8 +124,9 @@ contract CrowdFunding {
     }
 
     function donate(uint256 _campaignID) public payable CampaignExist(_campaignID) {
-        uint256 donation = msg.value;
+        uint32 donation = uint32((msg.value) / (10 ** 18));
         address donor = msg.sender;
+
         if (donation <= 0) revert CrowdFunding_EmptyDonation();
 
         Campaign storage campaign = campaigns[_campaignID];
