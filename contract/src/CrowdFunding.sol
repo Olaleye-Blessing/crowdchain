@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.26;
+
+event CrowdFunding_NewDonor(address donor, uint256 campaignID, uint256 amount);
 
 error CrowdFunding_Campaign_Creation(string message);
 error CrowdFunding_Campaign_NotExist();
+error CrowdFunding_EmptyDonation();
+error CrowdFunding_CampaignClosed();
+error CrowdFunding_CampaignClaimed();
 
 contract CrowdFunding {
     struct Campaign {
@@ -118,5 +123,23 @@ contract CrowdFunding {
         }
 
         return (donors, contributions);
+    }
+
+    function donate(uint256 _campaignID) public payable CampaignExist(_campaignID) {
+        uint256 donation = msg.value;
+        address donor = msg.sender;
+        if (donation <= 0) revert CrowdFunding_EmptyDonation();
+
+        Campaign storage campaign = campaigns[_campaignID];
+        if (campaign.claimed) revert CrowdFunding_CampaignClaimed();
+        if (campaign.deadline < block.timestamp) revert CrowdFunding_CampaignClosed();
+
+        // first time donating to this campaign
+        if (campaign.donors[donor] == 0) campaign.donorAddresses.push(donor);
+
+        campaign.amountRaised += donation;
+        campaign.donors[donor] += donation;
+
+        emit CrowdFunding_NewDonor(donor, campaign.id, donation);
     }
 }
