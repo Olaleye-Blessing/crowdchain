@@ -36,17 +36,20 @@ contract CrowdFunding {
         _;
     }
 
-    function createCampaign(string memory _title, string memory _description, uint32 _goal, uint64 _duration) public {
+    function createCampaign(string memory _title, string memory _description, uint256 _goal, uint64 _duration) public {
         if (msg.sender == address(0)) {
             revert CrowdFunding_Campaign_Creation("Invalid sender address");
         }
-        if (bytes(_title).length < 0 || bytes(_title).length > 200) {
+        if (bytes(_title).length <= 0 || bytes(_title).length > 200) {
             revert CrowdFunding_Campaign_Creation("Title must be between 1 and 200 characters");
         }
         if (bytes(_description).length < 10) {
             revert CrowdFunding_Campaign_Creation("Description must be greater than 100 characters");
         }
-        if (_goal <= 0) {
+
+        uint32 goal = uint32(_goal / (10 ** 18));
+
+        if (goal <= 0) {
             revert CrowdFunding_Campaign_Creation("Goal must be greater than 0");
         }
 
@@ -60,7 +63,7 @@ contract CrowdFunding {
         Campaign storage newCampaign = campaigns.push();
 
         newCampaign.id = campaignID;
-        newCampaign.goal = _goal;
+        newCampaign.goal = goal;
         newCampaign.deadline = block.timestamp + deadline;
         newCampaign.amountRaised = 0;
         newCampaign.owner = msg.sender;
