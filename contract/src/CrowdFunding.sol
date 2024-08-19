@@ -12,9 +12,9 @@ contract CrowdFunding {
 
     struct Campaign {
         uint256 id;
-        uint32 goal; // 200 ETH
-        uint32 amountRaised; // 195 ETH
+        uint256 amountRaised; // 195 ETH * 10**18 wei
         uint256 deadline; // 1724006777 in seconds
+        uint32 goal; // 200 ETH
         address owner;
         string title;
         string description;
@@ -40,7 +40,7 @@ contract CrowdFunding {
         return campaigns.length;
     }
 
-    function createCampaign(string memory _title, string memory _description, uint256 _goal, uint64 _duration) public {
+    function createCampaign(string memory _title, string memory _description, uint32 _goal, uint64 _duration) public {
         if (msg.sender == address(0)) {
             revert CrowdFunding_Campaign_Creation("Invalid sender address");
         }
@@ -51,9 +51,9 @@ contract CrowdFunding {
             revert CrowdFunding_Campaign_Creation("Description must be greater than 100 characters");
         }
 
-        uint32 goal = uint32(_goal / (10 ** 18));
+        // uint32 goal = uint32(_goal / (10 ** 18));
 
-        if (goal <= 0) {
+        if (_goal <= 0) {
             revert CrowdFunding_Campaign_Creation("Goal must be greater than 0");
         }
 
@@ -67,7 +67,7 @@ contract CrowdFunding {
         Campaign storage newCampaign = campaigns.push();
 
         newCampaign.id = campaignID;
-        newCampaign.goal = goal;
+        newCampaign.goal = _goal;
         newCampaign.deadline = block.timestamp + deadline;
         newCampaign.amountRaised = 0;
         newCampaign.owner = msg.sender;
@@ -84,7 +84,7 @@ contract CrowdFunding {
         CampaignExist(_campaignID)
         returns (
             uint256 id,
-            uint256 goal,
+            uint32 goal,
             uint256 deadline,
             uint256 amountRaised,
             address owner,
@@ -131,7 +131,7 @@ contract CrowdFunding {
     }
 
     function donate(uint256 _campaignID) public payable CampaignExist(_campaignID) {
-        uint32 donation = uint32((msg.value) / (10 ** 18));
+        uint256 donation = msg.value;
         address donor = msg.sender;
 
         if (donation <= 0) revert CrowdFunding_EmptyDonation();

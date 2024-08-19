@@ -12,13 +12,11 @@ contract CrowdFundingTest is Test, ConstantsTest {
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
 
-    uint256 constant ONE_ETH = 10 ** 18; // wei
-
     function createCampaign(
         address _owner,
         string memory _title,
         string memory _description,
-        uint256 _amountNeeded,
+        uint32 _amountNeeded,
         uint64 _deadline
     ) private {
         vm.startPrank(_owner);
@@ -44,7 +42,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_CreateCampaignSuccessfully() public {
         assertEq(crowdFunding.totalCampaigns(), 0);
 
-        uint256 amountNeeded = 6 * ONE_ETH; // eth
+        uint32 amountNeeded = 6;
         uint64 deadline = 4; // days
 
         createCampaign(ALICE, "My Title", "My little description from my heart, soul and mind", amountNeeded, deadline);
@@ -53,8 +51,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function test_CampaignCreationFailsWithWrongInput() public {
-        uint256 _amountNeeded = 6 * ONE_ETH; // eth
-        // uint64 _deadline = 4; // days
+        uint32 _amountNeeded = 6;
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -104,7 +101,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function test_CreatedCampaignSavedCorrectly() public {
-        uint256 _amountNeeded = 6 * ONE_ETH; // eth
+        uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
@@ -122,7 +119,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             bool claimed
         ) = crowdFunding.getCampaign(0);
 
-        assertEq(goal * ONE_ETH, _amountNeeded);
+        assertEq(goal, _amountNeeded);
         assertEq(amountRaised, 0);
         assertEq(owner, ALICE);
         assertEq(title, _title);
@@ -135,20 +132,20 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2 * ONE_ETH;
+        uint256 BLESSING_DONATION = 2;
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
 
         (,,, uint256 amountRaised,,,,) = crowdFunding.getCampaign(campaignID);
 
-        assertEq(BLESSING_DONATION, amountRaised * ONE_ETH);
+        assertEq(BLESSING_DONATION, amountRaised);
 
         vm.prank(BOB);
-        uint256 BOB_DONATION = 1 * ONE_ETH;
+        uint256 BOB_DONATION = 1;
         crowdFunding.donate{value: BOB_DONATION}(campaignID);
 
         (,,, uint256 newAmountRaised,,,,) = crowdFunding.getCampaign(campaignID);
 
-        assertEq(BOB_DONATION + BLESSING_DONATION, newAmountRaised * ONE_ETH);
+        assertEq(BOB_DONATION + BLESSING_DONATION, newAmountRaised);
     }
 
     function test_emitEventOnSuccessfulDonation() public {
@@ -156,7 +153,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2 * ONE_ETH;
+        uint256 BLESSING_DONATION = 2;
 
         vm.expectEmit(true, false, false, false, address(crowdFunding));
         emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION);
@@ -168,11 +165,11 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2 * ONE_ETH;
+        uint256 BLESSING_DONATION = 2;
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
 
         vm.prank(BOB);
-        uint256 BOB_DONATION = 1 * ONE_ETH;
+        uint256 BOB_DONATION = 1;
         crowdFunding.donate{value: BOB_DONATION}(campaignID);
 
         (address[] memory donors, uint256[] memory contributions) = crowdFunding.getCampaignDonors(campaignID);
@@ -180,8 +177,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(donors[0], BLESSING);
         assertEq(donors[1], BOB);
 
-        assertEq(contributions[0] * ONE_ETH, BLESSING_DONATION);
-        assertEq(contributions[1] * ONE_ETH, BOB_DONATION);
+        assertEq(contributions[0], BLESSING_DONATION);
+        assertEq(contributions[1], BOB_DONATION);
     }
 
     function test_donationFailsIfNoMoneyIsDonated() public {
@@ -204,13 +201,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.warp(block.timestamp + 5 * ONE_DAY);
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 1 * ONE_ETH;
+        uint256 BLESSING_DONATION = 1;
         vm.expectRevert(CrowdFunding.CrowdFunding_CampaignClosed.selector);
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
     function createSuccessfulCampaign() private {
-        uint256 _amountNeeded = 6 * ONE_ETH; // eth
+        uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
