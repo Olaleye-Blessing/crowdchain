@@ -36,6 +36,10 @@ contract CrowdFunding {
         _;
     }
 
+    function totalCampaigns() public view returns (uint256) {
+        return campaigns.length;
+    }
+
     function createCampaign(string memory _title, string memory _description, uint256 _goal, uint64 _duration) public {
         if (msg.sender == address(0)) {
             revert CrowdFunding_Campaign_Creation("Invalid sender address");
