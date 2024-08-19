@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.26;
 
-event CrowdFunding_NewDonor(address donor, uint256 campaignID, uint256 amount);
-
-error CrowdFunding_Campaign_Creation(string message);
-error CrowdFunding_Campaign_NotExist();
-error CrowdFunding_EmptyDonation();
-error CrowdFunding_CampaignClosed();
-error CrowdFunding_CampaignClaimed();
-
 contract CrowdFunding {
+    event CrowdFunding_NewDonor(address donor, uint256 campaignID, uint256 amount);
+
+    error CrowdFunding_Campaign_Creation(string message);
+    error CrowdFunding_Campaign_NotExist();
+    error CrowdFunding_EmptyDonation();
+    error CrowdFunding_CampaignClosed();
+    error CrowdFunding_CampaignClaimed();
+
     struct Campaign {
         uint256 id;
         uint32 goal; // 200 ETH
