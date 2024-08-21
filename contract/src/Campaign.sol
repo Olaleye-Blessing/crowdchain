@@ -112,19 +112,25 @@ contract BaseCampaign {
     }
 
     function withdraw(uint256 _campaignID) public payable CampaignExist(_campaignID) {
+        _withdraw(msg.sender, _campaignID);
+    }
+
+    function autoWithdrawFundsWhenGoalIsMet(address _owner, uint256 _campaignID) public CampaignExist(_campaignID) {
+        _withdraw(_owner, _campaignID);
+    }
+
+    function _withdraw(address _owner, uint256 _campaignID) internal {
         Campaign storage campaign = campaigns[_campaignID];
 
-        address owner = msg.sender;
-
         if (campaign.claimed) revert Campaign_Claimed();
-        if (owner != campaign.owner) revert Campaign_Not_Owner();
+        if (_owner != campaign.owner) revert Campaign_Not_Owner();
 
         campaign.claimed = true;
         uint256 amount = campaign.amountRaised;
 
-        (bool withdrawSuccess,) = payable(owner).call{value: amount}("");
+        (bool withdrawSuccess,) = payable(_owner).call{value: amount}("");
         if (!withdrawSuccess) revert Campaign_Withdraw_Failed();
 
-        emit Campaign_Fund_Withdrawn(_campaignID, owner, amount);
+        emit Campaign_Fund_Withdrawn(_campaignID, _owner, amount);
     }
 }

@@ -46,5 +46,9 @@ contract CrowdFunding is BaseCampaign {
         campaign.donors[donor] += donation;
 
         emit CrowdFunding_NewDonor(donor, campaign.id, donation);
+
+        if (campaign.amountRaised >= campaign.goal * ONE_ETH) {
+            autoWithdrawFundsWhenGoalIsMet(campaign.owner, _campaignID);
+        }
     }
 }

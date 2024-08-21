@@ -155,6 +155,27 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
+    function test_closeCampaignWhenGoalIsAchieved() public {
+        createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 2;
+        _donateInWEI(BLESSING_DONATION, campaignID);
+
+        (,,,,,,, bool claimed) = crowdFunding.getCampaign(campaignID);
+
+        assertEq(claimed, false);
+
+        vm.prank(BOB);
+        uint256 BOB_DONATION = 100;
+        _donateInWEI(BOB_DONATION, campaignID);
+
+        (,,,,,,, bool _nowClaimed) = crowdFunding.getCampaign(campaignID);
+
+        assertEq(_nowClaimed, true);
+    }
+
     function test_getAllDonors() public {
         createSuccessfulCampaign();
         uint256 campaignID = 0;
@@ -208,5 +229,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         string memory _description = "My little description from my heart, soul and mind";
 
         createCampaign(ALICE, _title, _description, _amountNeeded, _deadline);
+    }
+
+    function _donateInWEI(uint256 _donation, uint256 _campaignID) private {
+        crowdFunding.donate{value: _donation * ONE_ETH}(_campaignID);
     }
 }
