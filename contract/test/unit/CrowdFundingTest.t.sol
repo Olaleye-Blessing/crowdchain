@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {CrowdFunding} from "src/CrowdFunding.sol";
+import {BaseCampaign} from "src/Campaign.sol";
 import {DeployCrowdFunding} from "script/DeployCrowdFunding.s.sol";
 import {ConstantsTest} from "test/utils/Constants.sol";
 
@@ -56,15 +57,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         string memory _description = "My little description from my heart, soul and mind";
 
         // Invalid address
-        vm.expectRevert(
-            abi.encodeWithSelector(CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Invalid sender address")
-        );
+        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Invalid sender address"));
         createCampaign(address(0), "", "", 0, 0);
 
         // Empty title
         vm.expectRevert(
             abi.encodeWithSelector(
-                CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Title must be between 1 and 200 characters"
+                BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
             )
         );
         createCampaign(ALICE, "", "", 0, 0);
@@ -72,7 +71,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // Title with more than 200 characters
         vm.expectRevert(
             abi.encodeWithSelector(
-                CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Title must be between 1 and 200 characters"
+                BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
             )
         );
         createCampaign(ALICE, WORD_CHARACTERS_201, "", 0, 0);
@@ -80,22 +79,18 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // Short description
         vm.expectRevert(
             abi.encodeWithSelector(
-                CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Description must be greater than 100 characters"
+                BaseCampaign.Campaign_Creation.selector, "Description must be greater than 100 characters"
             )
         );
         createCampaign(ALICE, _title, "Desc", 0, 0);
 
         // 0 ETH needed donation
-        vm.expectRevert(
-            abi.encodeWithSelector(CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Goal must be greater than 0")
-        );
+        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Goal must be greater than 0"));
         createCampaign(ALICE, _title, _description, 0, 0);
 
         // Less than a day deadline
         vm.expectRevert(
-            abi.encodeWithSelector(
-                CrowdFunding.CrowdFunding_Campaign_Creation.selector, "Duration must be at least 1 day"
-            )
+            abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Duration must be at least 1 day")
         );
         createCampaign(ALICE, _title, _description, _amountNeeded, 0);
     }
@@ -187,7 +182,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 0;
-        vm.expectRevert(CrowdFunding.CrowdFunding_EmptyDonation.selector);
+        vm.expectRevert(BaseCampaign.Campaign_EmptyDonation.selector);
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
@@ -202,7 +197,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 1;
-        vm.expectRevert(CrowdFunding.CrowdFunding_CampaignClosed.selector);
+        vm.expectRevert(BaseCampaign.Campaign_Closed.selector);
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
