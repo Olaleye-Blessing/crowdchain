@@ -54,6 +54,13 @@ contract BaseCampaign {
         _;
     }
 
+    modifier CorrectPaginationPage(uint256 _page, uint256 _perPage) {
+        if (_page < 0) revert Campaign_Current_Page_Pagination();
+        if (_perPage < 1) revert Campaign_Per_Page_Pagination();
+
+        _;
+    }
+
     function totalCampaigns() public view returns (uint256) {
         return campaigns.length;
     }
@@ -129,10 +136,12 @@ contract BaseCampaign {
     // _page = 3;
     // _perPage = 5;
     // should return 15 to 17(inclusive)
-    function getCampaigns(uint256 _page, uint256 _perPage) public view returns (PaginatedCampaign[] memory, uint256) {
-        if (_page < 0) revert Campaign_Current_Page_Pagination();
-        if (_perPage < 1) revert Campaign_Per_Page_Pagination();
-
+    function getCampaigns(uint256 _page, uint256 _perPage)
+        public
+        view
+        CorrectPaginationPage(_page, _perPage)
+        returns (PaginatedCampaign[] memory, uint256)
+    {
         uint256 campaignsLength = campaigns.length; // 117
         uint256 start = _page * _perPage; // 3 * 5 = 15
         uint256 end = start + _perPage; // 15 + 5 = 20
@@ -147,17 +156,34 @@ contract BaseCampaign {
 
         for (uint256 i = 0; i < totalCampaignsToReturn; i++) {
             Campaign storage _campaign = campaigns[start + i]; // c[15 + 0,1,2,3,4]
-            paginatedCampaigns[i] = PaginatedCampaign({
-                id: _campaign.id,
-                amountRaised: _campaign.amountRaised,
-                deadline: _campaign.deadline,
-                goal: _campaign.goal,
-                owner: _campaign.owner,
-                title: _campaign.title,
-                description: _campaign.description,
-                claimed: _campaign.claimed,
-                totalDonors: _campaign.donorAddresses.length
-            });
+            paginatedCampaigns[i] = _createPaginatedCampaign(_campaign);
+        }
+
+        return (paginatedCampaigns, campaignsLength);
+    }
+
+    function getOwnerCampaigns(address _owner, uint256 _page, uint256 _perPage)
+        public
+        view
+        CorrectPaginationPage(_page, _perPage)
+        returns (PaginatedCampaign[] memory, uint256)
+    {
+        uint256[] memory campaignsOwnerIDs = campaignsOwner[_owner];
+        uint256 campaignsLength = campaignsOwnerIDs.length; // 117
+        uint256 start = _page * _perPage; // 3 * 5 = 15
+        uint256 end = start + _perPage; // 15 + 5 = 20
+
+        if (end > campaignsLength) end = campaignsLength;
+
+        // actual number of campaigns to return
+        uint256 totalCampaignsToReturn = end - start; // 20 - 15 = 5
+
+        PaginatedCampaign[] memory paginatedCampaigns = new PaginatedCampaign[](totalCampaignsToReturn);
+
+        for (uint256 i = 0; i < totalCampaignsToReturn; i++) {
+            uint256 campaignID = campaignsOwnerIDs[start + i];
+            Campaign storage _campaign = campaigns[campaignID];
+            paginatedCampaigns[i] = _createPaginatedCampaign(_campaign);
         }
 
         return (paginatedCampaigns, campaignsLength);
@@ -184,5 +210,19 @@ contract BaseCampaign {
         if (!withdrawSuccess) revert Campaign_Withdraw_Failed();
 
         emit Campaign_Fund_Withdrawn(_campaignID, _owner, amount);
+    }
+
+    function _createPaginatedCampaign(Campaign storage _campaign) private view returns (PaginatedCampaign memory) {
+        return PaginatedCampaign({
+            id: _campaign.id,
+            amountRaised: _campaign.amountRaised,
+            deadline: _campaign.deadline,
+            goal: _campaign.goal,
+            owner: _campaign.owner,
+            title: _campaign.title,
+            description: _campaign.description,
+            claimed: _campaign.claimed,
+            totalDonors: _campaign.donorAddresses.length
+        });
     }
 }

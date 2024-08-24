@@ -165,6 +165,34 @@ contract CrowdFundingTest is Test, ConstantsTest {
         _campaigns[2];
     }
 
+    function test_getOwnerCampaignsReturnsPaginatedResult() public {
+        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
+            createCampaign(
+                ALICE, string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"), WORD_CHARACTERS_201, 20, 10
+            );
+            createCampaign(
+                BLESSING, string.concat(NUMBER_IN_WORDS[index], "Blessing", "_title_title"), WORD_CHARACTERS_201, 20, 10
+            );
+            createCampaign(
+                BOB, string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"), WORD_CHARACTERS_201, 20, 10
+            );
+        }
+
+        uint256 _page = 3;
+        uint256 _perPage = 4;
+
+        (CrowdFunding.PaginatedCampaign[] memory campaigns, uint256 totalCampaigns) =
+            crowdFunding.getOwnerCampaigns(BLESSING, _page, _perPage);
+
+        assertEq(campaigns.length, 4); // total number of campaigns returned
+        assertEq(totalCampaigns, 30); // total number of campaigns created by Blessing
+
+        // make sure all returned campaigns belong to BLESSING
+        for (uint256 index = 0; index < campaigns.length; index++) {
+            assertEq(campaigns[0].owner, BLESSING);
+        }
+    }
+
     function test_donationSuccessful() public {
         createSuccessfulCampaign();
         uint256 campaignID = 0;
