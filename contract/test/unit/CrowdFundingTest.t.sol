@@ -122,6 +122,49 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(claimed, false);
     }
 
+    function test_getCampaignsReturnsPaginatedResult() public {
+        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
+            createCampaign(ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10);
+        }
+
+        uint256 _page = 0;
+        uint256 _perPage = 3;
+        (CrowdFunding.PaginatedCampaign[] memory _campaigns,) = crowdFunding.getCampaigns(_page, _perPage);
+
+        assertEq(_campaigns.length, 3);
+
+        assertEq(_campaigns[0].id, 0);
+        assertEq(_campaigns[0].title, string.concat(NUMBER_IN_WORDS[0], "_title_title"));
+        assertEq(_campaigns[1].id, 1);
+        assertEq(_campaigns[1].title, string.concat(NUMBER_IN_WORDS[1], "_title_title"));
+        assertEq(_campaigns[2].id, 2);
+        assertEq(_campaigns[2].title, string.concat(NUMBER_IN_WORDS[2], "_title_title"));
+
+        vm.expectRevert();
+        _campaigns[3];
+    }
+
+    function test_getCampaignsReuturnsFewResult() public {
+        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
+            createCampaign(ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10);
+        }
+
+        uint256 _page = 7;
+        uint256 _perPage = 4;
+        (CrowdFunding.PaginatedCampaign[] memory _campaigns,) = crowdFunding.getCampaigns(_page, _perPage);
+
+        // this should return 28, 29
+        assertEq(_campaigns.length, 2);
+
+        assertEq(_campaigns[0].id, 28);
+        assertEq(_campaigns[0].title, string.concat(NUMBER_IN_WORDS[28], "_title_title"));
+        assertEq(_campaigns[1].id, 29);
+        assertEq(_campaigns[1].title, string.concat(NUMBER_IN_WORDS[29], "_title_title"));
+
+        vm.expectRevert();
+        _campaigns[2];
+    }
+
     function test_donationSuccessful() public {
         createSuccessfulCampaign();
         uint256 campaignID = 0;

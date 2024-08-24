@@ -11,6 +11,8 @@ contract BaseCampaign {
     error Campaign_Claimed();
     error Campaign_Not_Owner();
     error Campaign_Withdraw_Failed();
+    error Campaign_Per_Page_Pagination();
+    error Campaign_Current_Page_Pagination();
 
     uint16 private constant ONE_DAY = 1 * 24 * 60 seconds;
     uint256 constant ONE_ETH = 10 ** 18; // wei
@@ -28,6 +30,18 @@ contract BaseCampaign {
         bool claimed;
         mapping(address => uint256) donors;
         address[] donorAddresses;
+    }
+
+    struct PaginatedCampaign {
+        uint256 id;
+        uint256 amountRaised;
+        uint256 deadline;
+        uint32 goal;
+        address owner;
+        string title;
+        string description;
+        bool claimed;
+        uint256 totalDonors;
     }
 
     Campaign[] internal campaigns;
@@ -109,6 +123,44 @@ contract BaseCampaign {
             campaign.description,
             campaign.claimed
         );
+    }
+
+    // total = 17;
+    // _page = 3;
+    // _perPage = 5;
+    // should return 15 to 17(inclusive)
+    function getCampaigns(uint256 _page, uint256 _perPage) public view returns (PaginatedCampaign[] memory, uint256) {
+        if (_page < 0) revert Campaign_Current_Page_Pagination();
+        if (_perPage < 1) revert Campaign_Per_Page_Pagination();
+
+        uint256 campaignsLength = campaigns.length; // 117
+        uint256 start = _page * _perPage; // 3 * 5 = 15
+        uint256 end = start + _perPage; // 15 + 5 = 20
+
+        if (end > campaignsLength) end = campaignsLength;
+
+        // actual number of campaigns to return
+        uint256 totalCampaignsToReturn = end - start; // 20 - 15 = 5
+
+        // array of length 5
+        PaginatedCampaign[] memory paginatedCampaigns = new PaginatedCampaign[](totalCampaignsToReturn);
+
+        for (uint256 i = 0; i < totalCampaignsToReturn; i++) {
+            Campaign storage _campaign = campaigns[start + i]; // c[15 + 0,1,2,3,4]
+            paginatedCampaigns[i] = PaginatedCampaign({
+                id: _campaign.id,
+                amountRaised: _campaign.amountRaised,
+                deadline: _campaign.deadline,
+                goal: _campaign.goal,
+                owner: _campaign.owner,
+                title: _campaign.title,
+                description: _campaign.description,
+                claimed: _campaign.claimed,
+                totalDonors: _campaign.donorAddresses.length
+            });
+        }
+
+        return (paginatedCampaigns, campaignsLength);
     }
 
     function withdraw(uint256 _campaignID) public payable CampaignExist(_campaignID) {
