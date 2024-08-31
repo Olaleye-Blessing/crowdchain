@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 contract BaseCampaign {
     event Campaign_Fund_Withdrawn(uint256 _campaignID, address owner, uint256 amount);
+    event Campaign_Goal_Completed(address owner, uint256 campaignID, uint256 amountRaised);
 
     error Campaign_Not_Exist();
     error Campaign_Creation(string message);
@@ -13,6 +14,7 @@ contract BaseCampaign {
     error Campaign_Withdraw_Failed();
     error Campaign_Per_Page_Pagination();
     error Campaign_Current_Page_Pagination();
+    error Campaign_Has_Not_Ended();
 
     uint16 private constant ONE_DAY = 1 * 24 * 60 seconds;
     uint256 constant ONE_ETH = 10 ** 18; // wei
@@ -191,10 +193,6 @@ contract BaseCampaign {
 
     function withdraw(uint256 _campaignID) public payable CampaignExist(_campaignID) {
         _withdraw(msg.sender, _campaignID);
-    }
-
-    function autoWithdrawFundsWhenGoalIsMet(address _owner, uint256 _campaignID) public CampaignExist(_campaignID) {
-        _withdraw(_owner, _campaignID);
     }
 
     function _withdraw(address _owner, uint256 _campaignID) internal {

@@ -226,25 +226,25 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
-    function test_closeCampaignWhenGoalIsAchieved() public {
+    function test_emitAnEventWhenGoalIsMet() public {
         createSuccessfulCampaign();
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
+        // Testing the donation event here is not neccessary
         _donateInWEI(BLESSING_DONATION, campaignID);
-
-        (,,,,,,, bool claimed) = crowdFunding.getCampaign(campaignID);
-
-        assertEq(claimed, false);
 
         vm.prank(BOB);
         uint256 BOB_DONATION = 100;
+
+        // Testing the donation event here is neccessary because of how forge event emitter works
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit CrowdFunding.CrowdFunding_NewDonor(BOB, campaignID, 100);
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit BaseCampaign.Campaign_Goal_Completed(BOB, campaignID, 102);
+
         _donateInWEI(BOB_DONATION, campaignID);
-
-        (,,,,,,, bool _nowClaimed) = crowdFunding.getCampaign(campaignID);
-
-        assertEq(_nowClaimed, true);
     }
 
     function test_getAllDonors() public {
