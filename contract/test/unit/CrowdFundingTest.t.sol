@@ -293,6 +293,51 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
+    function test_onlyOwnerCanWithdraw() public {
+        uint32 _amountNeeded = 6;
+        uint64 _deadline = 4; // days
+        string memory _title = "My Title";
+        string memory _description = "My little description from my heart, soul and mind";
+
+        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline);
+        createCampaign(BOB, _title, _description, _amountNeeded, _deadline);
+
+        uint256 ALICE_CAMPAIGN_ID = 0;
+        uint256 BOB_CAMPAIGN_ID = 1;
+
+        vm.startPrank(ALICE);
+        vm.expectRevert(BaseCampaign.Campaign_Not_Owner.selector);
+        crowdFunding.withdraw(BOB_CAMPAIGN_ID);
+
+        crowdFunding.withdraw(ALICE_CAMPAIGN_ID);
+    }
+
+    function test_cannotWithdrawIfCampaignHasBeenClaimed() public {
+        createSuccessfulCampaign();
+
+        vm.startPrank(ALICE);
+        uint256 campaign_ID = 0;
+        crowdFunding.withdraw(campaign_ID);
+
+        vm.expectRevert(BaseCampaign.Campaign_Claimed.selector);
+        crowdFunding.withdraw(campaign_ID);
+    }
+
+    function test_notifyOwnerAfterTheyWithdraw() public {
+        createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 2;
+
+        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit BaseCampaign.Campaign_Fund_Withdrawn(campaignID, ALICE, BLESSING_DONATION);
+        crowdFunding.withdraw(campaignID);
+    }
+
     function createSuccessfulCampaign() private {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
