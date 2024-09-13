@@ -18,11 +18,12 @@ contract CrowdFundingTest is Test, ConstantsTest {
         string memory _title,
         string memory _description,
         uint32 _amountNeeded,
-        uint64 _deadline
+        uint64 _deadline,
+        uint256 _refundDeadline
     ) private {
         vm.startPrank(_owner);
 
-        crowdFunding.createCampaign(_title, _description, _amountNeeded, _deadline);
+        crowdFunding.createCampaign(_title, _description, _amountNeeded, _deadline, _refundDeadline);
 
         vm.stopPrank();
     }
@@ -45,8 +46,16 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         uint32 amountNeeded = 6;
         uint64 deadline = 4; // days
+        uint256 refundDeadline = 6; // days
 
-        createCampaign(ALICE, "My Title", "My little description from my heart, soul and mind", amountNeeded, deadline);
+        createCampaign(
+            ALICE,
+            "My Title",
+            "My little description from my heart, soul and mind",
+            amountNeeded,
+            deadline,
+            refundDeadline
+        );
 
         assertEq(crowdFunding.totalCampaigns(), 1);
     }
@@ -58,7 +67,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // Invalid address
         vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Invalid sender address"));
-        createCampaign(address(0), "", "", 0, 0);
+        createCampaign(address(0), "", "", 0, 0, 0);
 
         // Empty title
         vm.expectRevert(
@@ -66,7 +75,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
                 BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
             )
         );
-        createCampaign(ALICE, "", "", 0, 0);
+        createCampaign(ALICE, "", "", 0, 0, 0);
 
         // Title with more than 200 characters
         vm.expectRevert(
@@ -74,7 +83,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
                 BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
             )
         );
-        createCampaign(ALICE, WORD_CHARACTERS_201, "", 0, 0);
+        createCampaign(ALICE, WORD_CHARACTERS_201, "", 0, 0, 0);
 
         // Short description
         vm.expectRevert(
@@ -82,30 +91,40 @@ contract CrowdFundingTest is Test, ConstantsTest {
                 BaseCampaign.Campaign_Creation.selector, "Description must be greater than 100 characters"
             )
         );
-        createCampaign(ALICE, _title, "Desc", 0, 0);
+        createCampaign(ALICE, _title, "Desc", 0, 0, 0);
 
         // 0 ETH needed donation
         vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Goal must be greater than 0"));
-        createCampaign(ALICE, _title, _description, 0, 0);
+        createCampaign(ALICE, _title, _description, 0, 0, 0);
 
         // Less than a day deadline
         vm.expectRevert(
             abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Duration must be at least 1 day")
         );
-        createCampaign(ALICE, _title, _description, _amountNeeded, 0);
+        createCampaign(ALICE, _title, _description, _amountNeeded, 0, 9);
+
+        // Less than 5 days refund deadline
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                BaseCampaign.Campaign_Creation.selector, "Refund Deadline must be at least 5 days after deadline"
+            )
+        );
+        createCampaign(ALICE, _title, _description, _amountNeeded, 4, 4);
     }
 
     function test_CreatedCampaignSavedCorrectly() public {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
+        uint256 _refundDeadline = 7; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline);
+        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
 
         (
             ,
             uint256 goal,
+            ,
             ,
             uint256 amountRaised,
             address owner,
@@ -124,7 +143,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     function test_getCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
-            createCampaign(ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10);
+            createCampaign(
+                ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
+            );
         }
 
         uint256 _page = 0;
@@ -146,7 +167,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     function test_getCampaignsReuturnsFewResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
-            createCampaign(ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10);
+            createCampaign(
+                ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
+            );
         }
 
         uint256 _page = 7;
@@ -168,13 +191,18 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_getOwnerCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
             createCampaign(
-                ALICE, string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"), WORD_CHARACTERS_201, 20, 10
+                ALICE, string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
             );
             createCampaign(
-                BLESSING, string.concat(NUMBER_IN_WORDS[index], "Blessing", "_title_title"), WORD_CHARACTERS_201, 20, 10
+                BLESSING,
+                string.concat(NUMBER_IN_WORDS[index], "Blessing", "_title_title"),
+                WORD_CHARACTERS_201,
+                20,
+                10,
+                10
             );
             createCampaign(
-                BOB, string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"), WORD_CHARACTERS_201, 20, 10
+                BOB, string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
             );
         }
 
@@ -201,7 +229,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 BLESSING_DONATION = 2;
         crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
 
-        (,,, uint256 amountRaised,,,,) = crowdFunding.getCampaign(campaignID);
+        (,,,, uint256 amountRaised,,,,) = crowdFunding.getCampaign(campaignID);
 
         assertEq(BLESSING_DONATION, amountRaised);
 
@@ -209,7 +237,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 BOB_DONATION = 1;
         crowdFunding.donate{value: BOB_DONATION}(campaignID);
 
-        (,,, uint256 newAmountRaised,,,,) = crowdFunding.getCampaign(campaignID);
+        (,,,, uint256 newAmountRaised,,,,) = crowdFunding.getCampaign(campaignID);
 
         assertEq(BOB_DONATION + BLESSING_DONATION, newAmountRaised);
     }
@@ -296,11 +324,12 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_onlyOwnerCanWithdraw() public {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
+        uint64 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline);
-        createCampaign(BOB, _title, _description, _amountNeeded, _deadline);
+        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
+        createCampaign(BOB, _title, _description, _amountNeeded, _deadline, _refundDeadline);
 
         uint256 ALICE_CAMPAIGN_ID = 0;
         uint256 BOB_CAMPAIGN_ID = 1;
@@ -341,10 +370,11 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function createSuccessfulCampaign() private {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
+        uint64 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline);
+        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
     }
 
     function _donateInWEI(uint256 _donation, uint256 _campaignID) private {

@@ -25,6 +25,7 @@ contract BaseCampaign {
         uint256 id;
         uint256 amountRaised; // 195 ETH * 10**18 wei
         uint256 deadline; // 1724006777 in seconds
+        uint256 refundDeadline;
         uint32 goal; // 200 ETH
         address owner;
         string title;
@@ -38,6 +39,7 @@ contract BaseCampaign {
         uint256 id;
         uint256 amountRaised;
         uint256 deadline;
+        uint256 refundDeadline;
         uint32 goal;
         address owner;
         string title;
@@ -67,7 +69,13 @@ contract BaseCampaign {
         return campaigns.length;
     }
 
-    function createCampaign(string memory _title, string memory _description, uint32 _goal, uint64 _duration) public {
+    function createCampaign(
+        string memory _title,
+        string memory _description,
+        uint32 _goal,
+        uint64 _duration,
+        uint256 _refundDeadline
+    ) public {
         if (msg.sender == address(0)) {
             revert Campaign_Creation("Invalid sender address");
         }
@@ -78,24 +86,29 @@ contract BaseCampaign {
             revert Campaign_Creation("Description must be greater than 100 characters");
         }
 
-        // uint32 goal = uint32(_goal / (10 ** 18));
-
         if (_goal <= 0) {
             revert Campaign_Creation("Goal must be greater than 0");
         }
 
-        uint256 deadline = uint256(_duration * ONE_DAY);
-
-        if (deadline < ONE_DAY) {
+        if (_duration < 1) {
             revert Campaign_Creation("Duration must be at least 1 day");
         }
+
+        if (_refundDeadline < 5) {
+            revert Campaign_Creation("Refund Deadline must be at least 5 days after deadline");
+        }
+
+        uint256 deadline = uint256(_duration * ONE_DAY);
 
         uint256 campaignID = campaigns.length;
         Campaign storage newCampaign = campaigns.push();
 
+        deadline = block.timestamp + deadline;
+
         newCampaign.id = campaignID;
         newCampaign.goal = _goal;
-        newCampaign.deadline = block.timestamp + deadline;
+        newCampaign.deadline = deadline;
+        newCampaign.refundDeadline = deadline + (_refundDeadline * ONE_DAY);
         newCampaign.amountRaised = 0;
         newCampaign.owner = msg.sender;
         newCampaign.title = _title;
@@ -113,6 +126,7 @@ contract BaseCampaign {
             uint256 id,
             uint256 goal,
             uint256 deadline,
+            uint256 refundDeadline,
             uint256 amountRaised,
             address owner,
             string memory title,
@@ -126,6 +140,7 @@ contract BaseCampaign {
             campaign.id,
             campaign.goal,
             campaign.deadline,
+            campaign.refundDeadline,
             campaign.amountRaised,
             campaign.owner,
             campaign.title,
@@ -215,6 +230,7 @@ contract BaseCampaign {
             id: _campaign.id,
             amountRaised: _campaign.amountRaised,
             deadline: _campaign.deadline,
+            refundDeadline: _campaign.refundDeadline,
             goal: _campaign.goal,
             owner: _campaign.owner,
             title: _campaign.title,
