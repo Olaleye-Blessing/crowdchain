@@ -334,6 +334,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 ALICE_CAMPAIGN_ID = 0;
         uint256 BOB_CAMPAIGN_ID = 1;
 
+        _shiftCurrentTimestampToAllowWithdraw();
+
         vm.startPrank(ALICE);
         vm.expectRevert(BaseCampaign.Campaign_Not_Owner.selector);
         crowdFunding.withdraw(BOB_CAMPAIGN_ID);
@@ -341,8 +343,19 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdFunding.withdraw(ALICE_CAMPAIGN_ID);
     }
 
+    function test_cannotWithdrawIfRefundDeadlineIsActive() public {
+        createSuccessfulCampaign();
+
+        vm.startPrank(ALICE);
+
+        vm.expectRevert(BaseCampaign.Campaign_Refund_Deadline_Active.selector);
+        crowdFunding.withdraw(0);
+    }
+
     function test_cannotWithdrawIfCampaignHasBeenClaimed() public {
         createSuccessfulCampaign();
+
+        _shiftCurrentTimestampToAllowWithdraw();
 
         vm.startPrank(ALICE);
         uint256 campaign_ID = 0;
@@ -364,6 +377,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         vm.expectEmit(true, false, false, false, address(crowdFunding));
         emit BaseCampaign.Campaign_Fund_Withdrawn(campaignID, ALICE, BLESSING_DONATION);
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
         crowdFunding.withdraw(campaignID);
     }
 
@@ -379,5 +395,11 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     function _donateInWEI(uint256 _donation, uint256 _campaignID) private {
         crowdFunding.donate{value: _donation * ONE_ETH}(_campaignID);
+    }
+
+    function _shiftCurrentTimestampToAllowWithdraw() private {
+        uint64 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
+        uint64 _deadline = 4; // gotten from createSuccessfulCampaign();
+        vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
     }
 }
