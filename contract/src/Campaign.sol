@@ -16,6 +16,7 @@ contract BaseCampaign {
     error Campaign_Current_Page_Pagination();
     error Campaign_Has_Not_Ended();
     error Campaign_Refund_Deadline_Active();
+    error Campaign_Refund_Deadline_Elasped(uint256 _campaignID);
 
     uint16 private constant ONE_DAY = 1 * 24 * 60 seconds;
     uint256 constant ONE_ETH = 10 ** 18; // wei

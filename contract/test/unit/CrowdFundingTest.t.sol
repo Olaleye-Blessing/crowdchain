@@ -383,6 +383,89 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdFunding.withdraw(campaignID);
     }
 
+    function test_allowDonorsToRefund() public {
+        createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+
+        vm.startPrank(BLESSING);
+        uint256 BLESSING_DONATION = 4;
+        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
+
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit CrowdFunding.CrowdFunding_Refund(campaignID, 2);
+        crowdFunding.refund(campaignID, 1);
+    }
+
+    function test_preventRefundIfCampaignHasBeenClaimed() public {
+        createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 3;
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION * ONE_ETH);
+        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit BaseCampaign.Campaign_Fund_Withdrawn(campaignID, ALICE, BLESSING_DONATION);
+        crowdFunding.withdraw(campaignID);
+
+        vm.prank(BLESSING);
+        vm.expectRevert(BaseCampaign.Campaign_Claimed.selector);
+        crowdFunding.refund(campaignID, 2);
+    }
+
+    function test_preventRefundIfRefundDeadlineElasped() public {
+        createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(BLESSING);
+        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Refund_Deadline_Elasped.selector, campaignID));
+        crowdFunding.refund(campaignID, 0);
+    }
+
+    function test_preventRefundIfUserHadNoDonation() public {
+        createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        vm.expectRevert(abi.encodeWithSelector(CrowdFunding.CrowdFunding_NoDonation.selector, campaignID));
+        crowdFunding.refund(campaignID, 0);
+    }
+
+    function test_preventRefundIfUserWantsToRefundMoreThanDonated() public {
+        createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 3;
+        vm.expectEmit(true, false, false, false, address(crowdFunding));
+        emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION * ONE_ETH);
+        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
+
+        vm.prank(BLESSING);
+        uint256 refundAmount = 4 * ONE_ETH;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CrowdFunding.CrowdFunding_Insufficient_Donation.selector,
+                campaignID,
+                refundAmount,
+                BLESSING_DONATION * ONE_ETH
+            )
+        );
+        crowdFunding.refund(campaignID, refundAmount);
+    }
+
     function createSuccessfulCampaign() private {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
