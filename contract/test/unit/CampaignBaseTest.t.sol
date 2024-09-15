@@ -206,7 +206,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
     ) private {
         vm.startPrank(_owner);
 
-        campaignBase.createCampaign(_title, _description, _amountNeeded, _deadline, _refundDeadline);
+        // TODO: Use forge to get image metadata
+        campaignBase.createCampaign(_title, _description, "coverImage", _amountNeeded, _deadline, _refundDeadline);
 
         vm.stopPrank();
     }

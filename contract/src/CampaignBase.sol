@@ -18,6 +18,7 @@ abstract contract CampaignBase is ICampaign {
         address owner;
         string title;
         string description;
+        string coverImage;
         bool claimed;
         mapping(address => uint256) donors;
         address[] donorAddresses;
@@ -26,7 +27,9 @@ abstract contract CampaignBase is ICampaign {
     Campaign[] internal campaigns;
 
     modifier campaignExists(uint256 campaignId) {
-        if (campaignId >= campaigns.length) revert Campaign__CampaignNotExist(campaignId);
+        if (campaignId >= campaigns.length) {
+            revert Campaign__CampaignNotExist(campaignId);
+        }
 
         _;
     }
@@ -42,11 +45,12 @@ abstract contract CampaignBase is ICampaign {
     function createCampaign(
         string memory title,
         string memory description,
+        string memory coverImage,
         uint32 goal,
         uint64 duration,
         uint256 refundDeadline
     ) public override {
-        _validateCampaignCreation(title, description, goal, duration, refundDeadline);
+        _validateCampaignCreation(title, description, coverImage, goal, duration, refundDeadline);
 
         uint256 deadline = block.timestamp + (duration * ONE_DAY);
         uint256 campaignId = campaigns.length;
@@ -137,6 +141,7 @@ abstract contract CampaignBase is ICampaign {
     function _validateCampaignCreation(
         string memory title,
         string memory description,
+        string memory coverImage,
         uint32 goal,
         uint64 duration,
         uint256 refundDeadline
@@ -149,6 +154,9 @@ abstract contract CampaignBase is ICampaign {
         }
         if (bytes(description).length < 10) {
             revert Campaign__CampaignCreationFailed("Description too short");
+        }
+        if (bytes(coverImage).length == 0) {
+            revert Campaign__CampaignCreationFailed("Provide a cover image");
         }
         if (goal == 0) {
             revert Campaign__CampaignCreationFailed("Goal must be greater than 0");
@@ -171,6 +179,7 @@ abstract contract CampaignBase is ICampaign {
             owner: campaign.owner,
             title: campaign.title,
             description: campaign.description,
+            coverImage: campaign.coverImage,
             claimed: campaign.claimed,
             totalDonors: campaign.donorAddresses.length
         });

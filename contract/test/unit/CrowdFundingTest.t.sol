@@ -244,7 +244,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
     ) private {
         vm.startPrank(_owner);
 
-        crowdfunding.createCampaign(_title, _description, _amountNeeded, _deadline, _refundDeadline);
+        // TODO: Use forge to get image metadata
+        crowdfunding.createCampaign(_title, _description, "coverImage", _amountNeeded, _deadline, _refundDeadline);
 
         vm.stopPrank();
     }

@@ -11,6 +11,7 @@ interface ICampaign {
         address owner;
         string title;
         string description;
+        string coverImage;
         bool claimed;
         uint256 totalDonors;
     }
@@ -33,6 +34,7 @@ interface ICampaign {
     function createCampaign(
         string memory title,
         string memory description,
+        string memory coverImage,
         uint32 goal,
         uint64 duration,
         uint256 refundDeadline
