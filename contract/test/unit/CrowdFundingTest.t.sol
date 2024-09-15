@@ -129,6 +129,101 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
+    function test_donorSuccessfullyGetsRefund() public {
+        _createSuccessfulCampaign();
+
+        uint256 campaignID = 0;
+        uint256 donation = 5;
+        uint256 refundAmount = 3;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation);
+        crowdfunding.donate{value: donation * ONE_ETH}(campaignID);
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.DonationRefunded(campaignID, BLESSING, refundAmount);
+        crowdfunding.refund(campaignID, refundAmount);
+
+        ICampaign.CampaignDetails memory campaign = crowdfunding.getCampaign(campaignID);
+
+        assertEq(campaign.amountRaised, (donation - refundAmount) * ONE_ETH);
+    }
+
+    function test_noRefundIfCampaignHasBeenClaimed() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        // donate
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH);
+        crowdfunding.donate{value: ONE_ETH}(campaignID);
+
+        vm.warp(block.timestamp + 15 * ONE_DAY);
+
+        // withdraw
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, BLESSING, ONE_ETH);
+        crowdfunding.withdraw(campaignID);
+
+        // refund
+        vm.prank(BLESSING);
+        vm.expectRevert(ICampaign.Campaign__CampaignAlreadyClaimed.selector);
+        crowdfunding.refund(campaignID, ONE_ETH);
+    }
+
+    function test_noRefundIfCampaignHasBeenClosed() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        // donate
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH);
+        crowdfunding.donate{value: ONE_ETH}(campaignID);
+
+        vm.warp(block.timestamp + 17 * ONE_DAY);
+
+        // refund
+        vm.prank(BLESSING);
+        vm.expectRevert(abi.encodeWithSelector(ICampaign.Campaign__RefundDeadlineElapsed.selector, campaignID));
+        crowdfunding.refund(campaignID, ONE_ETH);
+    }
+
+    function test_noRefundIfDonorHasZeroDonations() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.Crowdfunding__NoDonationFound.selector, campaignID));
+        crowdfunding.refund(campaignID, ONE_ETH);
+    }
+
+    function test_noRefundIfDonorWantsMoreThanTheyDonated() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+        uint256 donation = 5 * ONE_ETH;
+        uint256 refundAmount = donation + ONE_ETH;
+
+        // donate
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation);
+        crowdfunding.donate{value: donation}(campaignID);
+
+        // refund
+        vm.prank(BLESSING);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Crowdfunding.Crowdfunding__InsufficientDonation.selector, campaignID, refundAmount, donation
+            )
+        );
+        crowdfunding.refund(campaignID, refundAmount);
+    }
+
     function _createSuccessfulCampaign() private {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
