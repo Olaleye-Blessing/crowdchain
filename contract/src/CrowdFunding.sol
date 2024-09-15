@@ -1,100 +1,89 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {BaseCampaign} from "./Campaign.sol";
+import {CampaignBase} from "./CampaignBase.sol";
 
-contract CrowdFunding is BaseCampaign {
-    event CrowdFunding_NewDonor(address donor, uint256 campaignID, uint256 amount);
-    event CrowdFunding_Refund(uint256 campaignID, uint256 amount);
+contract Crowdfunding is CampaignBase {
+    event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount);
+    event DonationRefunded(uint256 indexed campaignId, address indexed donor, uint256 amount);
 
-    error CrowdFunding_NoDonation(uint256 campaignID);
-    error CrowdFunding_Insufficient_Donation(uint256 campaignID, uint256 amountToRefund, uint256 amountDonated);
-    error CrowdFunding_Refund_Failed(uint256 campaignID);
+    error Crowdfunding__NoDonationFound(uint256 campaignId);
+    error Crowdfunding__InsufficientDonation(uint256 campaignId, uint256 amountToRefund, uint256 amountDonated);
+    error Crowdfunding__RefundFailed(uint256 campaignId);
 
-    function getCampaignDonors(uint256 _campaignID)
+    function getCampaignDonors(uint256 campaignId)
         public
         view
-        CampaignExist(_campaignID)
-        returns (address[] memory, uint256[] memory)
+        campaignExists(campaignId)
+        returns (address[] memory donors, uint256[] memory contributions)
     {
-        Campaign storage campaign = campaigns[_campaignID];
-
+        Campaign storage campaign = campaigns[campaignId];
         uint256 totalDonors = campaign.donorAddresses.length;
 
-        address[] memory donors = new address[](totalDonors);
-        uint256[] memory contributions = new uint256[](totalDonors);
+        donors = new address[](totalDonors);
+        contributions = new uint256[](totalDonors);
 
         for (uint256 i = 0; i < totalDonors; i++) {
             address donor = campaign.donorAddresses[i];
-
             donors[i] = donor;
             contributions[i] = campaign.donors[donor];
         }
-
-        return (donors, contributions);
     }
 
-    function donate(uint256 _campaignID) public payable CampaignExist(_campaignID) {
-        uint256 donation = msg.value;
-        address donor = msg.sender;
+    function donate(uint256 campaignId) public payable campaignExists(campaignId) {
+        if (msg.value == 0) revert Campaign__EmptyDonation();
 
-        if (donation <= 0) revert Campaign_EmptyDonation();
+        Campaign storage campaign = campaigns[campaignId];
+        if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
+        if (block.timestamp > campaign.deadline) revert Campaign__CampaignClosed();
 
-        Campaign storage campaign = campaigns[_campaignID];
-        if (campaign.claimed) revert Campaign_Claimed();
-        if (campaign.deadline < block.timestamp) revert Campaign_Closed();
+        if (campaign.donors[msg.sender] == 0) {
+            campaign.donorAddresses.push(msg.sender);
+        }
 
-        // first time donating to this campaign
-        if (campaign.donors[donor] == 0) campaign.donorAddresses.push(donor);
+        campaign.amountRaised += msg.value;
+        campaign.donors[msg.sender] += msg.value;
 
-        campaign.amountRaised += donation;
-        campaign.donors[donor] += donation;
+        emit NewDonation(msg.sender, campaignId, msg.value);
 
-        emit CrowdFunding_NewDonor(donor, campaign.id, donation);
-
-        if (campaign.amountRaised >= campaign.goal * ONE_ETH) {
-            emit Campaign_Goal_Completed(campaign.owner, _campaignID, campaign.amountRaised);
+        if (campaign.amountRaised >= campaign.goal * 1 ether) {
+            emit CampaignGoalCompleted(campaign.owner, campaignId, campaign.amountRaised);
         }
     }
 
-    function refund(uint256 _campaignID, uint256 _amount) public CampaignExist(_campaignID) {
-        Campaign storage campaign = campaigns[_campaignID];
+    function refund(uint256 campaignId, uint256 amount) public campaignExists(campaignId) {
+        Campaign storage campaign = campaigns[campaignId];
 
-        if (campaign.claimed) revert Campaign_Claimed();
-        if (block.timestamp >= campaign.refundDeadline) revert Campaign_Refund_Deadline_Elasped(_campaignID);
+        if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
+        if (block.timestamp >= campaign.refundDeadline) revert Campaign__RefundDeadlineElapsed(campaignId);
 
-        address donor = msg.sender;
-        uint256 amountDonated = campaign.donors[donor];
+        uint256 amountDonated = campaign.donors[msg.sender];
+        if (amountDonated == 0) revert Crowdfunding__NoDonationFound(campaignId);
 
-        if (amountDonated == 0) revert CrowdFunding_NoDonation(_campaignID);
+        uint256 amountInWei = amount * 1 ether;
+        if (amountDonated < amountInWei) revert Crowdfunding__InsufficientDonation(campaignId, amount, amountDonated);
 
-        uint256 amountInWEI = _amount * ONE_ETH;
+        campaign.amountRaised -= amountInWei;
+        campaign.donors[msg.sender] -= amountInWei;
 
-        if (amountDonated < amountInWEI) revert CrowdFunding_Insufficient_Donation(_campaignID, _amount, amountDonated);
+        if (campaign.donors[msg.sender] == 0) {
+            _removeAddress(campaign.donorAddresses, msg.sender);
+        }
 
-        campaign.amountRaised -= amountInWEI;
-        campaign.donors[donor] -= amountInWEI;
+        (bool success,) = payable(msg.sender).call{value: amountInWei}("");
+        if (!success) revert Crowdfunding__RefundFailed(campaignId);
 
-        if ((amountDonated - amountInWEI) == 0) _removeAddress(campaign.donorAddresses, donor);
-
-        (bool withdrawSuccess,) = payable(donor).call{value: _amount}("");
-
-        if (!withdrawSuccess) revert CrowdFunding_Refund_Failed(_campaignID);
-
-        emit CrowdFunding_Refund(_campaignID, _amount);
+        emit DonationRefunded(campaignId, msg.sender, amount);
     }
 
     function _removeAddress(address[] storage array, address addressToRemove) internal returns (bool) {
         for (uint256 i = 0; i < array.length; i++) {
             if (array[i] == addressToRemove) {
-                if (i < array.length - 1) {
-                    array[i] = array[array.length - 1];
-                }
+                array[i] = array[array.length - 1];
                 array.pop();
                 return true;
             }
         }
-
         return false;
     }
 }
