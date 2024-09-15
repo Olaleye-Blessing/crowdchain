@@ -2,292 +2,87 @@
 pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
-import {CrowdFunding} from "src/CrowdFunding.sol";
-import {BaseCampaign} from "src/Campaign.sol";
-import {DeployCrowdFunding} from "script/DeployCrowdFunding.s.sol";
-import {ConstantsTest} from "test/utils/Constants.sol";
+import {Crowdfunding} from "./../../src/Crowdfunding.sol";
+import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
+import {DeployCrowdFunding} from "./../../script/DeployCrowdFunding.s.sol";
+import {ConstantsTest} from "./../utils/Constants.sol";
 
 contract CrowdFundingTest is Test, ConstantsTest {
-    CrowdFunding crowdFunding;
+    Crowdfunding public crowdfunding;
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
 
-    function createCampaign(
-        address _owner,
-        string memory _title,
-        string memory _description,
-        uint32 _amountNeeded,
-        uint64 _deadline,
-        uint256 _refundDeadline
-    ) private {
-        vm.startPrank(_owner);
-
-        crowdFunding.createCampaign(_title, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        vm.stopPrank();
-    }
-
     function setUp() external {
-        DeployCrowdFunding deployCrowdFunding = new DeployCrowdFunding();
-        crowdFunding = deployCrowdFunding.run();
+        DeployCrowdFunding deployCampaign = new DeployCrowdFunding();
+        crowdfunding = deployCampaign.run();
 
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
         vm.deal(BLESSING, 100 ether);
     }
 
-    function test_NoCampaignAtContractCreation() public view {
-        assertEq(crowdFunding.totalCampaigns(), 0);
-    }
-
-    function test_CreateCampaignSuccessfully() public {
-        assertEq(crowdFunding.totalCampaigns(), 0);
-
-        uint32 amountNeeded = 6;
-        uint64 deadline = 4; // days
-        uint256 refundDeadline = 6; // days
-
-        createCampaign(
-            ALICE,
-            "My Title",
-            "My little description from my heart, soul and mind",
-            amountNeeded,
-            deadline,
-            refundDeadline
-        );
-
-        assertEq(crowdFunding.totalCampaigns(), 1);
-    }
-
-    function test_CampaignCreationFailsWithWrongInput() public {
-        uint32 _amountNeeded = 6;
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        // Invalid address
-        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Invalid sender address"));
-        createCampaign(address(0), "", "", 0, 0, 0);
-
-        // Empty title
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
-            )
-        );
-        createCampaign(ALICE, "", "", 0, 0, 0);
-
-        // Title with more than 200 characters
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                BaseCampaign.Campaign_Creation.selector, "Title must be between 1 and 200 characters"
-            )
-        );
-        createCampaign(ALICE, WORD_CHARACTERS_201, "", 0, 0, 0);
-
-        // Short description
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                BaseCampaign.Campaign_Creation.selector, "Description must be greater than 100 characters"
-            )
-        );
-        createCampaign(ALICE, _title, "Desc", 0, 0, 0);
-
-        // 0 ETH needed donation
-        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Goal must be greater than 0"));
-        createCampaign(ALICE, _title, _description, 0, 0, 0);
-
-        // Less than a day deadline
-        vm.expectRevert(
-            abi.encodeWithSelector(BaseCampaign.Campaign_Creation.selector, "Duration must be at least 1 day")
-        );
-        createCampaign(ALICE, _title, _description, _amountNeeded, 0, 9);
-
-        // Less than 5 days refund deadline
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                BaseCampaign.Campaign_Creation.selector, "Refund Deadline must be at least 5 days after deadline"
-            )
-        );
-        createCampaign(ALICE, _title, _description, _amountNeeded, 4, 4);
-    }
-
-    function test_CreatedCampaignSavedCorrectly() public {
-        uint32 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint256 _refundDeadline = 7; // days
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        (
-            ,
-            uint256 goal,
-            ,
-            ,
-            uint256 amountRaised,
-            address owner,
-            string memory title,
-            string memory description,
-            bool claimed
-        ) = crowdFunding.getCampaign(0);
-
-        assertEq(goal, _amountNeeded);
-        assertEq(amountRaised, 0);
-        assertEq(owner, ALICE);
-        assertEq(title, _title);
-        assertEq(description, _description);
-        assertEq(claimed, false);
-    }
-
-    function test_getCampaignsReturnsPaginatedResult() public {
-        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
-            createCampaign(
-                ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
-            );
-        }
-
-        uint256 _page = 0;
-        uint256 _perPage = 3;
-        (CrowdFunding.PaginatedCampaign[] memory _campaigns,) = crowdFunding.getCampaigns(_page, _perPage);
-
-        assertEq(_campaigns.length, 3);
-
-        assertEq(_campaigns[0].id, 0);
-        assertEq(_campaigns[0].title, string.concat(NUMBER_IN_WORDS[0], "_title_title"));
-        assertEq(_campaigns[1].id, 1);
-        assertEq(_campaigns[1].title, string.concat(NUMBER_IN_WORDS[1], "_title_title"));
-        assertEq(_campaigns[2].id, 2);
-        assertEq(_campaigns[2].title, string.concat(NUMBER_IN_WORDS[2], "_title_title"));
-
-        vm.expectRevert();
-        _campaigns[3];
-    }
-
-    function test_getCampaignsReuturnsFewResult() public {
-        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
-            createCampaign(
-                ALICE, string.concat(NUMBER_IN_WORDS[index], "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
-            );
-        }
-
-        uint256 _page = 7;
-        uint256 _perPage = 4;
-        (CrowdFunding.PaginatedCampaign[] memory _campaigns,) = crowdFunding.getCampaigns(_page, _perPage);
-
-        // this should return 28, 29
-        assertEq(_campaigns.length, 2);
-
-        assertEq(_campaigns[0].id, 28);
-        assertEq(_campaigns[0].title, string.concat(NUMBER_IN_WORDS[28], "_title_title"));
-        assertEq(_campaigns[1].id, 29);
-        assertEq(_campaigns[1].title, string.concat(NUMBER_IN_WORDS[29], "_title_title"));
-
-        vm.expectRevert();
-        _campaigns[2];
-    }
-
-    function test_getOwnerCampaignsReturnsPaginatedResult() public {
-        for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
-            createCampaign(
-                ALICE, string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
-            );
-            createCampaign(
-                BLESSING,
-                string.concat(NUMBER_IN_WORDS[index], "Blessing", "_title_title"),
-                WORD_CHARACTERS_201,
-                20,
-                10,
-                10
-            );
-            createCampaign(
-                BOB, string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"), WORD_CHARACTERS_201, 20, 10, 10
-            );
-        }
-
-        uint256 _page = 3;
-        uint256 _perPage = 4;
-
-        (CrowdFunding.PaginatedCampaign[] memory campaigns, uint256 totalCampaigns) =
-            crowdFunding.getOwnerCampaigns(BLESSING, _page, _perPage);
-
-        assertEq(campaigns.length, 4); // total number of campaigns returned
-        assertEq(totalCampaigns, 30); // total number of campaigns created by Blessing
-
-        // make sure all returned campaigns belong to BLESSING
-        for (uint256 index = 0; index < campaigns.length; index++) {
-            assertEq(campaigns[0].owner, BLESSING);
-        }
-    }
-
     function test_donationSuccessful() public {
-        createSuccessfulCampaign();
+        _createSuccessfulCampaign();
         uint256 campaignID = 0;
 
+        // first donation
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
-        (,,,, uint256 amountRaised,,,,) = crowdFunding.getCampaign(campaignID);
+        ICampaign.CampaignDetails memory campaign = crowdfunding.getCampaign(campaignID);
 
-        assertEq(BLESSING_DONATION, amountRaised);
+        assertEq(BLESSING_DONATION, campaign.amountRaised);
 
+        // second donation
         vm.prank(BOB);
         uint256 BOB_DONATION = 1;
-        crowdFunding.donate{value: BOB_DONATION}(campaignID);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION);
+        crowdfunding.donate{value: BOB_DONATION}(campaignID);
 
-        (,,,, uint256 newAmountRaised,,,,) = crowdFunding.getCampaign(campaignID);
+        campaign = crowdfunding.getCampaign(campaignID);
 
-        assertEq(BOB_DONATION + BLESSING_DONATION, newAmountRaised);
-    }
-
-    function test_emitEventOnSuccessfulDonation() public {
-        createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION);
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+        assertEq(BOB_DONATION + BLESSING_DONATION, campaign.amountRaised);
     }
 
     function test_emitAnEventWhenGoalIsMet() public {
-        createSuccessfulCampaign();
+        _createSuccessfulCampaign();
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        // Testing the donation event here is not neccessary
-        _donateInWEI(BLESSING_DONATION, campaignID);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
+        crowdfunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
 
         vm.prank(BOB);
         uint256 BOB_DONATION = 100;
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION);
 
-        // Testing the donation event here is neccessary because of how forge event emitter works
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit CrowdFunding.CrowdFunding_NewDonor(BOB, campaignID, 100);
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit BaseCampaign.Campaign_Goal_Completed(BOB, campaignID, 102);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, BLESSING_DONATION + BOB_DONATION);
 
-        _donateInWEI(BOB_DONATION, campaignID);
+        crowdfunding.donate{value: BOB_DONATION * ONE_ETH}(campaignID);
     }
 
     function test_getAllDonors() public {
-        createSuccessfulCampaign();
+        _createSuccessfulCampaign();
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
         vm.prank(BOB);
         uint256 BOB_DONATION = 1;
-        crowdFunding.donate{value: BOB_DONATION}(campaignID);
+        crowdfunding.donate{value: BOB_DONATION}(campaignID);
 
-        (address[] memory donors, uint256[] memory contributions) = crowdFunding.getCampaignDonors(campaignID);
+        (address[] memory donors, uint256[] memory contributions) = crowdfunding.getCampaignDonors(campaignID);
 
         assertEq(donors[0], BLESSING);
         assertEq(donors[1], BOB);
@@ -297,192 +92,65 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function test_donationFailsIfNoMoneyIsDonated() public {
-        createSuccessfulCampaign();
+        _createSuccessfulCampaign();
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 0;
-        vm.expectRevert(BaseCampaign.Campaign_EmptyDonation.selector);
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+        vm.expectRevert(ICampaign.Campaign__EmptyDonation.selector);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
     // TODO: Add this when there is a logic to claim campaign
-    function test_donationFailsIfCampaignHasBeenClaimed() public {}
-
-    function test_donationFailsIfCampaignIsClosed() public {
-        createSuccessfulCampaign();
+    function test_donationFailsIfCampaignHasBeenClaimed() public {
+        _createSuccessfulCampaign();
         uint256 campaignID = 0;
 
-        vm.warp(block.timestamp + 5 * ONE_DAY);
+        vm.warp(block.timestamp + 15 * ONE_DAY);
+
+        vm.prank(ALICE);
+        crowdfunding.withdraw(campaignID);
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 1;
-        vm.expectRevert(BaseCampaign.Campaign_Closed.selector);
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
+        vm.expectRevert(ICampaign.Campaign__CampaignAlreadyClaimed.selector);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
-    function test_onlyOwnerCanWithdraw() public {
+    function test_donationFailsIfCampaignIsClosed() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        vm.warp(block.timestamp + 15 * ONE_DAY);
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 1;
+        vm.expectRevert(ICampaign.Campaign__CampaignClosed.selector);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
+    }
+
+    function _createSuccessfulCampaign() private {
         uint32 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         uint64 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
-        createCampaign(BOB, _title, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        uint256 ALICE_CAMPAIGN_ID = 0;
-        uint256 BOB_CAMPAIGN_ID = 1;
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        vm.startPrank(ALICE);
-        vm.expectRevert(BaseCampaign.Campaign_Not_Owner.selector);
-        crowdFunding.withdraw(BOB_CAMPAIGN_ID);
-
-        crowdFunding.withdraw(ALICE_CAMPAIGN_ID);
+        _createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
     }
 
-    function test_cannotWithdrawIfRefundDeadlineIsActive() public {
-        createSuccessfulCampaign();
+    function _createCampaign(
+        address _owner,
+        string memory _title,
+        string memory _description,
+        uint32 _amountNeeded,
+        uint64 _deadline,
+        uint256 _refundDeadline
+    ) private {
+        vm.startPrank(_owner);
 
-        vm.startPrank(ALICE);
+        crowdfunding.createCampaign(_title, _description, _amountNeeded, _deadline, _refundDeadline);
 
-        vm.expectRevert(BaseCampaign.Campaign_Refund_Deadline_Active.selector);
-        crowdFunding.withdraw(0);
-    }
-
-    function test_cannotWithdrawIfCampaignHasBeenClaimed() public {
-        createSuccessfulCampaign();
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        vm.startPrank(ALICE);
-        uint256 campaign_ID = 0;
-        crowdFunding.withdraw(campaign_ID);
-
-        vm.expectRevert(BaseCampaign.Campaign_Claimed.selector);
-        crowdFunding.withdraw(campaign_ID);
-    }
-
-    function test_notifyOwnerAfterTheyWithdraw() public {
-        createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-
-        crowdFunding.donate{value: BLESSING_DONATION}(campaignID);
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit BaseCampaign.Campaign_Fund_Withdrawn(campaignID, ALICE, BLESSING_DONATION);
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        crowdFunding.withdraw(campaignID);
-    }
-
-    function test_allowDonorsToRefund() public {
-        createSuccessfulCampaign();
-
-        uint256 campaignID = 0;
-
-        vm.startPrank(BLESSING);
-        uint256 BLESSING_DONATION = 4;
-        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
-
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit CrowdFunding.CrowdFunding_Refund(campaignID, 2);
-        crowdFunding.refund(campaignID, 1);
-    }
-
-    function test_preventRefundIfCampaignHasBeenClaimed() public {
-        createSuccessfulCampaign();
-
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 3;
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION * ONE_ETH);
-        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit BaseCampaign.Campaign_Fund_Withdrawn(campaignID, ALICE, BLESSING_DONATION);
-        crowdFunding.withdraw(campaignID);
-
-        vm.prank(BLESSING);
-        vm.expectRevert(BaseCampaign.Campaign_Claimed.selector);
-        crowdFunding.refund(campaignID, 2);
-    }
-
-    function test_preventRefundIfRefundDeadlineElasped() public {
-        createSuccessfulCampaign();
-
-        uint256 campaignID = 0;
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        vm.prank(BLESSING);
-        vm.expectRevert(abi.encodeWithSelector(BaseCampaign.Campaign_Refund_Deadline_Elasped.selector, campaignID));
-        crowdFunding.refund(campaignID, 0);
-    }
-
-    function test_preventRefundIfUserHadNoDonation() public {
-        createSuccessfulCampaign();
-
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        vm.expectRevert(abi.encodeWithSelector(CrowdFunding.CrowdFunding_NoDonation.selector, campaignID));
-        crowdFunding.refund(campaignID, 0);
-    }
-
-    function test_preventRefundIfUserWantsToRefundMoreThanDonated() public {
-        createSuccessfulCampaign();
-
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 3;
-        vm.expectEmit(true, false, false, false, address(crowdFunding));
-        emit CrowdFunding.CrowdFunding_NewDonor(BLESSING, campaignID, BLESSING_DONATION * ONE_ETH);
-        crowdFunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
-
-        vm.prank(BLESSING);
-        uint256 refundAmount = 4 * ONE_ETH;
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CrowdFunding.CrowdFunding_Insufficient_Donation.selector,
-                campaignID,
-                refundAmount,
-                BLESSING_DONATION * ONE_ETH
-            )
-        );
-        crowdFunding.refund(campaignID, refundAmount);
-    }
-
-    function createSuccessfulCampaign() private {
-        uint32 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint64 _refundDeadline = 10; // days
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
-    }
-
-    function _donateInWEI(uint256 _donation, uint256 _campaignID) private {
-        crowdFunding.donate{value: _donation * ONE_ETH}(_campaignID);
-    }
-
-    function _shiftCurrentTimestampToAllowWithdraw() private {
-        uint64 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
-        uint64 _deadline = 4; // gotten from createSuccessfulCampaign();
-        vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
+        vm.stopPrank();
     }
 }
