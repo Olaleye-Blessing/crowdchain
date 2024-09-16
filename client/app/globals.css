@@ -105,4 +105,8 @@
   .error {
     @apply text-red-700 font-semibold;
   }
+
+  .layout {
+    @apply px-4 mx-auto w-full max-w-7xl;
+  }
 }

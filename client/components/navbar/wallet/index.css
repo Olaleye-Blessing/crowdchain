@@ -1,0 +1,13 @@
+.connection__btn {
+  @apply block w-full mt-2 text-center py-2;
+
+  @apply md:mt-0;
+}
+
+.connected__item {
+  @apply flex items-center justify-start px-4 py-2 hover:bg-primary/10;
+}
+
+.connected__item span:nth-child(1) {
+  @apply mr-2 inline-block;
+}
