@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Copy, LogOut, User } from "lucide-react";
+import { useEffect } from "react";
+import { ethers } from "ethers";
+import { ArrowDownUp, Copy, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -9,20 +11,58 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import "./index.css";
+import useWalletStore from "@/stores/wallet";
+
+const formatAddress = (address: string) =>
+  `${address.slice(0, 6)}...${address.slice(-6)}`;
 
 const Wallet = () => {
-  let walletConnected = false;
-  // walletConnected = true;
+  const setAddress = useWalletStore((state) => state.setAddress);
+  const setProvider = useWalletStore((state) => state.setProvider);
+  const disconnect = useWalletStore((state) => state.disconnect);
+  const address = useWalletStore((state) => state.address);
+  const provider = useWalletStore((state) => state.provider);
 
-  const address = "0x40Fd612a0530485FC6595F969c1855D37DCf6a10";
-  const formattedAddress = `${address.slice(0, 6)}...${address.slice(-6)}`;
+  const connectWallet = async () => {
+    // TODO: Show Modal
+    if (!window.ethereum) return alert("Install Metamask");
+
+    const _provider =
+      provider || new ethers.providers.Web3Provider(window.ethereum, "any");
+    await _provider.send("eth_requestAccounts", []);
+
+    const signer = _provider.getSigner();
+    const address = await signer.getAddress();
+
+    if (!provider) setProvider(_provider);
+    setAddress(address);
+  };
+
+  const switchWallet = async () => {
+    alert("switch address");
+  };
+
+  useEffect(() => {
+    (async function getPreviouslyConnectedAddress() {
+      if (!window.ethereum) return;
+
+      const _provider = new ethers.providers.Web3Provider(
+        window.ethereum,
+        "any",
+      );
+
+      setProvider(_provider);
+    })();
+  }, []);
 
   return (
     <div className="border-t border-border px-4 md:border-0 md:flex md:items-center md:justify-start md:px-0 md:ml-4">
-      {walletConnected ? (
+      {address ? (
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="connection__btn">{formattedAddress}</Button>
+            <Button className="connection__btn">
+              {formatAddress(address)}
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="!p-0">
             <ul className="flex flex-col text-left">
@@ -32,13 +72,27 @@ const Wallet = () => {
                 </span>
                 <span>Copy</span>
               </button>
+              <button
+                type="button"
+                className="connected__item"
+                onClick={switchWallet}
+              >
+                <span>
+                  <ArrowDownUp />
+                </span>
+                <span>Switch</span>
+              </button>
               <Link href={"/"} className="connected__item">
                 <span>
                   <User />
                 </span>
                 <span>My Account</span>
               </Link>
-              <button type="button" className="connected__item">
+              <button
+                type="button"
+                className="connected__item"
+                onClick={disconnect}
+              >
                 <span>
                   <LogOut />
                 </span>
@@ -48,7 +102,9 @@ const Wallet = () => {
           </PopoverContent>
         </Popover>
       ) : (
-        <Button className="connection__btn">Connect Wallet</Button>
+        <Button className="connection__btn" onClick={connectWallet}>
+          Connect Wallet
+        </Button>
       )}
     </div>
   );
