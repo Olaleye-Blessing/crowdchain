@@ -7,7 +7,7 @@ interface ICampaign {
         uint256 amountRaised;
         uint256 deadline;
         uint256 refundDeadline;
-        uint32 goal;
+        uint256 goal;
         address owner;
         string title;
         string description;
@@ -35,7 +35,7 @@ interface ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
-        uint32 goal,
+        uint256 goal,
         uint64 duration,
         uint256 refundDeadline
     ) external;

@@ -14,7 +14,7 @@ abstract contract CampaignBase is ICampaign {
         uint256 amountRaised;
         uint256 deadline;
         uint256 refundDeadline;
-        uint32 goal;
+        uint256 goal; // in wei
         address owner;
         string title;
         string description;
@@ -46,7 +46,7 @@ abstract contract CampaignBase is ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
-        uint32 goal,
+        uint256 goal,
         uint64 duration,
         uint256 refundDeadline
     ) public override {
@@ -142,7 +142,7 @@ abstract contract CampaignBase is ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
-        uint32 goal,
+        uint256 goal,
         uint64 duration,
         uint256 refundDeadline
     ) internal view {

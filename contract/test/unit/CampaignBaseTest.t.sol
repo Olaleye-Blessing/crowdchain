@@ -23,7 +23,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function test_CreateCampaignSuccessfully() public {
-        uint32 amountNeeded = 6;
+        uint256 amountNeeded = 6;
         uint64 deadline = 4; // days
         uint256 refundDeadline = 6; // days
 
@@ -44,7 +44,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function test_CampaignCreationFailsWithWrongInput() public {
-        uint32 _amountNeeded = 6;
+        uint256 _amountNeeded = 6;
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -97,7 +97,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function test_CreatedCampaignSavedCorrectly() public {
-        uint32 _amountNeeded = 6;
+        uint256 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         uint256 _refundDeadline = 7; // days
         string memory _title = "My Title";
@@ -175,7 +175,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function test_onlyOwnerCanWithdraw() public {
-        uint32 _amountNeeded = 6;
+        uint256 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         uint64 _refundDeadline = 10; // days
         string memory _title = "My Title";
@@ -200,7 +200,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         address _owner,
         string memory _title,
         string memory _description,
-        uint32 _amountNeeded,
+        uint256 _amountNeeded,
         uint64 _deadline,
         uint256 _refundDeadline
     ) private {
