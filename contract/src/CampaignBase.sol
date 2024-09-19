@@ -63,6 +63,7 @@ abstract contract CampaignBase is ICampaign {
         newCampaign.owner = msg.sender;
         newCampaign.title = title;
         newCampaign.description = description;
+        newCampaign.coverImage = coverImage;
 
         campaignsOwner[msg.sender].push(campaignId);
     }
