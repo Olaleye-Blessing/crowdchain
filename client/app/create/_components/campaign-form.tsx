@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { ICampaign } from "@/interfaces/campaign";
 import useWalletStore from "@/stores/wallet";
-import { crowdChainContract } from "@/lib/contracts/crowd-chain/contract";
 import { DatePicker } from "@/components/ui/date-picker";
 import { differenceInDays } from "date-fns";
 import { parseEther } from "ethers/lib/utils";
@@ -29,7 +28,8 @@ const oneDay = 1 * 24 * 60 * 60 * 1000;
 
 const CampaignForm = () => {
   const { crowdchainInstance } = useCrowdchainInstance();
-  const provider = useWalletStore((state) => state.provider!);
+  const writableProvider = useWalletStore((state) => state.writableProvider);
+  const writableContract = useWalletStore((state) => state.writableContract);
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>("second");
 
@@ -62,6 +62,8 @@ const CampaignForm = () => {
   } = form;
 
   const onSubmit = async (data: ICampaignForm) => {
+    if (!writableProvider) return alert("Please install metamask!");
+
     if (!coverImage)
       return toast({
         title: "Add your campaign cover image",
@@ -100,10 +102,9 @@ const CampaignForm = () => {
     try {
       console.log("Uploading image....");
       const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
-      const crowdChainInstance = crowdChainContract(provider.getSigner());
 
       console.log("Called function...");
-      const tx = await crowdChainInstance.createCampaign(
+      const tx = await writableContract!.createCampaign(
         data.title,
         data.description,
         ifpsImg.IpfsHash,

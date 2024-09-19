@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { ethers } from "ethers";
 import { ArrowDownUp, Copy, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,42 +16,20 @@ const formatAddress = (address: string) =>
 
 const Wallet = () => {
   const setAddress = useWalletStore((state) => state.setAddress);
-  const setProvider = useWalletStore((state) => state.setProvider);
   const disconnect = useWalletStore((state) => state.disconnect);
   const address = useWalletStore((state) => state.address);
-  const provider = useWalletStore((state) => state.provider);
+  const writableProvider = useWalletStore((state) => state.writableProvider);
 
   const connectWallet = async () => {
     // TODO: Show Modal
-    if (!window.ethereum) return alert("Install Metamask");
+    if (!writableProvider) return alert("Install metamask");
 
-    const _provider =
-      provider || new ethers.providers.Web3Provider(window.ethereum, "any");
-    await _provider.send("eth_requestAccounts", []);
-
-    const signer = _provider.getSigner();
-    const address = await signer.getAddress();
-
-    if (!provider) setProvider(_provider);
-    setAddress(address);
+    setAddress(await writableProvider.getSigner().getAddress());
   };
 
   const switchWallet = async () => {
     alert("switch address");
   };
-
-  useEffect(() => {
-    (async function getPreviouslyConnectedAddress() {
-      if (!window.ethereum) return;
-
-      const _provider = new ethers.providers.Web3Provider(
-        window.ethereum,
-        "any",
-      );
-
-      setProvider(_provider);
-    })();
-  }, []);
 
   return (
     <div className="border-t border-border px-4 md:border-0 md:flex md:items-center md:justify-start md:px-0 md:ml-4">
