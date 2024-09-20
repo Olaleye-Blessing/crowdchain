@@ -45,7 +45,14 @@ const Wallet = () => {
   };
 
   const switchWallet = async () => {
-    alert("switch address");
+    await window.ethereum!.request!({
+      method: "wallet_requestPermissions",
+      params: [{ eth_accounts: {} }],
+    });
+
+    await window.ethereum!.request!({
+      method: "eth_requestAccounts",
+    });
   };
 
   return (

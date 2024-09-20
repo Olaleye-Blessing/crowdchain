@@ -26,6 +26,7 @@ export default function ContractProviders({
     (state) => state.setWritableProvider,
   );
   const address = useStore(useWalletStore, (state) => state.address);
+  const setAddress = useWalletStore((state) => state.setAddress);
 
   const [loadings, setLoadings] = useState({
     readonly: true,
@@ -54,6 +55,14 @@ export default function ContractProviders({
 
   useEffect(
     function setupWritableWallet() {
+      function accountChanged(accounts: Array<string>) {
+        const account = accounts[0] || null;
+
+        setAddress(account);
+
+        if (!account) setWritableContract(null);
+      }
+
       async function setUp() {
         if (!window.ethereum)
           return setLoadings((prev) => ({ ...prev, writable: false }));
@@ -64,6 +73,8 @@ export default function ContractProviders({
         );
 
         setWritableProvider(writableProvider);
+
+        (window.ethereum as any).on("accountsChanged", accountChanged);
 
         if (address === undefined) return;
 
