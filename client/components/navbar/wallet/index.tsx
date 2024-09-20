@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/popover";
 import "./index.css";
 import useWalletStore from "@/stores/wallet";
+import { ethers } from "ethers";
+import { crowdChainAddress } from "@/lib/contracts/crowd-chain/address";
+import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 
 const formatAddress = (address: string) =>
   `${address.slice(0, 6)}...${address.slice(-6)}`;
@@ -19,12 +22,26 @@ const Wallet = () => {
   const disconnect = useWalletStore((state) => state.disconnect);
   const address = useWalletStore((state) => state.address);
   const writableProvider = useWalletStore((state) => state.writableProvider);
+  const writableContract = useWalletStore((state) => state.writableContract);
+  const setWritableContract = useWalletStore(
+    (state) => state.setWritableContract,
+  );
 
   const connectWallet = async () => {
     // TODO: Show Modal
     if (!writableProvider) return alert("Install metamask");
 
+    await writableProvider.send("eth_requestAccounts", []);
+
     setAddress(await writableProvider.getSigner().getAddress());
+
+    if (writableContract) return;
+
+    const connectedSigner = writableProvider.getSigner();
+
+    setWritableContract(
+      new ethers.Contract(crowdChainAddress, crowdChainABI, connectedSigner),
+    );
   };
 
   const switchWallet = async () => {

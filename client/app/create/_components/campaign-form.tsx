@@ -63,6 +63,7 @@ const CampaignForm = () => {
 
   const onSubmit = async (data: ICampaignForm) => {
     if (!writableProvider) return alert("Please install metamask!");
+    if (!writableContract) return alert("Connect your wallet!");
 
     if (!coverImage)
       return toast({
@@ -104,7 +105,7 @@ const CampaignForm = () => {
       const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
 
       console.log("Called function...");
-      const tx = await writableContract!.createCampaign(
+      const tx = await writableContract.createCampaign(
         data.title,
         data.description,
         ifpsImg.IpfsHash,

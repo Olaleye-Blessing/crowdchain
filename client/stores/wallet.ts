@@ -42,7 +42,7 @@ const useWalletStore = create<Store>()(
             set({ address });
           },
           disconnect() {
-            set({ address: null });
+            set({ address: null, writableContract: null });
           },
           setReadOnlyContract(contract) {
             set({ readonlyContract: contract });
