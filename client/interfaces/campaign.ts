@@ -10,3 +10,7 @@ export interface ICampaign {
   coverImage: string;
   claimed: boolean;
 }
+
+export interface ICampaignDetail extends ICampaign {
+  totalDonors: number;
+}

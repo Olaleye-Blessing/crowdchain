@@ -13,9 +13,7 @@ import useWalletStore from "@/stores/wallet";
 import { ethers } from "ethers";
 import { crowdChainAddress } from "@/lib/contracts/crowd-chain/address";
 import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
-
-const formatAddress = (address: string) =>
-  `${address.slice(0, 6)}...${address.slice(-6)}`;
+import { formatAddress } from "@/utils/format-address";
 
 const Wallet = () => {
   const setAddress = useWalletStore((state) => state.setAddress);
