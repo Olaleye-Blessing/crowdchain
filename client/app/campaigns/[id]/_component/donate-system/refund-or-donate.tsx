@@ -5,24 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ICampaignDetail } from "@/interfaces/campaign";
+import useWalletStore from "@/stores/wallet";
+import { parseEther } from "ethers/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 export default function RefundOrDonate({
   deadline,
   refundDeadline,
   claimed,
-}: Pick<ICampaignDetail, "deadline" | "refundDeadline" | "claimed">) {
+  id,
+}: Pick<ICampaignDetail, "deadline" | "refundDeadline" | "claimed" | "id">) {
+  const writableContract = useWalletStore((state) => state.writableContract);
   const [donationAmount, setDonationAmount] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
 
   const currentTime = Date.now() / 1000;
-  let isActive = currentTime < deadline;
-  let canRefund = currentTime > deadline && currentTime < refundDeadline;
+  const canDonate = currentTime < deadline;
+  const canRefund = currentTime < refundDeadline;
 
-  // isActive = false;
-  // canRefund = false;
+  const handleDonate = async () => {
+    if (!writableContract || !donationAmount) return;
 
-  const handleDonate = () => {
-    alert(`Donating ${donationAmount} ETH to the campaign`);
+    try {
+      const tx = await writableContract.donate(+id, {
+        value: parseEther(`${donationAmount}`),
+      });
+
+      await tx.wait();
+
+      toast({ title: `You donated ${donationAmount}!` });
+    } catch (error) {
+      console.log("__ THERE IS AN ERROR __");
+      console.log(error);
+    }
   };
 
   const handleRefund = () => {
@@ -40,6 +55,10 @@ export default function RefundOrDonate({
           {claimed ? (
             <p className="h-full flex items-center justify-center text-center">
               This campaign has been claimed!
+            </p>
+          ) : !canDonate ? (
+            <p className="h-full flex items-center justify-center text-center">
+              Deadline passed!
             </p>
           ) : (
             <Form
@@ -60,7 +79,7 @@ export default function RefundOrDonate({
             <p className="h-full flex items-center justify-center text-center">
               This campaign has been claimed!
             </p>
-          ) : canRefund ? (
+          ) : !canRefund ? (
             <p className="h-full flex items-center justify-center text-center">
               Refund period has been closed!
             </p>

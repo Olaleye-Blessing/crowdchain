@@ -4,7 +4,7 @@ import { formatEther } from "ethers/lib/utils";
 export const constructCampaign = (_campaign: any): ICampaignDetail => {
   return {
     id: _campaign.id.toString(),
-    amountRaised: +_campaign.amountRaised.toString(),
+    amountRaised: +formatEther(_campaign.amountRaised),
     deadline: _campaign.deadline.toNumber(),
     refundDeadline: _campaign.refundDeadline.toNumber(),
     goal: +formatEther(_campaign.goal),

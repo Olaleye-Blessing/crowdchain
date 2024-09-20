@@ -14,6 +14,7 @@ export default function DonateSystem({
           deadline={campaign.deadline}
           refundDeadline={campaign.refundDeadline}
           claimed={campaign.claimed}
+          id={campaign.id}
         />
         <Donators />
       </div>
