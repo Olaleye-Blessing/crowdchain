@@ -143,7 +143,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.DonationRefunded(campaignID, BLESSING, refundAmount);
+        emit Crowdfunding.DonationRefunded(BLESSING, campaignID, refundAmount);
         crowdfunding.refund(campaignID, refundAmount);
 
         ICampaign.CampaignDetails memory campaign = crowdfunding.getCampaign(campaignID);

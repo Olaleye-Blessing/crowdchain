@@ -5,7 +5,7 @@ import {CampaignBase} from "./CampaignBase.sol";
 
 contract Crowdfunding is CampaignBase {
     event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount);
-    event DonationRefunded(uint256 indexed campaignId, address indexed donor, uint256 amount);
+    event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount);
 
     error Crowdfunding__NoDonationFound(uint256 campaignId);
     error Crowdfunding__InsufficientDonation(uint256 campaignId, uint256 amountToRefund, uint256 amountDonated);
@@ -72,7 +72,7 @@ contract Crowdfunding is CampaignBase {
         (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert Crowdfunding__RefundFailed(campaignId);
 
-        emit DonationRefunded(campaignId, msg.sender, amount);
+        emit DonationRefunded(msg.sender, campaignId, amount);
     }
 
     function _removeAddress(address[] storage array, address addressToRemove) internal returns (bool) {
