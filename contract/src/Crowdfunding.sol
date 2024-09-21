@@ -60,17 +60,16 @@ contract Crowdfunding is CampaignBase {
         uint256 amountDonated = campaign.donors[msg.sender];
         if (amountDonated == 0) revert Crowdfunding__NoDonationFound(campaignId);
 
-        uint256 amountInWei = amount * 1 ether;
-        if (amountDonated < amountInWei) revert Crowdfunding__InsufficientDonation(campaignId, amount, amountDonated);
+        if (amountDonated < amount) revert Crowdfunding__InsufficientDonation(campaignId, amount, amountDonated);
 
-        campaign.amountRaised -= amountInWei;
-        campaign.donors[msg.sender] -= amountInWei;
+        campaign.amountRaised -= amount;
+        campaign.donors[msg.sender] -= amount;
 
         if (campaign.donors[msg.sender] == 0) {
             _removeAddress(campaign.donorAddresses, msg.sender);
         }
 
-        (bool success,) = payable(msg.sender).call{value: amountInWei}("");
+        (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert Crowdfunding__RefundFailed(campaignId);
 
         emit DonationRefunded(campaignId, msg.sender, amount);

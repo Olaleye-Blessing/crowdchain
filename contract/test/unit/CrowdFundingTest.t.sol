@@ -133,13 +133,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         _createSuccessfulCampaign();
 
         uint256 campaignID = 0;
-        uint256 donation = 5;
-        uint256 refundAmount = 3;
+        uint256 donation = 5 * ONE_ETH;
+        uint256 refundAmount = 3 * ONE_ETH;
 
         vm.prank(BLESSING);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit Crowdfunding.NewDonation(BLESSING, campaignID, donation);
-        crowdfunding.donate{value: donation * ONE_ETH}(campaignID);
+        crowdfunding.donate{value: donation}(campaignID);
 
         vm.prank(BLESSING);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -148,7 +148,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         ICampaign.CampaignDetails memory campaign = crowdfunding.getCampaign(campaignID);
 
-        assertEq(campaign.amountRaised, (donation - refundAmount) * ONE_ETH);
+        assertEq(campaign.amountRaised, (donation - refundAmount));
     }
 
     function test_noRefundIfCampaignHasBeenClaimed() public {
