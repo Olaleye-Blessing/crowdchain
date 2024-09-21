@@ -1,3 +1,5 @@
+"use client";
+
 import { ICampaignDetail } from "@/interfaces/campaign";
 import Donators from "./donators";
 import RefundOrDonate from "./refund-or-donate";
@@ -7,12 +9,18 @@ import useWalletStore from "@/stores/wallet";
 import { sleep } from "@/utils/sleep";
 import { formatEther } from "ethers/lib/utils";
 import { type IContributionSystem } from "@/interfaces/contribution-system";
+import { ethers, EventFilter } from "ethers";
 
-interface DonateSystemProps {
+export interface DonateSystemProps {
   campaign: ICampaignDetail;
+  campaignDonorFilter: EventFilter;
 }
 
-export default function DonateSystem({ campaign }: DonateSystemProps) {
+export default function DonateSystem({
+  campaign,
+  campaignDonorFilter,
+}: DonateSystemProps) {
+  const readonlyProvider = useWalletStore((state) => state.readonlyProvider!);
   const readonlyContract = useWalletStore((state) => state.readonlyContract!);
   const [donors, setDonors] = useState<IFetch<IContributionSystem | null>>({
     loading: true,
@@ -48,7 +56,15 @@ export default function DonateSystem({ campaign }: DonateSystemProps) {
 
     fetchDonors();
 
-    return () => {};
+    async function listen(_donor: any, campaignId: any, _amount: any) {
+      fetchDonors();
+    }
+
+    readonlyContract.on(campaignDonorFilter, listen);
+
+    return () => {
+      readonlyContract.off(campaignDonorFilter, listen);
+    };
   }, []);
 
   return (

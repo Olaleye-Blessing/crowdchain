@@ -4,9 +4,15 @@
 import { Clock, Users, DollarSign, CheckCircle } from "lucide-react";
 import CampaignProgrees from "./progress";
 import { ICampaignDetail } from "@/interfaces/campaign";
-import DonateSystem from "./donate-system";
+import DonateSystem, { type DonateSystemProps } from "./donate-system";
+import { EventFilter } from "ethers";
 
-export default function Details({ campaign }: { campaign: ICampaignDetail }) {
+interface DetailsProps extends DonateSystemProps {}
+
+export default function Details({
+  campaign,
+  campaignDonorFilter,
+}: DetailsProps) {
   campaign.coverImage = `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS`;
 
   return (
@@ -88,7 +94,10 @@ export default function Details({ campaign }: { campaign: ICampaignDetail }) {
           </div>
         </div>
 
-        <DonateSystem campaign={campaign} />
+        <DonateSystem
+          campaign={campaign}
+          campaignDonorFilter={campaignDonorFilter}
+        />
       </div>
     </section>
   );
