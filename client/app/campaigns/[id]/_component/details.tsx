@@ -12,6 +12,7 @@ interface DetailsProps extends DonateSystemProps {}
 export default function Details({
   campaign,
   campaignDonorFilter,
+  campaignRefundFilter,
 }: DetailsProps) {
   campaign.coverImage = `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS`;
 
@@ -97,6 +98,7 @@ export default function Details({
         <DonateSystem
           campaign={campaign}
           campaignDonorFilter={campaignDonorFilter}
+          campaignRefundFilter={campaignRefundFilter}
         />
       </div>
     </section>

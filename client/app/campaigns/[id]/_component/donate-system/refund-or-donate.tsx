@@ -40,8 +40,23 @@ export default function RefundOrDonate({
     }
   };
 
-  const handleRefund = () => {
-    alert("Requesting refund");
+  const handleRefund = async () => {
+    if (!writableContract || !refundAmount) return;
+
+    try {
+      const tx = await writableContract.refund(
+        +id,
+        parseEther(`${refundAmount}`),
+        { gasLimit: 5000000 },
+      );
+
+      await tx.wait();
+
+      toast({ title: `You donated ${refundAmount}!` });
+    } catch (error) {
+      console.log("__ THERE IS AN ERROR __");
+      console.log(error);
+    }
   };
 
   return (
