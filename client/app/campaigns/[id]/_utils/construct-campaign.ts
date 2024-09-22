@@ -11,7 +11,7 @@ export const constructCampaign = (_campaign: any): ICampaignDetail => {
     owner: _campaign.owner,
     title: _campaign.title,
     description: _campaign.description,
-    coverImage: _campaign.coverImage,
+    coverImage: `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/${_campaign.coverImage || "QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS"}`,
     claimed: _campaign.claimed,
     totalDonors: +_campaign.totalDonors.toString(),
   };
