@@ -3,12 +3,18 @@ pragma solidity ^0.8.26;
 
 import {ICampaign} from "./interfaces/ICampaign.sol";
 
+/// @title CampaignBase
+/// @author Olaleye Blessing
+/// @notice Abstract contract implementing core functionality for crowdfunding campaigns
+/// @dev Implements the ICampaign interface
 abstract contract CampaignBase is ICampaign {
     uint256 private constant ONE_DAY = 1 days;
     uint256 private constant ONE_ETH = 1 ether;
 
+    /// @notice Mapping of owner addresses to their campaign IDs
     mapping(address => uint256[]) private campaignsOwner;
 
+    /// @notice Struct representing a single campaign
     struct Campaign {
         uint256 id;
         uint256 amountRaised;
@@ -24,8 +30,11 @@ abstract contract CampaignBase is ICampaign {
         address[] donorAddresses;
     }
 
+    /// @notice Array of all campaigns
     Campaign[] internal campaigns;
 
+    /// @notice Ensures the campaign exists
+    /// @param campaignId The ID of the campaign to check
     modifier campaignExists(uint256 campaignId) {
         if (campaignId >= campaigns.length) {
             revert Campaign__CampaignNotExist(campaignId);
@@ -34,6 +43,9 @@ abstract contract CampaignBase is ICampaign {
         _;
     }
 
+    /// @notice Validates pagination parameters
+    /// @param page The page number
+    /// @param perPage The number of items per page
     modifier validPagination(uint256 page, uint256 perPage) {
         if (page >= 0 && perPage > 0) {
             _;
@@ -42,10 +54,13 @@ abstract contract CampaignBase is ICampaign {
         }
     }
 
+    /// @notice Returns the total number of campaigns
+    /// @return The number of campaigns created
     function totalCampaigns() public view returns (uint256) {
         return campaigns.length;
     }
 
+    /// @inheritdoc ICampaign
     function createCampaign(
         string memory title,
         string memory description,
@@ -72,6 +87,7 @@ abstract contract CampaignBase is ICampaign {
         campaignsOwner[msg.sender].push(campaignId);
     }
 
+    /// @inheritdoc ICampaign
     function getCampaign(uint256 campaignId)
         public
         view
@@ -83,6 +99,7 @@ abstract contract CampaignBase is ICampaign {
         return _createCampaignDetails(campaign);
     }
 
+    /// @inheritdoc ICampaign
     function getCampaigns(uint256 page, uint256 perPage)
         public
         view
@@ -103,6 +120,7 @@ abstract contract CampaignBase is ICampaign {
         return (paginatedCampaigns, campaigns.length);
     }
 
+    /// @inheritdoc ICampaign
     function getOwnerCampaigns(address owner, uint256 page, uint256 perPage)
         public
         view
@@ -125,6 +143,7 @@ abstract contract CampaignBase is ICampaign {
         return (paginatedCampaigns, ownerCampaignIds.length);
     }
 
+    /// @inheritdoc ICampaign
     function withdraw(uint256 campaignId) public override campaignExists(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
@@ -143,6 +162,14 @@ abstract contract CampaignBase is ICampaign {
         emit CampaignFundWithdrawn(campaignId, msg.sender, amount);
     }
 
+    /// @notice Validates the parameters for creating a new campaign
+    /// @dev Internal function to check the validity of campaign creation inputs
+    /// @param title The title of the campaign
+    /// @param description The description of the campaign
+    /// @param coverImage The URL of the campaign's cover image
+    /// @param goal The funding goal of the campaign (in wei)
+    /// @param duration The duration of the campaign in days
+    /// @param refundDeadline The number of days after the campaign ends during which refunds are possible
     function _validateCampaignCreation(
         string memory title,
         string memory description,
@@ -174,6 +201,10 @@ abstract contract CampaignBase is ICampaign {
         }
     }
 
+    /// @notice Creates a CampaignDetails struct from a Campaign struct
+    /// @dev Internal function to convert Campaign storage to CampaignDetails memory
+    /// @param campaign The Campaign struct to convert
+    /// @return A CampaignDetails struct containing the campaign information
     function _createCampaignDetails(Campaign storage campaign) internal view returns (CampaignDetails memory) {
         return CampaignDetails({
             id: campaign.id,
