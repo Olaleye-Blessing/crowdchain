@@ -42,6 +42,10 @@ abstract contract CampaignBase is ICampaign {
         }
     }
 
+    function totalCampaigns() public view returns (uint256) {
+        return campaigns.length;
+    }
+
     function createCampaign(
         string memory title,
         string memory description,

@@ -117,6 +117,18 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(campaign.id, 0);
     }
 
+    function test_getTotalCampaignsCreated() public {
+        assertEq(campaignBase.totalCampaigns(), 0);
+
+        uint256 _campaignsLength = 5;
+
+        for (uint256 index = 0; index < _campaignsLength; index++) {
+            _createCampaign(ALICE, "My Title", "My little description from my heart, soul and mind", 6, 7, 7);
+        }
+
+        assertEq(campaignBase.totalCampaigns(), _campaignsLength);
+    } 
+
     function test_getCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
             _createCampaign(
