@@ -4,9 +4,8 @@ export default function Page() {
   return (
     <main>
       <header>
-        <h1>Create Campaign</h1>
+        <h1 className="sr-only">Create a New Campaign</h1>
       </header>
-      <h1>CrowdFunding</h1>
       <CampaignForm />
     </main>
   );

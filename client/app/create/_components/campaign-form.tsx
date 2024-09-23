@@ -136,7 +136,7 @@ const CampaignForm = () => {
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Create a New Campaign
+            Campaign Details
           </CardTitle>
         </CardHeader>
         <CardContent>
