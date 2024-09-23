@@ -20,7 +20,7 @@ export default function Ready() {
             Launch a Campaign
           </Link>
           <Link
-            href="/create"
+            href="/campaigns"
             className={buttonVariants({
               variant: "secondary",
               className: "mr-4",

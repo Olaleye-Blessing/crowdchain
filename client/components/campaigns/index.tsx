@@ -6,12 +6,14 @@ interface CampaignsProps {
   campaigns: ICampaignDetail[];
   emptyClass?: string;
   ulClass?: string;
+  liClass?: string;
 }
 
 export default function Campaigns({
   campaigns,
   emptyClass,
   ulClass,
+  liClass,
 }: CampaignsProps) {
   if (campaigns.length === 0)
     return <p className={cn("", emptyClass)}>No campaigns yet</p>;
@@ -24,7 +26,7 @@ export default function Campaigns({
       )}
     >
       {campaigns.map((campaign) => (
-        <Campaign key={campaign.id} campaign={campaign} />
+        <Campaign key={campaign.id} campaign={campaign} className={liClass} />
       ))}
     </ul>
   );

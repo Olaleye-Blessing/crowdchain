@@ -1,4 +1,4 @@
 export const pages = [
-  { label: "Explore", path: "/explore" },
+  { label: "Explore", path: "/campaigns" },
   { label: "Create", path: "/create" },
 ];

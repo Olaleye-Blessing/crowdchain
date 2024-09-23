@@ -10,7 +10,7 @@ export default function Campaigns() {
           <h2>Featured Campaigns</h2>
           <Link
             className={buttonVariants({ variant: "link", className: "!pr-0" })}
-            href="/explore"
+            href="/campaigns"
           >
             Explore More
           </Link>

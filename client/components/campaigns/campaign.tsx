@@ -12,12 +12,18 @@ import Link from "next/link";
 import { buttonVariants } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { ICampaignDetail } from "@/interfaces/campaign";
+import { cn } from "@/lib/utils";
 
-export default function Campaign({ campaign }: { campaign: ICampaignDetail }) {
+interface CampaignProps {
+  campaign: ICampaignDetail;
+  className?: string;
+}
+
+export default function Campaign({ campaign, className }: CampaignProps) {
   const _progress = (campaign.amountRaised * 100) / campaign.goal;
 
   return (
-    <li className="max-w-[23.4375rem]">
+    <li className={cn("max-w-[23.4375rem]", className)}>
       <Card>
         <figure className="w-full h-36 rounded-lg rounded-b-none overflow-hidden block items-center justify-center sm:h-64">
           <img
@@ -79,7 +85,12 @@ export default function Campaign({ campaign }: { campaign: ICampaignDetail }) {
           </div>
         </CardContent>
         <CardFooter className="p-3 flex flex-col">
-          {/* <p>{campaign.owner}</p> */}
+          <p className="break-all mb-2 font-semibold">
+            <span>Owner: </span>
+            <span className="text-sm text-muted-foreground">
+              {campaign.owner}
+            </span>
+          </p>
           <Link
             href={`/campaigns/${campaign.id}`}
             className={buttonVariants({ className: "w-full block" })}

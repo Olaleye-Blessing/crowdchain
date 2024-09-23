@@ -33,7 +33,7 @@ export default function Lists() {
 
         setCampaigns((prev) => ({
           ...prev,
-          data: _camps.slice(0, 1),
+          data: _camps,
         }));
       } catch (error) {
         console.log("__ THERE IS AN ERROR __");
