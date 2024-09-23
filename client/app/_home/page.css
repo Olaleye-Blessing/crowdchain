@@ -1,0 +1,7 @@
+main > section:nth-child(even) {
+  @apply bg-primary/15;
+}
+
+main > section:nth-child(n+2) {
+  @apply py-20;
+}
