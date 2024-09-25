@@ -9,11 +9,14 @@ import {ConstantsTest} from "./../utils/Constants.sol";
 
 contract CrowdFundingTest is Test, ConstantsTest {
     Crowdfunding public crowdfunding;
+    address DEPLOYER = makeAddr("deployer");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
 
     function setUp() external {
+        vm.deal(DEPLOYER, 100 ether);
+        vm.prank(DEPLOYER);
         DeployCrowdFunding deployCampaign = new DeployCrowdFunding();
         crowdfunding = deployCampaign.run();
 
@@ -38,6 +41,83 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, BLESSING_DONATION);
         crowdfunding.withdraw(campaignID);
+    }
+
+    function test_savesAccumalatedFeeCorrectly() public {
+        uint256 _amountNeeded = 16 * ONE_ETH;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = 3 * ONE_ETH;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        uint256 totalDonation = DONATION * 2;
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
+        crowdfunding.withdraw(campaignID);
+
+        vm.prank(DEPLOYER);
+        uint256 accumulatedFee = crowdfunding.getAccumulatedFee();
+        uint256 expectedAccumulatedFee = (crowdfunding.OWNER_FEE() * totalDonation) / 1000;
+
+        assertEq(accumulatedFee, expectedAccumulatedFee);
+
+    }
+
+    function test_onlyDeployerCanWithdrawAccumulatedFees() public {
+        uint256 _amountNeeded = 16 * ONE_ETH;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = 3 * ONE_ETH;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        uint256 totalDonation = DONATION * 2;
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
+        crowdfunding.withdraw(campaignID);
+
+        vm.prank(BOB);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__NotContractOwner.selector, BOB)
+        );
+        crowdfunding.withdrawFee();
+
+        vm.startPrank(DEPLOYER);
+        assertNotEq(crowdfunding.getAccumulatedFee(), 0);
+
+        crowdfunding.withdrawFee();
+        assertEq(crowdfunding.getAccumulatedFee(), 0);
     }
 
     function test_donationSuccessful() public {

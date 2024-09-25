@@ -32,6 +32,9 @@ interface ICampaign {
     /// @param amountRaised The total amount raised by the campaign
     event CampaignGoalCompleted(address indexed owner, uint256 indexed campaignId, uint256 amountRaised);
 
+    /// @notice Error thrown when the account performing an operation is not the contract's owner
+    error Campaign__NotContractOwner(address account);
+
     /// @notice Error thrown when a campaign does not exist
     error Campaign__CampaignNotExist(uint256 campaignId);
 
@@ -64,6 +67,9 @@ interface ICampaign {
 
     /// @notice Error thrown when attempting to refund after the refund deadline has elapsed
     error Campaign__RefundDeadlineElapsed(uint256 campaignId);
+
+    /// @dev Returns the address of the contract owner.
+    function getOwner() external returns(address owner);
 
     /// @notice Creates a new campaign
     /// @param title The title of the campaign
@@ -105,4 +111,10 @@ interface ICampaign {
     /// @notice Allows the campaign owner to withdraw funds after the campaign and refund period have ended
     /// @param campaignId The ID of the campaign to withdraw funds from
     function withdraw(uint256 campaignId) external;
+
+    /// @dev Allows contract owner to withdraw accumulated fee
+    function withdrawFee() external;
+
+    /// @dev Retrieves contract accumulated fee
+    function getAccumulatedFee() external returns(uint256);
 }

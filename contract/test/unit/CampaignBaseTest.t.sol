@@ -9,17 +9,27 @@ import {ConstantsTest} from "./../utils/Constants.sol";
 
 contract CampaignBaseTest is Test, ConstantsTest {
     CampaignBase public campaignBase;
+    address DEPLOYER = makeAddr("deployer");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
 
     function setUp() external {
+        vm.deal(DEPLOYER, 100 ether);
+        vm.prank(DEPLOYER);
         DeployCampaignBase deployCampaign = new DeployCampaignBase();
         campaignBase = deployCampaign.run();
 
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
         vm.deal(BLESSING, 100 ether);
+    }
+
+    function test_contractBelongsToTheCorrectOwner() public view {
+        address owner = campaignBase.getOwner();
+
+        assertNotEq(BOB, owner);
+        assertEq(DEPLOYER, owner);
     }
 
     function test_CreateCampaignSuccessfully() public {

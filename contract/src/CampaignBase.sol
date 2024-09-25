@@ -10,6 +10,10 @@ import {ICampaign} from "./interfaces/ICampaign.sol";
 abstract contract CampaignBase is ICampaign {
     uint256 private constant ONE_DAY = 1 days;
     uint256 private constant ONE_ETH = 1 ether;
+    /// @dev This is 0.2%. Always divide the final fee by 1000. It is set at 2 here cause solidity doesn't support decimals.
+    uint8 public constant OWNER_FEE = 2;
+    uint256 private accumulatedFee = 0;
+    address payable private immutable i_owner;
 
     /// @notice Mapping of owner addresses to their campaign IDs
     mapping(address => uint256[]) private campaignsOwner;
@@ -32,6 +36,16 @@ abstract contract CampaignBase is ICampaign {
 
     /// @notice Array of all campaigns
     Campaign[] internal campaigns;
+
+    constructor() {
+        i_owner = payable(msg.sender);
+    }
+
+    modifier onlyOwner() {
+        if (i_owner != msg.sender) revert Campaign__NotContractOwner(msg.sender);
+
+        _;
+    }
 
     /// @notice Ensures the campaign exists
     /// @param campaignId The ID of the campaign to check
@@ -58,6 +72,11 @@ abstract contract CampaignBase is ICampaign {
     /// @return The number of campaigns created
     function totalCampaigns() public view returns (uint256) {
         return campaigns.length;
+    }
+
+    /// @inheritdoc ICampaign
+    function getOwner() public view returns(address) {
+        return i_owner;
     }
 
     /// @inheritdoc ICampaign
@@ -155,12 +174,30 @@ abstract contract CampaignBase is ICampaign {
         if(campaign.amountRaised == 0) revert Campaign__EmptyDonation();
 
         campaign.claimed = true;
-        uint256 amount = campaign.amountRaised;
+        uint256 fee = (campaign.amountRaised * OWNER_FEE) / 1000;
+
+        uint256 amount = campaign.amountRaised - fee;
+
+        accumulatedFee += fee;
 
         (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert Campaign__WithdrawalFailed();
 
         emit CampaignFundWithdrawn(campaignId, msg.sender, amount);
+    }
+
+    /// @inheritdoc ICampaign
+    function withdrawFee() public onlyOwner {
+        uint256 amount = accumulatedFee;
+        accumulatedFee = 0;
+
+        (bool success,) = i_owner.call{value: amount}("");
+        if (!success) revert();
+    }
+
+    /// @inheritdoc ICampaign
+    function getAccumulatedFee() public view onlyOwner() returns(uint256) {
+        return accumulatedFee;
     }
 
     /// @notice Validates the parameters for creating a new campaign
