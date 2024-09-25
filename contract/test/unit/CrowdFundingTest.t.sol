@@ -22,6 +22,24 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.deal(BLESSING, 100 ether);
     }
 
+    function test_withdrawSuccessfully() public {
+        _createSuccessfulCampaign();
+        uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 2;
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, BLESSING_DONATION);
+        crowdfunding.withdraw(campaignID);
+    }
+
     function test_donationSuccessful() public {
         _createSuccessfulCampaign();
         uint256 campaignID = 0;
@@ -101,10 +119,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
     }
 
-    // TODO: Add this when there is a logic to claim campaign
     function test_donationFailsIfCampaignHasBeenClaimed() public {
         _createSuccessfulCampaign();
         uint256 campaignID = 0;
+
+        vm.prank(BLESSING);
+        uint256 BLESSING_DONATION = 1;
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
         vm.warp(block.timestamp + 15 * ONE_DAY);
 
@@ -112,7 +133,6 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.withdraw(campaignID);
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 1;
         vm.expectRevert(ICampaign.Campaign__CampaignAlreadyClaimed.selector);
         crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
     }
@@ -222,6 +242,12 @@ contract CrowdFundingTest is Test, ConstantsTest {
             )
         );
         crowdfunding.refund(campaignID, refundAmount);
+    }
+
+    function _shiftCurrentTimestampToAllowWithdraw() private {
+        uint64 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
+        uint64 _deadline = 4; // gotten from createSuccessfulCampaign();
+        vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
     }
 
     function _createSuccessfulCampaign() private {

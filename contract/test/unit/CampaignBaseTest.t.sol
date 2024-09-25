@@ -186,26 +186,46 @@ contract CampaignBaseTest is Test, ConstantsTest {
         }
     }
 
-    function test_onlyOwnerCanWithdraw() public {
+    function test_withdrawFailIfNotOwner() public {
         uint256 _amountNeeded = 6;
         uint64 _deadline = 4; // days
         uint64 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        _createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
         _createCampaign(BOB, _title, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        uint256 ALICE_CAMPAIGN_ID = 0;
-        uint256 BOB_CAMPAIGN_ID = 1;
-
-        _shiftCurrentTimestampToAllowWithdraw();
 
         vm.startPrank(ALICE);
         vm.expectRevert(ICampaign.Campaign__NotCampaignOwner.selector);
-        campaignBase.withdraw(BOB_CAMPAIGN_ID);
+        campaignBase.withdraw(0);
+    }
 
-        campaignBase.withdraw(ALICE_CAMPAIGN_ID);
+    function test_withdrawFailIfRefundDeadlineIsClosed() public {
+        uint256 _amountNeeded = 6;
+        uint64 _deadline = 4; // days
+        uint64 _refundDeadline = 10; // days
+        string memory _title = "My Title";
+        string memory _description = "My little description from my heart, soul and mind";
+
+        _createCampaign(BOB, _title, _description, _amountNeeded, _deadline, _refundDeadline);
+
+        vm.startPrank(BOB);
+        vm.expectRevert(ICampaign.Campaign__RefundDeadlineActive.selector);
+        campaignBase.withdraw(0);
+    }
+
+    function test_withdrawFailIfThereIsNoDonation() public {
+        uint256 _amountNeeded = 6;
+        uint64 _deadline = 4; // days
+        uint64 _refundDeadline = 10; // days
+        string memory _title = "My Title";
+        string memory _description = "My little description from my heart, soul and mind";
+
+        _createCampaign(BOB, _title, _description, _amountNeeded, _deadline, _refundDeadline);
+
+        vm.startPrank(BOB);
+        vm.expectRevert(ICampaign.Campaign__RefundDeadlineActive.selector);
+        campaignBase.withdraw(0);
     }
 
     function _createCampaign(

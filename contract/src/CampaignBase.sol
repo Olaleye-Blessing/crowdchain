@@ -152,6 +152,7 @@ abstract contract CampaignBase is ICampaign {
         if (block.timestamp < campaign.refundDeadline) {
             revert Campaign__RefundDeadlineActive();
         }
+        if(campaign.amountRaised == 0) revert Campaign__EmptyDonation();
 
         campaign.claimed = true;
         uint256 amount = campaign.amountRaised;
