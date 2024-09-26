@@ -2,6 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {ICampaign} from "./interfaces/ICampaign.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /// @title CampaignBase
 /// @author Olaleye Blessing
@@ -14,6 +15,11 @@ abstract contract CampaignBase is ICampaign {
     uint8 public constant OWNER_FEE = 2;
     uint256 private accumulatedFee = 0;
     address payable private immutable i_owner;
+
+    /// @dev Minimum amount required a campaign has to raise for tokens to be allocated to the owner and donors.
+    uint256 internal constant MINIMUM_AMOUNT_RAISED = 15 ether;
+
+    ERC20 internal crowdchainToken;
 
     /// @notice Mapping of owner addresses to their campaign IDs
     mapping(address => uint256[]) private campaignsOwner;
@@ -32,13 +38,16 @@ abstract contract CampaignBase is ICampaign {
         bool claimed;
         mapping(address => uint256) donors;
         address[] donorAddresses;
+        mapping(address => bool) hasClaimedTokens;
+        uint256 tokensAllocated;
     }
 
     /// @notice Array of all campaigns
     Campaign[] internal campaigns;
 
-    constructor() {
+    constructor(address _crowdchainTokenAddress) {
         i_owner = payable(msg.sender);
+        crowdchainToken = ERC20(_crowdchainTokenAddress);
     }
 
     modifier onlyOwner() {
@@ -180,6 +189,10 @@ abstract contract CampaignBase is ICampaign {
 
         accumulatedFee += fee;
 
+        if(amount > MINIMUM_AMOUNT_RAISED) {
+            campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
+        }
+
         (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert Campaign__WithdrawalFailed();
 
@@ -255,7 +268,8 @@ abstract contract CampaignBase is ICampaign {
             description: campaign.description,
             coverImage: campaign.coverImage,
             claimed: campaign.claimed,
-            totalDonors: campaign.donorAddresses.length
+            totalDonors: campaign.donorAddresses.length,
+            tokensAllocated: campaign.tokensAllocated
         });
     }
 }

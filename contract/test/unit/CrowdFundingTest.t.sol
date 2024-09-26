@@ -3,12 +3,14 @@ pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Crowdfunding} from "./../../src/Crowdfunding.sol";
+import {CrowdchainToken} from "./../../src/tokens/crowdchain.sol";
 import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {DeployCrowdFunding} from "./../../script/DeployCrowdFunding.s.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
 
 contract CrowdFundingTest is Test, ConstantsTest {
     Crowdfunding public crowdfunding;
+    CrowdchainToken public crowdchainToken;
     address DEPLOYER = makeAddr("deployer");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
@@ -18,7 +20,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.deal(DEPLOYER, 100 ether);
         vm.prank(DEPLOYER);
         DeployCrowdFunding deployCampaign = new DeployCrowdFunding();
-        crowdfunding = deployCampaign.run();
+        (crowdfunding, crowdchainToken) = deployCampaign.run();
 
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
