@@ -18,6 +18,7 @@ interface ICampaign {
         string coverImage;
         bool claimed;
         uint256 totalDonors;
+        uint256 tokensAllocated;
     }
 
     /// @notice Emitted when campaign funds are withdrawn by the owner

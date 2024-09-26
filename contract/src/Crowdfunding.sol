@@ -29,6 +29,8 @@ contract Crowdfunding is CampaignBase {
     /// @notice Error thrown when a refund transaction fails
     error Crowdfunding__RefundFailed(uint256 campaignId);
 
+    constructor(address _crowdchainTokenAddress) CampaignBase(_crowdchainTokenAddress) {}
+
     /// @notice Retrieves the list of donors and their contributions for a specific campaign
     /// @param campaignId The ID of the campaign
     /// @return donors An array of donor addresses
