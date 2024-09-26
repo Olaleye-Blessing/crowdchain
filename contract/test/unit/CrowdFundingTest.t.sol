@@ -81,6 +81,70 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     }
 
+    function test_allocateCorrectAmountOfTokensAfterOwnerWithdraw() public {
+        uint256 _amountNeeded = 16 * ONE_ETH;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = 9 * ONE_ETH;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        uint256 totalDonation = DONATION * 2;
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
+        crowdfunding.withdraw(campaignID);
+
+        vm.prank(DEPLOYER);
+        uint256 accumulatedFee = crowdfunding.getAccumulatedFee();
+        uint256 expectedAccumulatedFee = (crowdfunding.OWNER_FEE() * totalDonation) / 1000;
+        assertEq(accumulatedFee, expectedAccumulatedFee);
+
+        uint256 amountWithdrawn = crowdfunding.getCampaign(0).amountRaised - accumulatedFee;
+        uint256 tokenAllocated = (amountWithdrawn / crowdfunding.MINIMUM_AMOUNT_RAISED()) * 10**18;
+
+        assertEq(crowdfunding.getCampaign(0).tokensAllocated, tokenAllocated);
+    }
+
+    function test_allocateZeroTokenIfAmountRaisedIsSmall() public {
+        uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
+        uint256 _amountNeeded = minimumGoalAmount - 6 ether;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = _amountNeeded - 4 ether;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
+        crowdfunding.withdraw(campaignID);
+
+        assertEq(crowdfunding.getCampaign(campaignID).tokensAllocated, 0);
+    }
+
     function test_onlyDeployerCanWithdrawAccumulatedFees() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 

@@ -127,6 +127,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(campaign.claimed, false);
         assertEq(campaign.totalDonors, 0);
         assertEq(campaign.id, 0);
+        assertEq(campaign.tokensAllocated, 0);
     }
 
     function test_getTotalCampaignsCreated() public {

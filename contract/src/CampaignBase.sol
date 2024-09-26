@@ -17,7 +17,7 @@ abstract contract CampaignBase is ICampaign {
     address payable private immutable i_owner;
 
     /// @dev Minimum amount required a campaign has to raise for tokens to be allocated to the owner and donors.
-    uint256 internal constant MINIMUM_AMOUNT_RAISED = 15 ether;
+    uint256 public constant MINIMUM_AMOUNT_RAISED = 15 ether;
 
     ERC20 internal crowdchainToken;
 
