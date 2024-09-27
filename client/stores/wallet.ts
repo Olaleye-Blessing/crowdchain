@@ -8,10 +8,14 @@ interface State {
   readonlyProvider: ethers.providers.JsonRpcProvider | null;
   readonlyContract: ethers.Contract | null;
   writableProvider: ethers.providers.Web3Provider | null;
-  writableContract: ethers.Contract | null;
-  writablePlatformTokenProvider: ethers.providers.Web3Provider | null;
+  writeableCrowdChainContract: ethers.Contract | null;
   writablePlatformTokenContract: ethers.Contract | null;
 }
+
+type ContractsKeys = Pick<
+  State,
+  "writablePlatformTokenContract" | "writeableCrowdChainContract"
+>;
 
 interface Actions {
   setAddress(address: string | null): void;
@@ -19,10 +23,8 @@ interface Actions {
   setReadonlyProvider(provider: ethers.providers.JsonRpcProvider): void;
   setReadOnlyContract: (contract: ethers.Contract | null) => void;
   setWritableProvider(provider: ethers.providers.Web3Provider): void;
-  setWritableContract: (contract: ethers.Contract | null) => void;
-  setWritablePlatformTokenProvider(
-    provider: ethers.providers.Web3Provider,
-  ): void;
+  setWritableContracts(contracts: Partial<ContractsKeys>): void;
+  setWriteableCrowdChainContract: (contract: ethers.Contract | null) => void;
   setWritablePlatformTokenContract: (contract: ethers.Contract | null) => void;
 }
 
@@ -37,7 +39,7 @@ const useWalletStore = create<Store>()(
           readonlyProvider: null,
           readonlyContract: null,
           writableProvider: null,
-          writableContract: null,
+          writeableCrowdChainContract: null,
           writablePlatformTokenContract: null,
           writablePlatformTokenProvider: null,
           setReadonlyProvider(provider) {
@@ -46,27 +48,30 @@ const useWalletStore = create<Store>()(
           setWritableProvider(provider) {
             set({ writableProvider: provider });
           },
-          setWritablePlatformTokenProvider(provider) {
-            set({ writablePlatformTokenProvider: provider });
-          },
           setAddress(address) {
             set({ address });
           },
           disconnect() {
             set({
               address: null,
-              writableContract: null,
+              writeableCrowdChainContract: null,
               writablePlatformTokenContract: null,
             });
           },
           setReadOnlyContract(contract) {
             set({ readonlyContract: contract });
           },
-          setWritableContract(contract) {
-            set({ writableContract: contract });
+          setWriteableCrowdChainContract(contract) {
+            set({ writeableCrowdChainContract: contract });
           },
           setWritablePlatformTokenContract(contract) {
             set({ writablePlatformTokenContract: contract });
+          },
+          setWritableContracts(contracts) {
+            set((state) => ({
+              ...state,
+              ...contracts,
+            }));
           },
         }),
         { name: "wallet", partialize: (state) => ({ address: state.address }) },
