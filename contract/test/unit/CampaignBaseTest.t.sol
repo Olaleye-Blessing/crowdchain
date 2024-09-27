@@ -241,6 +241,14 @@ contract CampaignBaseTest is Test, ConstantsTest {
         campaignBase.withdraw(0);
     }
 
+    function test_claimingTokenFailsIfCampaignIsActive() public {
+        _createCampaign(ALICE, "title title title title", "description description description description description description", 1 ether, 3, 6);
+
+        vm.prank(BLESSING);
+        vm.expectRevert(ICampaign.Campaign__CampaignNotEnded.selector);
+        campaignBase.claimToken(0);
+    }
+
     function _createCampaign(
         address _owner,
         string memory _title,

@@ -145,6 +145,64 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(crowdfunding.getCampaign(campaignID).tokensAllocated, 0);
     }
 
+    function test_revertClaimTokenWhenUserHasNoDonation() public {
+        uint256 _amountNeeded = 16 * ONE_ETH;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = 18 * ONE_ETH;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
+        crowdfunding.withdraw(campaignID);
+
+        vm.prank(BOB);
+        vm.expectRevert(ICampaign.Campaign__EmptyDonation.selector);
+        crowdfunding.claimToken(campaignID);
+    }
+
+    function test_revertWhenClaimingTokenFromUnderFundedCampaign() public {
+        uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
+        uint256 _amountNeeded = minimumGoalAmount - 6 ether;
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+
+        uint256 campaignID = 0;
+        uint256 DONATION = _amountNeeded - 4 ether;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        crowdfunding.donate{value: DONATION}(campaignID);
+
+        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
+        crowdfunding.withdraw(campaignID);
+
+        console.log("___ AMOUNTRAISED ___");
+        console.log(crowdfunding.getCampaign(campaignID).amountRaised);
+
+        vm.prank(BLESSING);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__InsufficientDonationsForTokens.selector, 0, DONATION, minimumGoalAmount)
+        );
+        crowdfunding.claimToken(campaignID);
+    }
+
     function test_onlyDeployerCanWithdrawAccumulatedFees() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 

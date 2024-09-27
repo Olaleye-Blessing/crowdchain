@@ -213,6 +213,30 @@ abstract contract CampaignBase is ICampaign {
         return accumulatedFee;
     }
 
+    function claimToken(uint256 _campaignId) public campaignExists(_campaignId) {
+        Campaign storage campaign = campaigns[_campaignId];
+
+        if(campaign.hasClaimedTokens[msg.sender]) revert Campaign__TokensClaimed();
+
+        if(!campaign.claimed) revert Campaign__CampaignNotEnded();
+
+        if(campaign.donors[msg.sender] == 0) revert Campaign__EmptyDonation();
+
+        if(campaign.amountRaised < MINIMUM_AMOUNT_RAISED) revert Campaign__InsufficientDonationsForTokens(_campaignId, campaign.amountRaised, MINIMUM_AMOUNT_RAISED);
+
+        campaign.hasClaimedTokens[msg.sender] = true;
+
+        uint256 _numberOfTokens = (campaign.donors[msg.sender] * campaign.tokensAllocated) / campaign.amountRaised;
+
+        _distributeToken(msg.sender, _numberOfTokens);
+    }
+
+    function _distributeToken(address _recipient, uint256 _amount) private {
+        bool result = crowdchainToken.transfer(_recipient, _amount);
+
+        if(!result) revert Campaign__TokenDistributionFailed();
+    }
+
     /// @notice Validates the parameters for creating a new campaign
     /// @dev Internal function to check the validity of campaign creation inputs
     /// @param title The title of the campaign
