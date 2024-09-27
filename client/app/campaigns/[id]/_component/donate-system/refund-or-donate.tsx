@@ -15,7 +15,9 @@ export default function RefundOrDonate({
   claimed,
   id,
 }: Pick<ICampaignDetail, "deadline" | "refundDeadline" | "claimed" | "id">) {
-  const writableContract = useWalletStore((state) => state.writableContract);
+  const writeableCrowdChainContract = useWalletStore(
+    (state) => state.writeableCrowdChainContract,
+  );
   const [donationAmount, setDonationAmount] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
 
@@ -24,10 +26,10 @@ export default function RefundOrDonate({
   const canRefund = currentTime < refundDeadline;
 
   const handleDonate = async () => {
-    if (!writableContract || !donationAmount) return;
+    if (!writeableCrowdChainContract || !donationAmount) return;
 
     try {
-      const tx = await writableContract.donate(+id, {
+      const tx = await writeableCrowdChainContract.donate(+id, {
         value: parseEther(`${donationAmount}`),
       });
 
@@ -41,10 +43,10 @@ export default function RefundOrDonate({
   };
 
   const handleRefund = async () => {
-    if (!writableContract || !refundAmount) return;
+    if (!writeableCrowdChainContract || !refundAmount) return;
 
     try {
-      const tx = await writableContract.refund(
+      const tx = await writeableCrowdChainContract.refund(
         +id,
         parseEther(`${refundAmount}`),
         { gasLimit: 5000000 },

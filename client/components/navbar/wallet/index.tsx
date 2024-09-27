@@ -22,12 +22,11 @@ const Wallet = () => {
   const disconnect = useWalletStore((state) => state.disconnect);
   const address = useWalletStore((state) => state.address);
   const writableProvider = useWalletStore((state) => state.writableProvider);
-  const writableContract = useWalletStore((state) => state.writableContract);
-  const setWritableContract = useWalletStore(
-    (state) => state.setWritableContract,
+  const writeableCrowdChainContract = useWalletStore(
+    (state) => state.writeableCrowdChainContract,
   );
-  const setWritablePlatformTokenContract = useWalletStore(
-    (state) => state.setWritablePlatformTokenContract,
+  const setWritableContracts = useWalletStore(
+    (state) => state.setWritableContracts,
   );
 
   const connectWallet = async () => {
@@ -38,20 +37,22 @@ const Wallet = () => {
 
     setAddress(await writableProvider.getSigner().getAddress());
 
-    if (writableContract) return;
+    // any writable contract can be used to do the check
+    if (writeableCrowdChainContract) return;
 
     const connectedSigner = writableProvider.getSigner();
-
-    setWritableContract(
-      new ethers.Contract(crowdChainAddress, crowdChainABI, connectedSigner),
-    );
-    setWritablePlatformTokenContract(
-      new ethers.Contract(
+    setWritableContracts({
+      writeableCrowdChainContract: new ethers.Contract(
+        crowdChainAddress,
+        crowdChainABI,
+        connectedSigner,
+      ),
+      writablePlatformTokenContract: new ethers.Contract(
         crowdChainTokenAddress,
         crowdChainTokenABI,
         connectedSigner,
       ),
-    );
+    });
   };
 
   const switchWallet = async () => {

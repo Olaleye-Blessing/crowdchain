@@ -21,17 +21,12 @@ export default function ContractProviders({
   const setReadonlyProvider = useWalletStore(
     (state) => state.setReadonlyProvider,
   );
-  const setWritableContract = useWalletStore(
-    (state) => state.setWritableContract,
+  const disconnect = useWalletStore((state) => state.disconnect);
+  const setWritableContracts = useWalletStore(
+    (state) => state.setWritableContracts,
   );
   const setWritableProvider = useWalletStore(
     (state) => state.setWritableProvider,
-  );
-  const setWritablePlatformTokenProvider = useWalletStore(
-    (state) => state.setWritablePlatformTokenProvider,
-  );
-  const setWritablePlatformTokenContract = useWalletStore(
-    (state) => state.setWritablePlatformTokenContract,
   );
   const address = useStore(useWalletStore, (state) => state.address);
   const setAddress = useWalletStore((state) => state.setAddress);
@@ -68,10 +63,7 @@ export default function ContractProviders({
 
         setAddress(account);
 
-        if (!account) {
-          setWritableContract(null);
-          setWritablePlatformTokenContract(null);
-        }
+        if (!account) disconnect();
       }
 
       async function setUp() {
@@ -84,7 +76,6 @@ export default function ContractProviders({
         );
 
         setWritableProvider(writableProvider);
-        setWritablePlatformTokenProvider(writableProvider);
 
         (window.ethereum as any).on("accountsChanged", accountChanged);
 
@@ -96,21 +87,20 @@ export default function ContractProviders({
         try {
           await writableProvider.send("eth_requestAccounts", []);
 
-          setWritableContract(
-            new ethers.Contract(
+          const signer = writableProvider.getSigner();
+
+          setWritableContracts({
+            writeableCrowdChainContract: new ethers.Contract(
               crowdChainAddress,
               crowdChainABI,
-              writableProvider.getSigner(),
+              signer,
             ),
-          );
-
-          setWritablePlatformTokenContract(
-            new ethers.Contract(
+            writablePlatformTokenContract: new ethers.Contract(
               crowdChainTokenAddress,
               crowdChainTokenABI,
-              writableProvider.getSigner(),
+              signer,
             ),
-          );
+          });
         } catch (e) {
           // setAddress(null);
         } finally {

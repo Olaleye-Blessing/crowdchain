@@ -29,7 +29,9 @@ const oneDay = 1 * 24 * 60 * 60 * 1000;
 const CampaignForm = () => {
   const { crowdchainInstance } = useCrowdchainInstance();
   const writableProvider = useWalletStore((state) => state.writableProvider);
-  const writableContract = useWalletStore((state) => state.writableContract);
+  const writeableCrowdChainContract = useWalletStore(
+    (state) => state.writeableCrowdChainContract,
+  );
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>("second");
 
@@ -63,7 +65,7 @@ const CampaignForm = () => {
 
   const onSubmit = async (data: ICampaignForm) => {
     if (!writableProvider) return alert("Please install metamask!");
-    if (!writableContract) return alert("Connect your wallet!");
+    if (!writeableCrowdChainContract) return alert("Connect your wallet!");
 
     if (!coverImage)
       return toast({
@@ -105,7 +107,7 @@ const CampaignForm = () => {
       const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
 
       console.log("Called function...");
-      const tx = await writableContract.createCampaign(
+      const tx = await writeableCrowdChainContract.createCampaign(
         data.title,
         data.description,
         ifpsImg.IpfsHash,
