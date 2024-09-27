@@ -12,7 +12,7 @@ contract DeployCrowdFunding is Script {
     constructor() {
         i_deployer = msg.sender;
     }
-    
+
     function run() external returns (Crowdfunding, CrowdchainToken) {
         DeployCrowdchainToken deployCrowdchainToken = new DeployCrowdchainToken();
         CrowdchainToken crowdchainToken = deployCrowdchainToken.run();

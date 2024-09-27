@@ -140,7 +140,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         }
 
         assertEq(campaignBase.totalCampaigns(), _campaignsLength);
-    } 
+    }
 
     function test_getCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
@@ -242,7 +242,14 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function test_claimingTokenFailsIfCampaignIsActive() public {
-        _createCampaign(ALICE, "title title title title", "description description description description description description", 1 ether, 3, 6);
+        _createCampaign(
+            ALICE,
+            "title title title title",
+            "description description description description description description",
+            1 ether,
+            3,
+            6
+        );
 
         vm.prank(BLESSING);
         vm.expectRevert(ICampaign.Campaign__CampaignNotEnded.selector);
