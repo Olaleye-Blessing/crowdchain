@@ -84,7 +84,7 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function getOwner() public view returns(address) {
+    function getOwner() public view returns (address) {
         return i_owner;
     }
 
@@ -180,7 +180,7 @@ abstract contract CampaignBase is ICampaign {
         if (block.timestamp < campaign.refundDeadline) {
             revert Campaign__RefundDeadlineActive();
         }
-        if(campaign.amountRaised == 0) revert Campaign__EmptyDonation();
+        if (campaign.amountRaised == 0) revert Campaign__EmptyDonation();
 
         campaign.claimed = true;
         uint256 fee = (campaign.amountRaised * OWNER_FEE) / 1000;
@@ -189,7 +189,7 @@ abstract contract CampaignBase is ICampaign {
 
         accumulatedFee += fee;
 
-        if(amount > MINIMUM_AMOUNT_RAISED) {
+        if (amount > MINIMUM_AMOUNT_RAISED) {
             campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
         }
 
@@ -209,20 +209,22 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function getAccumulatedFee() public view onlyOwner() returns(uint256) {
+    function getAccumulatedFee() public view onlyOwner returns (uint256) {
         return accumulatedFee;
     }
 
     function claimToken(uint256 _campaignId) public campaignExists(_campaignId) {
         Campaign storage campaign = campaigns[_campaignId];
 
-        if(campaign.hasClaimedTokens[msg.sender]) revert Campaign__TokensClaimed();
+        if (campaign.hasClaimedTokens[msg.sender]) revert Campaign__TokensClaimed();
 
-        if(!campaign.claimed) revert Campaign__CampaignNotEnded();
+        if (!campaign.claimed) revert Campaign__CampaignNotEnded();
 
-        if(campaign.donors[msg.sender] == 0) revert Campaign__EmptyDonation();
+        if (campaign.donors[msg.sender] == 0) revert Campaign__EmptyDonation();
 
-        if(campaign.amountRaised < MINIMUM_AMOUNT_RAISED) revert Campaign__InsufficientDonationsForTokens(_campaignId, campaign.amountRaised, MINIMUM_AMOUNT_RAISED);
+        if (campaign.amountRaised < MINIMUM_AMOUNT_RAISED) {
+            revert Campaign__InsufficientDonationsForTokens(_campaignId, campaign.amountRaised, MINIMUM_AMOUNT_RAISED);
+        }
 
         campaign.hasClaimedTokens[msg.sender] = true;
 
@@ -234,7 +236,7 @@ abstract contract CampaignBase is ICampaign {
     function _distributeToken(address _recipient, uint256 _amount) private {
         bool result = crowdchainToken.transfer(_recipient, _amount);
 
-        if(!result) revert Campaign__TokenDistributionFailed();
+        if (!result) revert Campaign__TokenDistributionFailed();
     }
 
     /// @notice Validates the parameters for creating a new campaign

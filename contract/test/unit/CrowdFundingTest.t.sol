@@ -49,7 +49,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = 3 * ONE_ETH;
@@ -78,14 +80,15 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 expectedAccumulatedFee = (crowdfunding.OWNER_FEE() * totalDonation) / 1000;
 
         assertEq(accumulatedFee, expectedAccumulatedFee);
-
     }
 
     function test_allocateCorrectAmountOfTokensAfterOwnerWithdraw() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = 9 * ONE_ETH;
@@ -115,7 +118,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(accumulatedFee, expectedAccumulatedFee);
 
         uint256 amountWithdrawn = crowdfunding.getCampaign(0).amountRaised - accumulatedFee;
-        uint256 tokenAllocated = (amountWithdrawn / crowdfunding.MINIMUM_AMOUNT_RAISED()) * 10**18;
+        uint256 tokenAllocated = (amountWithdrawn / crowdfunding.MINIMUM_AMOUNT_RAISED()) * 10 ** 18;
 
         assertEq(crowdfunding.getCampaign(0).tokensAllocated, tokenAllocated);
     }
@@ -125,7 +128,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = _amountNeeded - 4 ether;
@@ -149,7 +154,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = 18 * ONE_ETH;
@@ -176,7 +183,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = _amountNeeded - 4 ether;
@@ -198,7 +207,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         vm.expectRevert(
-            abi.encodeWithSelector(ICampaign.Campaign__InsufficientDonationsForTokens.selector, 0, DONATION, minimumGoalAmount)
+            abi.encodeWithSelector(
+                ICampaign.Campaign__InsufficientDonationsForTokens.selector, 0, DONATION, minimumGoalAmount
+            )
         );
         crowdfunding.claimToken(campaignID);
     }
@@ -207,7 +218,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         vm.prank(ALICE);
-        crowdfunding.createCampaign("My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10);
+        crowdfunding.createCampaign(
+            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+        );
 
         uint256 campaignID = 0;
         uint256 DONATION = 3 * ONE_ETH;
@@ -232,9 +245,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.withdraw(campaignID);
 
         vm.prank(BOB);
-        vm.expectRevert(
-            abi.encodeWithSelector(ICampaign.Campaign__NotContractOwner.selector, BOB)
-        );
+        vm.expectRevert(abi.encodeWithSelector(ICampaign.Campaign__NotContractOwner.selector, BOB));
         crowdfunding.withdrawFee();
 
         vm.startPrank(DEPLOYER);

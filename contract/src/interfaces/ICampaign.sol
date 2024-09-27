@@ -79,7 +79,7 @@ interface ICampaign {
     error Campaign__RefundDeadlineElapsed(uint256 campaignId);
 
     /// @dev Returns the address of the contract owner.
-    function getOwner() external returns(address owner);
+    function getOwner() external returns (address owner);
 
     /// @notice Creates a new campaign
     /// @param title The title of the campaign
@@ -126,5 +126,5 @@ interface ICampaign {
     function withdrawFee() external;
 
     /// @dev Retrieves contract accumulated fee
-    function getAccumulatedFee() external returns(uint256);
+    function getAccumulatedFee() external returns (uint256);
 }
