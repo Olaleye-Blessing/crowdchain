@@ -63,6 +63,15 @@ interface ICampaign {
     /// @notice Error thrown when attempting to interact with a campaign that hasn't ended
     error Campaign__CampaignNotEnded();
 
+    /// @notice Error thrown when attempting to interact with a campaign that has insufficient donation to get tokens
+    error Campaign__InsufficientDonationsForTokens(uint256 campaignId, uint256 amountRaised, uint256 minimumDonation);
+
+    /// @notice Error thrown when token distribution fails
+    error Campaign__TokenDistributionFailed();
+
+    /// @notice Error thrown when an address interacting with a campaign has claimed their tokens
+    error Campaign__TokensClaimed();
+
     /// @notice Error thrown when attempting to withdraw funds while the refund deadline is still active
     error Campaign__RefundDeadlineActive();
 
