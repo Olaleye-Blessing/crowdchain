@@ -1,1 +1,3 @@
-export const crowdChainAddress = process.env.NEXT_PUBLIC_CROWD_CHAIN_ADDRESS!;
+import { clientEnv } from "@/constants/env/client";
+
+export const crowdChainAddress = clientEnv.NEXT_PUBLIC_CROWD_CHAIN_ADDRESS;

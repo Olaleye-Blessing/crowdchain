@@ -14,6 +14,8 @@ import { ethers } from "ethers";
 import { crowdChainAddress } from "@/lib/contracts/crowd-chain/address";
 import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import { formatAddress } from "@/utils/format-address";
+import { crowdChainTokenAddress } from "@/lib/contracts/crowd-chain/token/address";
+import { crowdChainTokenABI } from "@/lib/contracts/crowd-chain/token/abi";
 
 const Wallet = () => {
   const setAddress = useWalletStore((state) => state.setAddress);
@@ -23,6 +25,9 @@ const Wallet = () => {
   const writableContract = useWalletStore((state) => state.writableContract);
   const setWritableContract = useWalletStore(
     (state) => state.setWritableContract,
+  );
+  const setWritablePlatformTokenContract = useWalletStore(
+    (state) => state.setWritablePlatformTokenContract,
   );
 
   const connectWallet = async () => {
@@ -39,6 +44,13 @@ const Wallet = () => {
 
     setWritableContract(
       new ethers.Contract(crowdChainAddress, crowdChainABI, connectedSigner),
+    );
+    setWritablePlatformTokenContract(
+      new ethers.Contract(
+        crowdChainTokenAddress,
+        crowdChainTokenABI,
+        connectedSigner,
+      ),
     );
   };
 

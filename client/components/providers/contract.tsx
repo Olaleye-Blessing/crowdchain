@@ -7,6 +7,8 @@ import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import { crowdChainAddress } from "@/lib/contracts/crowd-chain/address";
 import useWalletStore from "@/stores/wallet";
 import { useStore } from "@/stores/store";
+import { crowdChainTokenABI } from "@/lib/contracts/crowd-chain/token/abi";
+import { crowdChainTokenAddress } from "@/lib/contracts/crowd-chain/token/address";
 
 export default function ContractProviders({
   children,
@@ -24,6 +26,12 @@ export default function ContractProviders({
   );
   const setWritableProvider = useWalletStore(
     (state) => state.setWritableProvider,
+  );
+  const setWritablePlatformTokenProvider = useWalletStore(
+    (state) => state.setWritablePlatformTokenProvider,
+  );
+  const setWritablePlatformTokenContract = useWalletStore(
+    (state) => state.setWritablePlatformTokenContract,
   );
   const address = useStore(useWalletStore, (state) => state.address);
   const setAddress = useWalletStore((state) => state.setAddress);
@@ -60,7 +68,10 @@ export default function ContractProviders({
 
         setAddress(account);
 
-        if (!account) setWritableContract(null);
+        if (!account) {
+          setWritableContract(null);
+          setWritablePlatformTokenContract(null);
+        }
       }
 
       async function setUp() {
@@ -73,6 +84,7 @@ export default function ContractProviders({
         );
 
         setWritableProvider(writableProvider);
+        setWritablePlatformTokenProvider(writableProvider);
 
         (window.ethereum as any).on("accountsChanged", accountChanged);
 
@@ -88,6 +100,14 @@ export default function ContractProviders({
             new ethers.Contract(
               crowdChainAddress,
               crowdChainABI,
+              writableProvider.getSigner(),
+            ),
+          );
+
+          setWritablePlatformTokenContract(
+            new ethers.Contract(
+              crowdChainTokenAddress,
+              crowdChainTokenABI,
               writableProvider.getSigner(),
             ),
           );
