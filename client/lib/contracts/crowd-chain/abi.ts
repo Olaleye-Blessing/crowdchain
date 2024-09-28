@@ -8,8 +8,10 @@ export const crowdChainABI = [
   "function donate(uint256 campaignId) public payable",
   "function getCampaignDonors(uint256 campaignId) public view returns (address[] donors, uint256[] contributions)",
   "function refund(uint256 campaignId, uint256 amount) public",
+  "function withdraw(uint256 campaignId) external",
 
   // =============== EVENTS ==============
   "event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount)",
   "event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount)",
+  "event CampaignFundWithdrawn(uint256 indexed campaignId, address indexed owner, uint256 amount)",
 ];
