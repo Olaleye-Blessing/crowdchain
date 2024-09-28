@@ -8,7 +8,7 @@ export default function CampaignProgree({
   amountRaised,
   goal,
 }: CampaignProgreeProps) {
-  const _progress = (amountRaised * 100) / goal;
+  const _progress = Math.min((amountRaised * 100) / goal, 100);
 
   return (
     <div>
