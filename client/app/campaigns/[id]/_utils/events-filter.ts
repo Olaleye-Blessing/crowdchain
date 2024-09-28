@@ -9,3 +9,8 @@ export const campaignRefundEventFilter = (
   readonlyContract: Contract,
   id: number,
 ) => readonlyContract.filters.DonationRefunded(null, id, null);
+
+export const campaignClaimedEventFilter = (
+  readonlyContract: Contract,
+  id: number,
+) => readonlyContract.filters.CampaignFundWithdrawn(id, null, null);

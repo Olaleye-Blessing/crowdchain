@@ -3,9 +3,11 @@
 
 import { Clock, Users, DollarSign, CheckCircle } from "lucide-react";
 import CampaignProgrees from "./progress";
-import { ICampaignDetail } from "@/interfaces/campaign";
 import DonateSystem, { type DonateSystemProps } from "./donate-system";
-import { EventFilter } from "ethers";
+import WithdrawFunds from "./withdraw-funds";
+import useWalletStore from "@/stores/wallet";
+
+const currentTime = Date.now() / 1000;
 
 interface DetailsProps extends DonateSystemProps {}
 
@@ -14,13 +16,23 @@ export default function Details({
   campaignDonorFilter,
   campaignRefundFilter,
 }: DetailsProps) {
+  const address = useWalletStore((state) => state.address);
+
   return (
     <section className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
       <div className="lg:flex lg:space-x-8">
         <div className="lg:w-2/3">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-            {campaign.title}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {campaign.title}
+            </h1>
+            {address === campaign.owner &&
+              campaign.amountRaised > campaign.goal &&
+              !campaign.claimed &&
+              currentTime > campaign.refundDeadline && (
+                <WithdrawFunds id={campaign.id} />
+              )}
+          </div>
           <p className="text-sm text-gray-500 mb-4">
             Campaign ID: {campaign.id}
             <span className="inline-block ml-2">show socials here</span>
