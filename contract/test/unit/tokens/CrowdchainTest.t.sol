@@ -4,16 +4,15 @@ pragma solidity ^0.8.26;
 import {Test, console} from "forge-std/Test.sol";
 import {CrowdchainToken} from "./../../../src/tokens/crowdchain.sol";
 import {DeployCrowdchainToken} from "./../../../script/tokens/DeployCrowdchain.s.sol";
+import {ConstantsTest} from "./../../utils/Constants.sol";
 
-contract CrowdchainTest is Test {
+contract CrowdchainTest is Test, ConstantsTest {
     CrowdchainToken public crowdchainToken;
-    address DEPLOYER = makeAddr("deployer");
     address BLESSING = makeAddr("Blessing");
     uint256 private constant INITIAL_SUPPLY = 5_000_000 * 10 ** 18;
 
     function setUp() external {
         vm.deal(DEPLOYER, 100 ether);
-        vm.prank(DEPLOYER);
         DeployCrowdchainToken deployToken = new DeployCrowdchainToken();
         crowdchainToken = deployToken.run();
     }

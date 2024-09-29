@@ -127,4 +127,7 @@ interface ICampaign {
 
     /// @dev Retrieves contract accumulated fee
     function getAccumulatedFee() external returns (uint256);
+
+    /// @notice Allows donor to claim their token from a campaign
+    function claimToken(uint256 campaignId) external;
 }

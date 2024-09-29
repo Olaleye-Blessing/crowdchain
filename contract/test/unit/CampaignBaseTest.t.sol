@@ -11,7 +11,6 @@ import {ConstantsTest} from "./../utils/Constants.sol";
 contract CampaignBaseTest is Test, ConstantsTest {
     CampaignBase public campaignBase;
     CrowdchainToken public crowdchainToken;
-    address DEPLOYER = makeAddr("deployer");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
