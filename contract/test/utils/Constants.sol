@@ -2,6 +2,7 @@
 pragma solidity ^ 0.8.26;
 
 abstract contract ConstantsTest {
+    address constant DEPLOYER = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38; // default from foundry
     uint256 constant ONE_ETH = 10 ** 18; // wei
     uint256 constant ONE_DAY = 1 days;
     string constant WORD_CHARACTERS_201 =

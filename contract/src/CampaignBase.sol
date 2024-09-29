@@ -213,6 +213,9 @@ abstract contract CampaignBase is ICampaign {
         return accumulatedFee;
     }
 
+    // TODO: Think about how to make this work. Currently, the _distributeToken won't work
+    // because msg.sender != the address that deployed the token.
+    // msg.sender is from the internal ERC20
     function claimToken(uint256 _campaignId) public campaignExists(_campaignId) {
         Campaign storage campaign = campaigns[_campaignId];
 

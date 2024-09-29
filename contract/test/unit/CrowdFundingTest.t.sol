@@ -11,7 +11,6 @@ import {ConstantsTest} from "./../utils/Constants.sol";
 contract CrowdFundingTest is Test, ConstantsTest {
     Crowdfunding public crowdfunding;
     CrowdchainToken public crowdchainToken;
-    address DEPLOYER = makeAddr("deployer");
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
@@ -149,6 +148,9 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         assertEq(crowdfunding.getCampaign(campaignID).tokensAllocated, 0);
     }
+
+    // TODO: Write a test for this case
+    function test_allowDonorToClaimToken() public {}
 
     function test_revertClaimTokenWhenUserHasNoDonation() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
