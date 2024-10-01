@@ -5,6 +5,7 @@ import { immer } from "zustand/middleware/immer";
 
 interface State {
   address: string | null;
+  network: number | null;
   readonlyProvider: ethers.providers.JsonRpcProvider | null;
   readonlyContract: ethers.Contract | null;
   writableProvider: ethers.providers.Web3Provider | null;
@@ -19,6 +20,7 @@ type ContractsKeys = Pick<
 
 interface Actions {
   setAddress(address: string | null): void;
+  setNetwork(network: number | null): void;
   disconnect(): void;
   setReadonlyProvider(provider: ethers.providers.JsonRpcProvider): void;
   setReadOnlyContract: (contract: ethers.Contract | null) => void;
@@ -36,6 +38,7 @@ const useWalletStore = create<Store>()(
       persist(
         (set) => ({
           address: null,
+          network: null,
           readonlyProvider: null,
           readonlyContract: null,
           writableProvider: null,
@@ -50,6 +53,9 @@ const useWalletStore = create<Store>()(
           },
           setAddress(address) {
             set({ address });
+          },
+          setNetwork(network) {
+            set({ network });
           },
           disconnect() {
             set({
@@ -74,7 +80,13 @@ const useWalletStore = create<Store>()(
             }));
           },
         }),
-        { name: "wallet", partialize: (state) => ({ address: state.address }) },
+        {
+          name: "wallet",
+          partialize: (state) => ({
+            address: state.address,
+            network: state.network,
+          }),
+        },
       ),
     ),
   ),

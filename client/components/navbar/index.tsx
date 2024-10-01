@@ -7,7 +7,7 @@ import "./index.css";
 
 const Navbar = () => {
   return (
-    <nav className="py-2 relative border border-border">
+    <nav className="py-2 border border-border sticky top-0 left-0 bg-background">
       <div className="layout flex items-center justify-between">
         <HomeLink />
         <Hamburger />
