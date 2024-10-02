@@ -6,6 +6,7 @@ import CampaignProgrees from "./progress";
 import DonateSystem, { type DonateSystemProps } from "./donate-system";
 import WithdrawFunds from "./withdraw-funds";
 import useWalletStore from "@/stores/wallet";
+import Link from "next/link";
 
 const currentTime = Date.now() / 1000;
 
@@ -96,12 +97,17 @@ export default function Details({
               </div>
             </div>
 
-            <div>
-              <p className="text-xl font-semibold mb-2">Campaign Owner</p>
-              <p className="font-mono text-sm break-all text-primary">
+            <p>
+              <span className="block text-xl font-semibold mb-2">
+                Campaign Owner
+              </span>
+              <Link
+                href={`/accounts/${campaign.owner}`}
+                className="block font-mono text-sm break-all text-primary"
+              >
                 {campaign.owner}
-              </p>
-            </div>
+              </Link>
+            </p>
           </div>
         </div>
 

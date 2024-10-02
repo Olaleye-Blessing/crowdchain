@@ -4,6 +4,7 @@ export const crowdChainABI = [
   "function createCampaign(string title, string description, string coverImage, uint256 goal, uint64 duration, uint256 refundDeadline)",
   "function totalCampaigns() public view returns (uint256)",
   `function getCampaigns(uint256 page, uint256 perPage) external view returns (${campaignDetails}[], uint256)`,
+  `function getOwnerCampaigns(address owner, uint256 page, uint256 perPage) external view returns (${campaignDetails}[] memory, uint256)`,
   `function getCampaign(uint256 campaignId) view returns (${campaignDetails})`,
   "function donate(uint256 campaignId) public payable",
   "function getCampaignDonors(uint256 campaignId) public view returns (address[] donors, uint256[] contributions)",

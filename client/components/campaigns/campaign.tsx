@@ -87,9 +87,12 @@ export default function Campaign({ campaign, className }: CampaignProps) {
         <CardFooter className="p-3 flex flex-col">
           <p className="break-all mb-2 font-semibold">
             <span>Owner: </span>
-            <span className="text-sm text-muted-foreground">
+            <Link
+              href={`/accounts/${campaign.owner}`}
+              className="text-sm text-primary"
+            >
               {campaign.owner}
-            </span>
+            </Link>
           </p>
           <Link
             href={`/campaigns/${campaign.id}`}
