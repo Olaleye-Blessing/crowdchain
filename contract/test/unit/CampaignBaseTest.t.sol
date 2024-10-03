@@ -221,6 +221,38 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(campaign.tokensAllocated, 0);
     }
 
+    function test_getCampaignMilestones() public {
+        uint256 amountNeeded = 40 * 1 ether;
+        uint64 deadline = 15; // days
+        uint256 refundDeadline = 10; // days
+
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
+
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
+
+        _milestones[1] =
+            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
+
+        _milestones[2] =
+            ICampaign.BasicMilestone({targetAmount: 18 ether, deadline: 4, description: "Second milestone"});
+
+        vm.prank(ALICE);
+        campaignBase.createCampaign(
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            amountNeeded,
+            deadline,
+            refundDeadline
+        );
+
+        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone) = campaignBase.getCampaignMileStones(0);
+
+        assertEq(currentMilestone, 0);
+        assertEq(milestones.length, 3);
+    }
+
     function test_getTotalCampaignsCreated() public {
         assertEq(campaignBase.totalCampaigns(), 0);
 
