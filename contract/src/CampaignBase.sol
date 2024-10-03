@@ -40,6 +40,9 @@ abstract contract CampaignBase is ICampaign {
         address[] donorAddresses;
         mapping(address => bool) hasClaimedTokens;
         uint256 tokensAllocated;
+        mapping(uint8 => Milestone) milestones;
+        uint8 totalMilestones;
+        uint8 currentMilestone;
     }
 
     /// @notice Array of all campaigns
@@ -93,11 +96,12 @@ abstract contract CampaignBase is ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
+        BasicMilestone[] memory milestones,
         uint256 goal,
         uint64 duration,
         uint256 refundDeadline
     ) public override {
-        _validateCampaignCreation(title, description, coverImage, goal, duration, refundDeadline);
+        _validateCampaignCreation(title, description, coverImage, milestones, goal, duration, refundDeadline);
 
         uint256 deadline = block.timestamp + (duration * ONE_DAY);
         uint256 campaignId = campaigns.length;
@@ -111,6 +115,22 @@ abstract contract CampaignBase is ICampaign {
         newCampaign.title = title;
         newCampaign.description = description;
         newCampaign.coverImage = coverImage;
+
+        uint8 totalMilestones = uint8(milestones.length);
+
+        if (totalMilestones > 0) {
+            for (uint8 i = 0; i < totalMilestones; i++) {
+                Milestone memory _milestone = Milestone({
+                    id: i,
+                    targetAmount: milestones[i].targetAmount,
+                    deadline: milestones[i].deadline,
+                    description: milestones[i].description,
+                    status: MilestoneStatus.Pending
+                });
+                newCampaign.milestones[i] = _milestone;
+            }
+        }
+        newCampaign.totalMilestones = totalMilestones;
 
         campaignsOwner[msg.sender].push(campaignId);
     }
@@ -254,6 +274,7 @@ abstract contract CampaignBase is ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
+        BasicMilestone[] memory milestones,
         uint256 goal,
         uint64 duration,
         uint256 refundDeadline
@@ -278,6 +299,25 @@ abstract contract CampaignBase is ICampaign {
         }
         if (refundDeadline < 5) {
             revert Campaign__CampaignCreationFailed("Refund deadline must be at least 5 days after deadline");
+        }
+
+        uint256 totalMilestones = milestones.length;
+        if (totalMilestones > 0) {
+            uint256 milestonesAmount = 0;
+            uint256 deadlines = 0;
+            for (uint256 index = 0; index < totalMilestones; index++) {
+                milestonesAmount += milestones[index].targetAmount;
+                deadlines += milestones[index].deadline;
+            }
+
+            if (milestonesAmount != goal) {
+                revert Campaign__CampaignCreationFailed("Total milestones amount must be equal to goal");
+            }
+            if (deadlines >= duration) {
+                revert Campaign__CampaignCreationFailed(
+                    "Total milestones deadline must be less than campign duration by at least 1 day"
+                );
+            }
         }
     }
 
