@@ -47,9 +47,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_savesAccumalatedFeeCorrectly() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -84,9 +92,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_allocateCorrectAmountOfTokensAfterOwnerWithdraw() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -126,9 +142,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -155,9 +179,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_revertClaimTokenWhenUserHasNoDonation() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -184,9 +216,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -219,9 +259,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
     function test_onlyDeployerCanWithdrawAccumulatedFees() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         vm.prank(ALICE);
         crowdfunding.createCampaign(
-            "My Title", "My little description from my heart, soul and mind", "coverImage", _amountNeeded, 4, 10
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            _amountNeeded,
+            4,
+            10
         );
 
         uint256 campaignID = 0;
@@ -487,8 +535,12 @@ contract CrowdFundingTest is Test, ConstantsTest {
     ) private {
         vm.startPrank(_owner);
 
+        ICampaign.BasicMilestone[] memory _milestones;
+
         // TODO: Use forge to get image metadata
-        crowdfunding.createCampaign(_title, _description, "coverImage", _amountNeeded, _deadline, _refundDeadline);
+        crowdfunding.createCampaign(
+            _title, _description, "coverImage", _milestones, _amountNeeded, _deadline, _refundDeadline
+        );
 
         vm.stopPrank();
     }

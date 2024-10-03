@@ -5,6 +5,30 @@ pragma solidity ^0.8.26;
 /// @author Olaleye Blessing
 /// @notice Interface for the core functionality of a crowdfunding campaign system
 interface ICampaign {
+    enum MilestoneStatus {
+        Pending, // Milestone is yet to be started
+        InProgress, // Milestone is currently being worked on
+        Completed, // Milestone has been completed
+        Approved, // Milestone has been approved by the campaign owner or stakeholders
+        Rejected // Milestone was rejected
+
+    }
+
+    /// @dev Struct containing details of a milestone
+    struct Milestone {
+        uint8 id;
+        uint256 targetAmount;
+        uint256 deadline;
+        string description;
+        MilestoneStatus status;
+    }
+
+    struct BasicMilestone {
+        uint256 targetAmount;
+        uint256 deadline;
+        string description;
+    }
+
     /// @notice Struct containing details of a campaign
     struct CampaignDetails {
         uint256 id;
@@ -92,6 +116,7 @@ interface ICampaign {
         string memory title,
         string memory description,
         string memory coverImage,
+        BasicMilestone[] memory milestones,
         uint256 goal,
         uint64 duration,
         uint256 refundDeadline
