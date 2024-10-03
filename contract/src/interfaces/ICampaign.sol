@@ -127,6 +127,15 @@ interface ICampaign {
     /// @return The CampaignDetails struct containing the campaign's information
     function getCampaign(uint256 campaignId) external view returns (CampaignDetails memory);
 
+    /// @notice Retrieves the milestones of a campaign if it has any
+    /// @param campaignId The ID of the campaign milestones to retrieve
+    /// @return milestones An array of milestones for the specified campaign
+    /// @return currentMileStone The ID of the current milestone or 0 if no milestones are defined
+    function getCampaignMileStones(uint256 campaignId)
+        external
+        view
+        returns (Milestone[] memory milestones, uint8 currentMileStone);
+
     /// @notice Retrieves a paginated list of all campaigns
     /// @param page The page number to retrieve
     /// @param perPage The number of campaigns per page
