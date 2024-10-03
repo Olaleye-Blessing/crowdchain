@@ -148,6 +148,24 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
+    function getCampaignMileStones(uint256 campaignId)
+        public
+        view
+        override
+        campaignExists(campaignId)
+        returns (Milestone[] memory milestones, uint8 currentMileStone)
+    {
+        Campaign storage campaign = campaigns[campaignId];
+        milestones = new ICampaign.Milestone[](campaign.totalMilestones);
+
+        for (uint8 index = 0; index < campaign.totalMilestones; index++) {
+            milestones[index] = campaign.milestones[index];
+        }
+
+        return (milestones, campaign.currentMilestone);
+    }
+
+    /// @inheritdoc ICampaign
     function getCampaigns(uint256 page, uint256 perPage)
         public
         view
