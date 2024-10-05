@@ -16,6 +16,7 @@ import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import { formatAddress } from "@/utils/format-address";
 import { crowdChainTokenAddress } from "@/lib/contracts/crowd-chain/token/address";
 import { crowdChainTokenABI } from "@/lib/contracts/crowd-chain/token/abi";
+import Connect from "./connect";
 
 const Wallet = () => {
   const setAddress = useWalletStore((state) => state.setAddress);
@@ -113,9 +114,7 @@ const Wallet = () => {
           </PopoverContent>
         </Popover>
       ) : (
-        <Button className="connection__btn" onClick={connectWallet}>
-          Connect Wallet
-        </Button>
+        <Connect />
       )}
     </div>
   );
