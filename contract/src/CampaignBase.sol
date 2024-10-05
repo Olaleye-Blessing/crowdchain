@@ -321,16 +321,21 @@ abstract contract CampaignBase is ICampaign {
 
         uint256 totalMilestones = milestones.length;
         if (totalMilestones > 0) {
-            uint256 milestonesAmount = 0;
+            if(totalMilestones > 4) revert Campaign__CampaignCreationFailed("You can only have maximum of 4 milestones");
+            if(milestones[totalMilestones - 1].targetAmount != goal) revert Campaign__CampaignCreationFailed("Last milestone target amount must be equal to campaign goal");
+
             uint256 deadlines = 0;
             for (uint256 index = 0; index < totalMilestones; index++) {
-                milestonesAmount += milestones[index].targetAmount;
+                if(index == (totalMilestones - 1)) {
+                    deadlines += milestones[index].deadline;
+                    break;
+                } else if (milestones[index].targetAmount > milestones[index + 1].targetAmount){
+                    revert Campaign__CampaignCreationFailed("Target amount of previous milestone must be less than the next one");
+                }
+
                 deadlines += milestones[index].deadline;
             }
 
-            if (milestonesAmount != goal) {
-                revert Campaign__CampaignCreationFailed("Total milestones amount must be equal to goal");
-            }
             if (deadlines >= duration) {
                 revert Campaign__CampaignCreationFailed(
                     "Total milestones deadline must be less than campign duration by at least 1 day"
