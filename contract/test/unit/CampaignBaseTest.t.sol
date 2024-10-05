@@ -67,7 +67,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
 
         _milestones[2] =
-            ICampaign.BasicMilestone({targetAmount: 18 ether, deadline: 4, description: "Second milestone"});
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
 
         vm.prank(ALICE);
         campaignBase.createCampaign(
@@ -134,12 +134,12 @@ contract CampaignBaseTest is Test, ConstantsTest {
         _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 4);
     }
 
-    function test_campaignCreationFailsIfMilestoneIsNotEqualToGoal() public {
+    function test_campaignCreationFailsIfMilestonesAreMoreThan4() public {
         uint256 amountNeeded = 40 * 1 ether;
         uint64 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
-        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](5);
 
         _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
 
@@ -149,9 +149,45 @@ contract CampaignBaseTest is Test, ConstantsTest {
         _milestones[2] =
             ICampaign.BasicMilestone({targetAmount: 20 ether, deadline: 4, description: "Second milestone"});
 
+        _milestones[3] =
+            ICampaign.BasicMilestone({targetAmount: 30 ether, deadline: 4, description: "Second milestone"});
+
+        _milestones[4] =
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
+
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICampaign.Campaign__CampaignCreationFailed.selector, "Total milestones amount must be equal to goal"
+                ICampaign.Campaign__CampaignCreationFailed.selector,
+                "You can only have maximum of 4 milestones"
+            )
+        );
+        vm.prank(ALICE);
+        campaignBase.createCampaign(
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            amountNeeded,
+            deadline,
+            refundDeadline
+        );
+    }
+
+    function test_campaignCreationFailsIfLastMilestoneTargetIsNotEqualToGoal() public {
+        uint256 amountNeeded = 40 * 1 ether;
+        uint64 deadline = 15; // days
+        uint256 refundDeadline = 10; // days
+
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
+
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 2, description: "First milestone"});
+
+        _milestones[1] =
+            ICampaign.BasicMilestone({targetAmount: 41 ether, deadline: 4, description: "Second milestone"});
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ICampaign.Campaign__CampaignCreationFailed.selector, "Last milestone target amount must be equal to campaign goal"
             )
         );
         vm.prank(ALICE);
@@ -171,15 +207,12 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint64 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
-        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
 
-        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 6, description: "First milestone"});
 
         _milestones[1] =
-            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
-
-        _milestones[2] =
-            ICampaign.BasicMilestone({targetAmount: 18 ether, deadline: 9, description: "Second milestone"});
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 10, description: "Second milestone"});
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -228,13 +261,13 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
 
-        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 2, description: "First milestone"});
 
         _milestones[1] =
-            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
+            ICampaign.BasicMilestone({targetAmount: 30 ether, deadline: 4, description: "Second milestone"});
 
         _milestones[2] =
-            ICampaign.BasicMilestone({targetAmount: 18 ether, deadline: 4, description: "Second milestone"});
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
 
         vm.prank(ALICE);
         campaignBase.createCampaign(
