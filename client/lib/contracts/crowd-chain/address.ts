@@ -1,4 +1,14 @@
-import { clientEnv } from "@/constants/env/client";
+import { ISupportedNetworks } from "@/interfaces/network";
+import { crowdchainAddresses, networkIds } from "@/utils/networks";
 
-export const crowdChainAddress =
-  clientEnv.NEXT_PUBLIC_CROWD_CHAIN_ANVIL_ADDRESS;
+export const getCrowdChainDetail = (network: number | null | undefined) => {
+  const defaultNetworkId: ISupportedNetworks =
+    process.env.NODE_ENV === "production" ? "sepolia" : "anvil";
+
+  const loadedNetworkId = network ? networkIds[network] : defaultNetworkId;
+
+  return {
+    crowdchainAddress: crowdchainAddresses[loadedNetworkId],
+    loadedNetworkId,
+  };
+};

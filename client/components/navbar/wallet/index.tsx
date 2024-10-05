@@ -11,13 +11,13 @@ import {
 import "./index.css";
 import useWalletStore from "@/stores/wallet";
 import { ethers } from "ethers";
-import { crowdChainAddress } from "@/lib/contracts/crowd-chain/address";
 import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import { formatAddress } from "@/utils/format-address";
-import { crowdChainTokenAddress } from "@/lib/contracts/crowd-chain/token/address";
-import { crowdChainTokenABI } from "@/lib/contracts/crowd-chain/token/abi";
+import { useStore } from "@/stores/store";
+import { getCrowdChainDetail } from "@/lib/contracts/crowd-chain/address";
 
 const Wallet = () => {
+  const network = useStore(useWalletStore, (state) => state.network);
   const setAddress = useWalletStore((state) => state.setAddress);
   const disconnect = useWalletStore((state) => state.disconnect);
   const address = useWalletStore((state) => state.address);
@@ -43,15 +43,16 @@ const Wallet = () => {
     const connectedSigner = writableProvider.getSigner();
     setWritableContracts({
       writeableCrowdChainContract: new ethers.Contract(
-        crowdChainAddress,
+        getCrowdChainDetail(network).crowdchainAddress,
         crowdChainABI,
         connectedSigner,
       ),
-      writablePlatformTokenContract: new ethers.Contract(
-        crowdChainTokenAddress,
-        crowdChainTokenABI,
-        connectedSigner,
-      ),
+      // TODO: Connect to this contract when you find a way to distribute tokens
+      // writablePlatformTokenContract: new ethers.Contract(
+      //   crowdChainTokenAddress,
+      //   crowdChainTokenABI,
+      //   connectedSigner,
+      // ),
     });
   };
 

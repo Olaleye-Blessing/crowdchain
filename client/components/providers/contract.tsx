@@ -6,15 +6,11 @@ import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import useWalletStore from "@/stores/wallet";
 import { useStore } from "@/stores/store";
 import { crowdChainTokenABI } from "@/lib/contracts/crowd-chain/token/abi";
-import { crowdChainTokenAddress } from "@/lib/contracts/crowd-chain/token/address";
 import { IWalletNetworkInfo } from "@/interfaces/network";
-import {
-  crowdchainAddresses,
-  networkIds,
-  rpcProviders,
-} from "@/utils/networks";
+import { networkIds, rpcProviders } from "@/utils/networks";
 import Loading from "@/app/loading";
 import { toast } from "@/hooks/use-toast";
+import { getCrowdChainDetail } from "@/lib/contracts/crowd-chain/address";
 
 export default function ContractProviders({
   children,
@@ -52,18 +48,18 @@ export default function ContractProviders({
 
   useEffect(
     function setupProviders() {
-      let timer;
+      let timer: NodeJS.Timeout;
       if (network === undefined) return;
 
       // TODO: Find a way to load the correct network on initial load
       async function setUp() {
-        const loadedNetworkId = network ? networkIds[network] : "anvil";
+        const { crowdchainAddress, loadedNetworkId } =
+          getCrowdChainDetail(network);
         const rpc = rpcProviders[loadedNetworkId];
-        const crowdChainAddress = crowdchainAddresses[loadedNetworkId];
 
         const readonlyProvider = new providers.JsonRpcProvider(rpc);
         const readonlyContract = new ethers.Contract(
-          crowdChainAddress,
+          crowdchainAddress,
           crowdChainABI,
           readonlyProvider,
         );
@@ -96,15 +92,16 @@ export default function ContractProviders({
 
           setWritableContracts({
             writeableCrowdChainContract: new ethers.Contract(
-              crowdChainAddress,
+              crowdchainAddress,
               crowdChainABI,
               signer,
             ),
-            writablePlatformTokenContract: new ethers.Contract(
-              crowdChainTokenAddress,
-              crowdChainTokenABI,
-              signer,
-            ),
+            // TODO: Connect to this contract when you find a way to distribute tokens
+            // writablePlatformTokenContract: new ethers.Contract(
+            //   crowdChainTokenAddress,
+            //   crowdChainTokenABI,
+            //   signer,
+            // ),
           });
         } catch (e) {
           console.error("Failed to set up writable contracts:", e);
