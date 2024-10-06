@@ -44,6 +44,108 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.withdraw(campaignID);
     }
 
+    function test_withdrawMilestonedCampaign() public {
+        _createCampignWithMilestones(ALICE);
+         uint256 amountNeeded = 40 * 1 ether; // gotten from _createCampignWithMilestones above 
+
+        uint8 firstMilestoneID = 0;
+        uint8 secondMilestoneID = 1;
+        uint8 thirdMilestoneID = 2;
+
+        uint256 campaignID = 0;
+
+        // ========== first milestone amount -> 7 ether ==========
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.NextMilestoneStarted(campaignID, secondMilestoneID);
+        crowdfunding.donate{value: 4 ether}(campaignID); // total = 7 ethers
+
+        uint256 firstMilestoneTarget = 6 ether;
+        uint256 fee = (crowdfunding.OWNER_FEE() * amountNeeded) / 1000;
+        uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
+        uint256 aliceFirstBalance = ALICE.balance;
+
+        vm.prank(ALICE);
+        // assert withdraw was successful
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, firstAmountWithdrawn);
+        crowdfunding.withdraw(campaignID);
+
+        // assert correct amount was withdrawn
+        assertEq(ALICE.balance, aliceFirstBalance + firstAmountWithdrawn);
+
+        // ========== second milestone amount -> 16 ether ==========
+        uint256 aliceSecondBalance = ALICE.balance;
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.NextMilestoneStarted(campaignID, thirdMilestoneID);
+        crowdfunding.donate{value: 6 ether}(campaignID); // total = 16 ethers
+        // ========== second milestone amount -> 16 ether ==========
+
+        uint256 secondMilestoneTarget = 16 ether;
+        uint256 secondAmountWithdrawn = secondMilestoneTarget - firstMilestoneTarget;
+
+        vm.prank(ALICE);
+        // assert withdraw was successful
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, secondAmountWithdrawn);
+        crowdfunding.withdraw(campaignID);
+
+        // assert correct amount was withdrawn
+        assertEq(ALICE.balance, aliceSecondBalance + secondAmountWithdrawn);
+
+        // ========== third milestone amount -> 40 ether ==========
+        uint256 aliceThirdBalance = ALICE.balance;
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether);
+        crowdfunding.donate{value: 5 ether}(campaignID); // total = 21 ethers
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID); // total = 24 ethers
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
+        crowdfunding.donate{value: 36 ether}(campaignID); // total = 60 ethers
+        // ========== third milestone amount -> 40 ether ==========
+
+        uint256 amountRaised = 60 ether;
+        uint256 thirdAmountWithdrawn = amountRaised - (firstAmountWithdrawn + fee + secondAmountWithdrawn);
+
+        vm.prank(ALICE);
+        // assert withdraw was successful
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, thirdAmountWithdrawn);
+        crowdfunding.withdraw(campaignID);
+
+        // assert correct amount was withdrawn
+        assertEq(ALICE.balance, aliceThirdBalance + thirdAmountWithdrawn);
+        assertEq(ALICE.balance, aliceFirstBalance + firstAmountWithdrawn + secondAmountWithdrawn + thirdAmountWithdrawn);
+    }
+
     function test_savesAccumalatedFeeCorrectly() public {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
@@ -354,33 +456,11 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function test_startNextMilestoneWhenCurrentIsMet() public {
-        uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
-        uint256 refundDeadline = 10; // days
+        _createCampignWithMilestones();
+
         uint8 firstMilestoneID = 0;
         uint8 secondMilestoneID = 1;
         uint8 thirdMilestoneID = 2;
-
-        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
-
-        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
-
-        _milestones[1] =
-            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
-
-        _milestones[2] =
-            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
-
-        vm.prank(ALICE);
-        crowdfunding.createCampaign(
-            "My Title",
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            amountNeeded,
-            deadline,
-            refundDeadline
-        );
 
         uint256 campaignID = 0;
 
@@ -626,5 +706,36 @@ contract CrowdFundingTest is Test, ConstantsTest {
         );
 
         vm.stopPrank();
+    }
+
+    function _createCampignWithMilestones() private {
+        _createCampignWithMilestones(ALICE);
+    }
+
+    function _createCampignWithMilestones(address owner) private {
+        uint256 amountNeeded = 40 * 1 ether;
+        uint64 deadline = 15; // days
+        uint256 refundDeadline = 10; // days
+
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
+
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
+
+        _milestones[1] =
+            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
+
+        _milestones[2] =
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
+
+        vm.prank(owner);
+        crowdfunding.createCampaign(
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            amountNeeded,
+            deadline,
+            refundDeadline
+        );
     }
 }

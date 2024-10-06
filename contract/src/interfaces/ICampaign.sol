@@ -69,6 +69,8 @@ interface ICampaign {
     /// @param amountRaised The total amount raised by the campaign
     event CampaignGoalCompleted(address indexed owner, uint256 indexed campaignId, uint256 amountRaised);
 
+    error Campaign__MilestoneGoalNotCompeleted(uint256 campaignId, uint8 milestoneId, uint256 amountRaised);
+
     /// @notice Error thrown when the account performing an operation is not the contract's owner
     error Campaign__NotContractOwner(address account);
 

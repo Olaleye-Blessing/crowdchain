@@ -28,6 +28,7 @@ abstract contract CampaignBase is ICampaign {
     struct Campaign {
         uint256 id;
         uint256 amountRaised;
+        uint256 amountWithdrawn;
         uint256 deadline;
         uint256 refundDeadline;
         uint256 goal; // in wei
@@ -43,6 +44,7 @@ abstract contract CampaignBase is ICampaign {
         mapping(uint8 => Milestone) milestones;
         uint8 totalMilestones;
         uint8 currentMilestone;
+        uint8 nextWithdrawableMilestone;
     }
 
     /// @notice Array of all campaigns
@@ -215,26 +217,12 @@ abstract contract CampaignBase is ICampaign {
 
         if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
         if (msg.sender != campaign.owner) revert Campaign__NotCampaignOwner();
-        if (block.timestamp < campaign.refundDeadline) {
-            revert Campaign__RefundDeadlineActive();
+
+        if (campaign.totalMilestones == 0) {
+            _withdrawCampaignFundWithNoMilestone(campaign);
+        } else {
+            _withdrawCampaignFundWithMilestone(campaign);
         }
-        if (campaign.amountRaised == 0) revert Campaign__EmptyDonation();
-
-        campaign.claimed = true;
-        uint256 fee = (campaign.amountRaised * OWNER_FEE) / 1000;
-
-        uint256 amount = campaign.amountRaised - fee;
-
-        accumulatedFee += fee;
-
-        if (amount > MINIMUM_AMOUNT_RAISED) {
-            campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
-        }
-
-        (bool success,) = payable(msg.sender).call{value: amount}("");
-        if (!success) revert Campaign__WithdrawalFailed();
-
-        emit CampaignFundWithdrawn(campaignId, msg.sender, amount);
     }
 
     /// @inheritdoc ICampaign
@@ -363,5 +351,62 @@ abstract contract CampaignBase is ICampaign {
             totalDonors: campaign.donorAddresses.length,
             tokensAllocated: campaign.tokensAllocated
         });
+    }
+
+    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal {
+        if (block.timestamp < campaign.refundDeadline) {
+            revert Campaign__RefundDeadlineActive();
+        }
+        if (campaign.amountRaised == 0) revert Campaign__EmptyDonation();
+
+        campaign.claimed = true;
+        uint256 fee = (campaign.amountRaised * OWNER_FEE) / 1000;
+
+        uint256 amount = campaign.amountRaised - fee;
+
+        accumulatedFee += fee;
+
+        if (amount > MINIMUM_AMOUNT_RAISED) {
+            campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
+        }
+
+        (bool success,) = payable(msg.sender).call{value: amount}("");
+        if (!success) revert Campaign__WithdrawalFailed();
+
+        emit CampaignFundWithdrawn(campaign.id, msg.sender, amount);
+    }
+
+    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal {
+        Milestone storage milestone = campaign.milestones[campaign.nextWithdrawableMilestone];
+        if (milestone.status != MilestoneStatus.Completed) revert Campaign__MilestoneGoalNotCompeleted(campaign.id, campaign.nextWithdrawableMilestone, campaign.amountRaised);
+
+        uint256 amountToWithdraw = campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1 ? campaign.amountRaised - campaign.amountWithdrawn : milestone.targetAmount - campaign.amountWithdrawn;
+        uint256 fee = 0;
+        uint256 amoutToSend = 0;
+
+        // TODO: During donation, you might want to check if amountRaised + fee is greater than first milestone target before moving to the next.
+        if (campaign.nextWithdrawableMilestone == 0) {
+            // deduct fee from the goal amount as some campign might stop and request for emergency refund before completing the total milestone. This is a loss on our part as far as fee is concerned.
+            fee = (campaign.goal * OWNER_FEE) / 1000;
+            amoutToSend = amountToWithdraw - fee;
+
+            accumulatedFee += fee;
+        } else {
+            amoutToSend = amountToWithdraw;
+        }
+
+        milestone.status = MilestoneStatus.Approved;
+        campaign.amountWithdrawn += amountToWithdraw;
+
+        if (campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1) {
+            campaign.claimed = true;
+        } else {
+            campaign.nextWithdrawableMilestone += 1;
+        }
+
+        (bool success,) = payable(msg.sender).call{value: amoutToSend}("");
+        if (!success) revert Campaign__WithdrawalFailed();
+
+        emit CampaignFundWithdrawn(campaign.id, msg.sender, amoutToSend);
     }
 }
