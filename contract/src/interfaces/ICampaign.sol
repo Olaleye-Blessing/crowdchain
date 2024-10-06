@@ -45,6 +45,18 @@ interface ICampaign {
         uint256 tokensAllocated;
     }
 
+    /// @notice Emitted when a campaign reached a milestone
+    /// @dev The next milestone, if available, is started immediately the current one ends
+    /// @param campaignId The id of the campaign
+    /// @param milestoneId The id of the completed milestone
+    /// @param amountRaised The amount raised for the milestone
+    event MilestoneReached(uint256 indexed campaignId, uint8 milestoneId, uint256 amountRaised);
+
+    /// @notice Emitted when a new campaign's milestone just started.
+    /// @param campaignId The id of the campaign
+    /// @param milestoneId The id of the completed milestone
+    event NextMilestoneStarted(uint256 indexed campaignId, uint8 milestoneId);
+
     /// @notice Emitted when campaign funds are withdrawn by the owner
     /// @param campaignId The ID of the campaign
     /// @param owner The address of the campaign owner
