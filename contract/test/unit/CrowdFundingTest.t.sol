@@ -353,6 +353,89 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.donate{value: BOB_DONATION * ONE_ETH}(campaignID);
     }
 
+    function test_startNextMilestoneWhenCurrentIsMet() public {
+        uint256 amountNeeded = 40 * 1 ether;
+        uint64 deadline = 15; // days
+        uint256 refundDeadline = 10; // days
+        uint8 firstMilestoneID = 0;
+        uint8 secondMilestoneID = 1;
+        uint8 thirdMilestoneID = 2;
+
+        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
+
+        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
+
+        _milestones[1] =
+            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
+
+        _milestones[2] =
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
+
+        vm.prank(ALICE);
+        crowdfunding.createCampaign(
+            "My Title",
+            "My little description from my heart, soul and mind",
+            "coverImage",
+            _milestones,
+            amountNeeded,
+            deadline,
+            refundDeadline
+        );
+
+        uint256 campaignID = 0;
+
+        // ========== first milestone amount -> 7 ether ==========
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.NextMilestoneStarted(campaignID, secondMilestoneID);
+        crowdfunding.donate{value: 4 ether}(campaignID); // total = 7 ethers
+        // ========== first milestone amount -> 7 ether ==========
+
+        // ========== second milestone amount -> 16 ether ==========
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID);
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.NextMilestoneStarted(campaignID, thirdMilestoneID);
+        crowdfunding.donate{value: 6 ether}(campaignID); // total = 16 ethers
+        // ========== second milestone amount -> 16 ether ==========
+
+        // ========== third milestone amount -> 40 ether ==========
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether);
+        crowdfunding.donate{value: 5 ether}(campaignID); // total = 21 ethers
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        crowdfunding.donate{value: 3 ether}(campaignID); // total = 24 ethers
+
+        vm.prank(BOB);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether); // total = 60 ethers
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
+        crowdfunding.donate{value: 36 ether}(campaignID); // total = 16 ethers
+        // ========== third milestone amount -> 40 ether ==========
+    }
+
     function test_getAllDonors() public {
         _createSuccessfulCampaign();
         uint256 campaignID = 0;
