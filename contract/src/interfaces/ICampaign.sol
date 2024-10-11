@@ -95,6 +95,8 @@ interface ICampaign {
     /// @notice Error thrown when a withdrawal fails
     error Campaign__WithdrawalFailed();
 
+    error Campaign__WithdrawNotAllowed(string message);
+
     /// @notice Error thrown when invalid pagination parameters are provided
     error Campaign__InvalidPagination();
 

@@ -95,6 +95,7 @@ contract Crowdfunding is CampaignBase {
     }
 
     /// @notice Allows a donor to request a refund for their donation
+    /// @dev Donors can claim all refund if the campaign has no milestone. Otherwise, a proportion will be calculated based on the available fund.
     /// @param campaignId The ID of the campaign to request a refund from
     /// @param amount The amount to refund
     function refund(uint256 campaignId, uint256 amount) public campaignExists(campaignId) {
@@ -108,6 +109,10 @@ contract Crowdfunding is CampaignBase {
 
         if (amountDonated < amount) revert Crowdfunding__InsufficientDonation(campaignId, amount, amountDonated);
 
+        if (campaign.totalMilestones > 0) {
+            if (campaign.nextWithdrawableMilestone != 0) revert Campaign__WithdrawNotAllowed("Refunds not allowed after the first milestone funds have been withdrawn");
+        }
+
         campaign.amountRaised -= amount;
         campaign.donors[msg.sender] -= amount;
 
@@ -115,10 +120,34 @@ contract Crowdfunding is CampaignBase {
             _removeAddress(campaign.donorAddresses, msg.sender);
         }
 
+        if (campaign.totalMilestones > 0) _updateMilestone(campaign);
+
         (bool success,) = payable(msg.sender).call{value: amount}("");
         if (!success) revert Crowdfunding__RefundFailed(campaignId);
 
         emit DonationRefunded(msg.sender, campaignId, amount);
+    }
+
+    function _updateMilestone(Campaign storage campaign) private {
+        uint8 newCurrentMilestone = 0;
+
+        for (uint8 i = 0; i < campaign.totalMilestones; i++) {
+            if (campaign.amountRaised >= campaign.milestones[i].targetAmount) {
+                campaign.milestones[i].status = MilestoneStatus.Completed;
+            } else {
+                newCurrentMilestone = i;
+                campaign.milestones[i].status = MilestoneStatus.InProgress;
+                break;
+            }
+        }
+
+        if (newCurrentMilestone < campaign.currentMilestone) {
+            for (uint8 i = newCurrentMilestone + 1; i <= campaign.currentMilestone; i++) {
+                campaign.milestones[i].status = MilestoneStatus.Pending;
+            }
+
+            campaign.currentMilestone = newCurrentMilestone;
+        }
     }
 
     /// @notice Removes an address from an array
