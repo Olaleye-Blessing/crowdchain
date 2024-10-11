@@ -599,6 +599,52 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(campaign.amountRaised, (donation - refundAmount));
     }
 
+    function test_refundDonorsOfMilestonedCampaign() public {
+        _createCampignWithMilestones(ALICE); // goal -> 40 ether
+        uint256 amountNeeded = 40 * 1 ether; // gotten from _createCampignWithMilestones above
+
+        uint256 campaignID = 0;
+        uint8 firstMilestoneID = 0;
+        uint256 firstMilestoneTarget = 6 ether;
+        uint8 secondMilestoneID = 1;
+        uint256 secondMilestoneTarget = 16 ether;
+        uint8 thirdMilestoneID = 2;
+        // uint256 thirdMilestoneTarget = 16 ether;
+
+        uint256 BLESSING_DONATION = 15 ether;
+        uint256 BLESSING_FIRST_REQUESTED_REFUND = 5 ether;
+        uint256 BOB_DONATION = 12 ether;
+
+        _donateToMilestoneCampaign(campaignID, BLESSING, BLESSING_DONATION, firstMilestoneID, firstMilestoneTarget, secondMilestoneID);
+        _donateToMilestoneCampaign(campaignID, BOB, BOB_DONATION, secondMilestoneID, secondMilestoneTarget, thirdMilestoneID);
+
+        uint256 BLESSING_FIRST_BALANCE = BLESSING.balance;
+
+        vm.prank(BLESSING);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.DonationRefunded(BLESSING, campaignID, BLESSING_FIRST_REQUESTED_REFUND);
+        crowdfunding.refund(campaignID, BLESSING_FIRST_REQUESTED_REFUND);
+
+        assertEq(BLESSING.balance, BLESSING_FIRST_BALANCE + BLESSING_FIRST_REQUESTED_REFUND);
+        assertEq(crowdfunding.getCampaign(campaignID).amountRaised, BLESSING_DONATION + BOB_DONATION - BLESSING_FIRST_REQUESTED_REFUND);
+
+        uint256 fee = (crowdfunding.OWNER_FEE() * amountNeeded) / 1000;
+        uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, firstAmountWithdrawn);
+        crowdfunding.withdraw(campaignID); // first milestone is 6 ether
+
+        uint256 BLESSING_SECOND_REQUESTED_REFUND = 8 ether;
+
+        vm.prank(BLESSING);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__WithdrawNotAllowed.selector, "Refunds not allowed after the first milestone funds have been withdrawn")
+        );
+        crowdfunding.refund(campaignID, BLESSING_SECOND_REQUESTED_REFUND);
+    }
+
     function test_noRefundIfCampaignHasBeenClaimed() public {
         _createSuccessfulCampaign();
         uint256 campaignID = 0;
@@ -737,5 +783,23 @@ contract CrowdFundingTest is Test, ConstantsTest {
             deadline,
             refundDeadline
         );
+    }
+
+    function _donate(uint256 campaignID, address donor, uint256 amount) private {
+        vm.prank(donor);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(donor, campaignID, amount);
+        crowdfunding.donate{value: amount}(campaignID);
+    }
+
+    function _donateToMilestoneCampaign(uint256 campaignID, address donor, uint256 amount, uint8 currentMilestoneID, uint256 milestoneAmount, uint8 nextMilestoneID) private {
+        vm.prank(donor);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit Crowdfunding.NewDonation(donor, campaignID, amount);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.MilestoneReached(campaignID, currentMilestoneID, milestoneAmount);
+        vm.expectEmit(true, false, false, false, address(crowdfunding));
+        emit ICampaign.NextMilestoneStarted(campaignID, nextMilestoneID);
+        crowdfunding.donate{value: amount}(campaignID);
     }
 }
