@@ -43,6 +43,9 @@ interface ICampaign {
         bool claimed;
         uint256 totalDonors;
         uint256 tokensAllocated;
+        uint8 totalMilestones;
+        uint8 currentMilestone;
+        uint8 nextWithdrawableMilestone;
     }
 
     /// @notice Emitted when a campaign reached a milestone

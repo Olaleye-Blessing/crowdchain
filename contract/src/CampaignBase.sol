@@ -349,7 +349,10 @@ abstract contract CampaignBase is ICampaign {
             coverImage: campaign.coverImage,
             claimed: campaign.claimed,
             totalDonors: campaign.donorAddresses.length,
-            tokensAllocated: campaign.tokensAllocated
+            tokensAllocated: campaign.tokensAllocated,
+            totalMilestones: campaign.totalMilestones,
+            currentMilestone: campaign.currentMilestone,
+            nextWithdrawableMilestone: campaign.nextWithdrawableMilestone
         });
     }
 
