@@ -155,7 +155,7 @@ abstract contract CampaignBase is ICampaign {
         view
         override
         campaignExists(campaignId)
-        returns (Milestone[] memory milestones, uint8 currentMileStone)
+        returns (Milestone[] memory milestones, uint8 currentMileStone, uint8 nextWithdrawableMilestone)
     {
         Campaign storage campaign = campaigns[campaignId];
         milestones = new ICampaign.Milestone[](campaign.totalMilestones);
@@ -164,7 +164,7 @@ abstract contract CampaignBase is ICampaign {
             milestones[index] = campaign.milestones[index];
         }
 
-        return (milestones, campaign.currentMilestone);
+        return (milestones, campaign.currentMilestone, campaign.nextWithdrawableMilestone);
     }
 
     /// @inheritdoc ICampaign

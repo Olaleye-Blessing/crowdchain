@@ -153,7 +153,7 @@ interface ICampaign {
     function getCampaignMileStones(uint256 campaignId)
         external
         view
-        returns (Milestone[] memory milestones, uint8 currentMileStone);
+        returns (Milestone[] memory milestones, uint8 currentMileStone, uint8 nextWithdrawableMilestone);
 
     /// @notice Retrieves a paginated list of all campaigns
     /// @param page The page number to retrieve
