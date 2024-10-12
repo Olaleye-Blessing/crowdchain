@@ -280,10 +280,11 @@ contract CampaignBaseTest is Test, ConstantsTest {
             refundDeadline
         );
 
-        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone) = campaignBase.getCampaignMileStones(0);
+        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone, uint8 nextWithdrawableMilestone) = campaignBase.getCampaignMileStones(0);
 
         assertEq(currentMilestone, 0);
         assertEq(milestones.length, 3);
+        assertEq(nextWithdrawableMilestone, 0);
     }
 
     function test_getTotalCampaignsCreated() public {
