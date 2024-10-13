@@ -6,10 +6,15 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
-import { ICampaign } from "@/interfaces/campaign";
 import useWalletStore from "@/stores/wallet";
 import { DatePicker } from "@/components/ui/date-picker";
 import { differenceInDays } from "date-fns";
@@ -17,12 +22,10 @@ import { parseEther } from "ethers/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { uploadImage } from "@/utils/upload-image";
 import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
-
-interface ICampaignForm
-  extends Pick<ICampaign, "description" | "goal" | "title"> {
-  deadline: Date | undefined;
-  refundDeadline: Date | undefined;
-}
+import Milestones from "./milestones";
+import { ICampaignForm } from "../_interfaces/form";
+import ImportantNotice from "./important-notice";
+import { validateMilestoneRules } from "../_utils/milestone-rules";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
@@ -42,6 +45,7 @@ const CampaignForm = () => {
       goal: 1,
       deadline: new Date(Date.now() + oneDay),
       refundDeadline: new Date(Date.now() + 6 * oneDay),
+      milestones: [],
     },
   });
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -102,6 +106,33 @@ const CampaignForm = () => {
         message: "Refund deadline must be at least 5 days from deadline",
       });
 
+    const milestones = data.milestones;
+
+    if (milestones.length > 0) {
+      const rules = Object.values(
+        validateMilestoneRules({
+          milestones,
+          goal: data.goal,
+          deadline: data.deadline,
+        }),
+      );
+
+      if (rules.some((rule) => !rule.valid))
+        return toast({
+          title: "Fix all milestones error",
+          variant: "destructive",
+        });
+    }
+
+    // console.log(
+    //   "__ SUBMIT FORM __",
+    //   milestones.map((milestone) => ({
+    //     targetAmount: parseEther(`${milestone.targetAmount}`),
+    //     deadline: differenceInDays(milestone.deadline!, fullNow),
+    //     description: milestone.description,
+    //   })),
+    // );
+
     try {
       console.log("Uploading image....");
       const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
@@ -111,6 +142,11 @@ const CampaignForm = () => {
         data.title,
         data.description,
         ifpsImg.IpfsHash,
+        milestones.map((milestone) => ({
+          targetAmount: parseEther(`${milestone.targetAmount}`),
+          deadline: differenceInDays(milestone.deadline!, fullNow),
+          description: milestone.description,
+        })),
         parseEther(data.goal as any),
         _deadline,
         _refundDeadline,
@@ -135,14 +171,20 @@ const CampaignForm = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Campaign Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="max-w-2xl mx-auto"
+      >
+        <Card className="">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-left">
+              Create New Campaign
+            </CardTitle>
+            <CardDescription>
+              <ImportantNotice className="mt-[-0.7rem]" />
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Campaign Title</Label>
               <Input
@@ -279,24 +321,20 @@ const CampaignForm = () => {
                 </figure>
               )}
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-center space-x-2 text-yellow-600">
-              <AlertCircle size={20} />
-              <span className="text-sm">
-                Please ensure all information is accurate before submitting.
-              </span>
-            </div>
+        <Milestones form={form} />
+        <ImportantNotice className="mt-2" />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={form.formState.isSubmitting}
-            >
-              Create Campaign
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        <Button
+          type="submit"
+          className="w-full mt-8 max-w-80 mx-auto block"
+          disabled={form.formState.isSubmitting}
+        >
+          Create Campaign
+        </Button>
+      </form>
     </div>
   );
 };
