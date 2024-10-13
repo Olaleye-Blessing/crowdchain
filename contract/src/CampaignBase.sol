@@ -125,7 +125,7 @@ abstract contract CampaignBase is ICampaign {
                 Milestone memory _milestone = Milestone({
                     id: i,
                     targetAmount: milestones[i].targetAmount,
-                    deadline: milestones[i].deadline,
+                    deadline: block.timestamp + (milestones[i].deadline * ONE_DAY),
                     description: milestones[i].description,
                     status: MilestoneStatus.Pending
                 });
@@ -311,23 +311,18 @@ abstract contract CampaignBase is ICampaign {
         if (totalMilestones > 0) {
             if(totalMilestones > 4) revert Campaign__CampaignCreationFailed("You can only have maximum of 4 milestones");
             if(milestones[totalMilestones - 1].targetAmount != goal) revert Campaign__CampaignCreationFailed("Last milestone target amount must be equal to campaign goal");
+            if(milestones[totalMilestones - 1].deadline > duration) revert Campaign__CampaignCreationFailed("The deadline of the last milestone must not be greater than the total duration");
 
-            uint256 deadlines = 0;
             for (uint256 index = 0; index < totalMilestones; index++) {
-                if(index == (totalMilestones - 1)) {
-                    deadlines += milestones[index].deadline;
-                    break;
-                } else if (milestones[index].targetAmount > milestones[index + 1].targetAmount){
+                if (index == totalMilestones - 1) continue;
+
+                if (milestones[index].targetAmount > milestones[index + 1].targetAmount){
                     revert Campaign__CampaignCreationFailed("Target amount of previous milestone must be less than the next one");
                 }
 
-                deadlines += milestones[index].deadline;
-            }
-
-            if (deadlines >= duration) {
-                revert Campaign__CampaignCreationFailed(
-                    "Total milestones deadline must be less than campign duration by at least 1 day"
-                );
+                if (milestones[index].deadline > milestones[index + 1].deadline){
+                    revert Campaign__CampaignCreationFailed("Deadline of previous milestone must be less than the next one");
+                }
             }
         }
     }

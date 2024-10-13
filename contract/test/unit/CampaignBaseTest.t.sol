@@ -212,12 +212,12 @@ contract CampaignBaseTest is Test, ConstantsTest {
         _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 6, description: "First milestone"});
 
         _milestones[1] =
-            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 10, description: "Second milestone"});
+            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 16, description: "Second milestone"});
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 ICampaign.Campaign__CampaignCreationFailed.selector,
-                "Total milestones deadline must be less than campign duration by at least 1 day"
+                "The deadline of the last milestone must not be greater than the total duration"
             )
         );
         vm.prank(ALICE);
