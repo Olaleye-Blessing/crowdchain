@@ -218,11 +218,12 @@ abstract contract CampaignBase is ICampaign {
         if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
         if (msg.sender != campaign.owner) revert Campaign__NotCampaignOwner();
 
-        if (campaign.totalMilestones == 0) {
-            _withdrawCampaignFundWithNoMilestone(campaign);
-        } else {
-            _withdrawCampaignFundWithMilestone(campaign);
-        }
+        uint256 amountToSend = campaign.totalMilestones == 0 ? _withdrawCampaignFundWithNoMilestone(campaign) :  _withdrawCampaignFundWithMilestone(campaign);
+
+        (bool success,) = payable(msg.sender).call{value: amountToSend}("");
+        if (!success) revert Campaign__WithdrawalFailed();
+
+        emit CampaignFundWithdrawn(campaign.id, msg.sender, amountToSend);
     }
 
     /// @inheritdoc ICampaign
@@ -351,7 +352,7 @@ abstract contract CampaignBase is ICampaign {
         });
     }
 
-    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal {
+    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal returns(uint256) {
         if (block.timestamp < campaign.refundDeadline) {
             revert Campaign__RefundDeadlineActive();
         }
@@ -368,13 +369,10 @@ abstract contract CampaignBase is ICampaign {
             campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
         }
 
-        (bool success,) = payable(msg.sender).call{value: amount}("");
-        if (!success) revert Campaign__WithdrawalFailed();
-
-        emit CampaignFundWithdrawn(campaign.id, msg.sender, amount);
+        return amount;
     }
 
-    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal {
+    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal returns(uint256) {
         Milestone storage milestone = campaign.milestones[campaign.nextWithdrawableMilestone];
         if (milestone.status != MilestoneStatus.Completed) revert Campaign__MilestoneGoalNotCompeleted(campaign.id, campaign.nextWithdrawableMilestone, campaign.amountRaised);
 
@@ -402,9 +400,6 @@ abstract contract CampaignBase is ICampaign {
             campaign.nextWithdrawableMilestone += 1;
         }
 
-        (bool success,) = payable(msg.sender).call{value: amoutToSend}("");
-        if (!success) revert Campaign__WithdrawalFailed();
-
-        emit CampaignFundWithdrawn(campaign.id, msg.sender, amoutToSend);
+        return amoutToSend;
     }
 }
