@@ -72,24 +72,38 @@ contract Crowdfunding is CampaignBase {
 
         emit NewDonation(msg.sender, campaignId, msg.value);
 
-        if(campaign.totalMilestones > 0) {
-            Milestone storage currentMilestone = campaign.milestones[campaign.currentMilestone];
+        if (campaign.amountRaised >= campaign.goal) {
+            emit CampaignGoalCompleted(campaign.owner, campaignId, campaign.amountRaised);
+        }
 
-            if(campaign.amountRaised >= currentMilestone.targetAmount) {
-                currentMilestone.status = MilestoneStatus.Completed;
+        if (campaign.totalMilestones > 0) {
+            if (campaign.currentMilestone < campaign.totalMilestones - 1) {
+                uint8 newMilestone = campaign.currentMilestone;
 
-                if(currentMilestone.id == campaign.totalMilestones - 1) {
-                    emit CampaignGoalCompleted(campaign.owner, campaignId, campaign.amountRaised);
-                } else {
-                    emit MilestoneReached(campaignId, campaign.currentMilestone, campaign.amountRaised);
-                    campaign.currentMilestone++;
-                    campaign.milestones[campaign.currentMilestone].status = MilestoneStatus.InProgress;
-                    emit NextMilestoneStarted(campaignId, campaign.currentMilestone);
+                for (uint8 i = campaign.currentMilestone; i < campaign.totalMilestones; i++) {
+                    if (campaign.amountRaised >= campaign.milestones[i].targetAmount) {
+                        campaign.milestones[i].status = MilestoneStatus.Completed;
+                    } else {
+                        campaign.milestones[i].status = MilestoneStatus.InProgress;
+                        newMilestone = i;
+                        break;
+                    }
                 }
-            }
-        } else {
-            if (campaign.amountRaised >= campaign.goal) {
-                emit CampaignGoalCompleted(campaign.owner, campaignId, campaign.amountRaised);
+
+                if (newMilestone > campaign.currentMilestone) {
+                    emit MilestoneReached(campaign.id, newMilestone - 1, campaign.amountRaised);
+                    campaign.currentMilestone = newMilestone;
+
+                    if (newMilestone < campaign.totalMilestones) {
+                        emit NextMilestoneStarted(campaign.id, newMilestone);
+                    }
+                }
+            } else {
+                Milestone storage lastMilestone = campaign.milestones[campaign.currentMilestone];
+
+                if (campaign.amountRaised >= lastMilestone.targetAmount) {
+                    lastMilestone.status = MilestoneStatus.Completed;
+                }
             }
         }
     }
