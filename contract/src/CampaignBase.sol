@@ -127,7 +127,7 @@ abstract contract CampaignBase is ICampaign {
                     targetAmount: milestones[i].targetAmount,
                     deadline: block.timestamp + (milestones[i].deadline * ONE_DAY),
                     description: milestones[i].description,
-                    status: MilestoneStatus.Pending
+                    status: i == 0 ? MilestoneStatus.InProgress : MilestoneStatus.Pending
                 });
                 newCampaign.milestones[i] = _milestone;
             }
