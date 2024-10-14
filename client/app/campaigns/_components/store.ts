@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { ICampaignDetail } from "@/interfaces/campaign";
+import { arrayOfUniqueObjs } from "@/utils/unique-arr-objects";
 
 interface State {
   page: number;
@@ -31,7 +32,10 @@ export const useHomeCampaigns = create<Store>()(
       },
       setCampaigns(campaigns) {
         set((state) => ({
-          campaigns: [...state.campaigns, ...campaigns],
+          campaigns:
+            process.env.NODE_ENV === "production"
+              ? [...state.campaigns, ...campaigns]
+              : arrayOfUniqueObjs([...state.campaigns, ...campaigns], "id"),
         }));
       },
     })),
