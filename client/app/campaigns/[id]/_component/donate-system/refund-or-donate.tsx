@@ -9,12 +9,11 @@ import useWalletStore from "@/stores/wallet";
 import { parseEther } from "ethers/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
-export default function RefundOrDonate({
-  deadline,
-  refundDeadline,
-  claimed,
-  id,
-}: Pick<ICampaignDetail, "deadline" | "refundDeadline" | "claimed" | "id">) {
+interface RefundOrDonateProps {
+  campaign: ICampaignDetail;
+}
+
+export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
   const writeableCrowdChainContract = useWalletStore(
     (state) => state.writeableCrowdChainContract,
   );
@@ -22,39 +21,32 @@ export default function RefundOrDonate({
   const [refundAmount, setRefundAmount] = useState("");
 
   const currentTime = Date.now() / 1000;
-  const canDonate = currentTime < deadline;
-  const canRefund = currentTime < refundDeadline;
+  const canDonate = currentTime < campaign.deadline;
+  const canRefund = currentTime < campaign.refundDeadline;
 
-  const handleDonate = async () => {
-    if (!writeableCrowdChainContract || !donationAmount) return;
+  const handleAction = async (type: "refund" | "donate", amount: string) => {
+    if (!writeableCrowdChainContract || !amount) return;
 
     try {
-      const tx = await writeableCrowdChainContract.donate(+id, {
-        value: parseEther(`${donationAmount}`),
+      const tx =
+        type === "donate"
+          ? await writeableCrowdChainContract.donate(+campaign.id, {
+              value: parseEther(`${amount}`),
+            })
+          : await writeableCrowdChainContract.refund(
+              +campaign.id,
+              parseEther(`${amount}`),
+              { gasLimit: 5000000 },
+            );
+
+      await tx.wait();
+
+      toast({
+        title:
+          type === "donate"
+            ? `You donated ${amount}!`
+            : `${amount} has been sent to your wallet!`,
       });
-
-      await tx.wait();
-
-      toast({ title: `You donated ${donationAmount}!` });
-    } catch (error) {
-      console.log("__ THERE IS AN ERROR __");
-      console.log(error);
-    }
-  };
-
-  const handleRefund = async () => {
-    if (!writeableCrowdChainContract || !refundAmount) return;
-
-    try {
-      const tx = await writeableCrowdChainContract.refund(
-        +id,
-        parseEther(`${refundAmount}`),
-        { gasLimit: 5000000 },
-      );
-
-      await tx.wait();
-
-      toast({ title: `You donated ${refundAmount}!` });
     } catch (error) {
       console.log("__ THERE IS AN ERROR __");
       console.log(error);
@@ -69,7 +61,7 @@ export default function RefundOrDonate({
           <TabsTrigger value="refund">Refund</TabsTrigger>
         </TabsList>
         <TabsContent value="donate">
-          {claimed ? (
+          {campaign.claimed ? (
             <p className="h-full flex items-center justify-center text-center">
               This campaign has been claimed!
             </p>
@@ -86,13 +78,13 @@ export default function RefundOrDonate({
               handleInputChange={(val) => {
                 setDonationAmount(val);
               }}
-              handleSubmit={handleDonate}
+              handleSubmit={() => handleAction("donate", donationAmount)}
               btnText="Donate"
             />
           )}
         </TabsContent>
         <TabsContent value="refund">
-          {claimed ? (
+          {campaign.claimed ? (
             <p className="h-full flex items-center justify-center text-center">
               This campaign has been claimed!
             </p>
@@ -109,7 +101,7 @@ export default function RefundOrDonate({
               handleInputChange={(val) => {
                 setRefundAmount(val);
               }}
-              handleSubmit={handleRefund}
+              handleSubmit={() => handleAction("refund", refundAmount)}
               btnText="Request Refund"
             />
           )}
@@ -141,7 +133,6 @@ function Form(props: FormProps) {
         props.handleSubmit();
       }}
     >
-      {/* <h4 className="!-mb-4 font-medium">{props.title}</h4> */}
       <p className="text-sm text-gray-600">{props.description}</p>
       <Input
         type="number"
