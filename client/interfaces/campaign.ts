@@ -13,4 +13,7 @@ export interface ICampaign {
 
 export interface ICampaignDetail extends ICampaign {
   totalDonors: number;
+  totalMilestones: number;
+  currentMilestone: number;
+  nextWithdrawableMilestone: number;
 }
