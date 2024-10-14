@@ -9,9 +9,10 @@ import {
   milestoneStatuses,
 } from "../../_utils/construct-milestone";
 import { IFetch } from "@/interfaces/fetch";
-import { Milestone } from "@/interfaces/milestone";
+import { Milestone, MilestoneStatus } from "@/interfaces/milestone";
 import FetchedData from "@/components/fetched-data";
 import { getMilestoneStatusColor } from "../../_utils/milestone-color";
+import WithdrawFunds from "../withdraw-funds";
 
 interface Data {
   lists: Milestone[];
@@ -21,8 +22,10 @@ interface Data {
 
 export default function Milestones({
   campaignId,
+  owned,
 }: {
   campaignId: ICampaignDetail["id"];
+  owned: boolean;
 }) {
   const readonlyContract = useWalletStore((state) => state.readonlyContract!);
   const [milestones, setMilestones] = useState<IFetch<Data | null>>({
@@ -96,6 +99,17 @@ export default function Milestones({
                       key={milestone.id}
                       className={`border p-4 rounded-lg bg-opacity-30 ${bgColor}`}
                     >
+                      {owned &&
+                        milestones.data?.withdrawable === milestone.id &&
+                        milestone.status === MilestoneStatus.Completed && (
+                          <WithdrawFunds
+                            id={campaignId}
+                            buttonProps={{
+                              variant: "outline",
+                              className: "!px-2 !py-1",
+                            }}
+                          />
+                        )}
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="font-semibold">
                           Milestone {milestone.id + 1}

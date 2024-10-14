@@ -32,7 +32,8 @@ export default function Details({
               {address === campaign.owner &&
                 campaign.amountRaised > campaign.goal &&
                 !campaign.claimed &&
-                currentTime > campaign.refundDeadline && (
+                currentTime > campaign.refundDeadline &&
+                campaign.totalMilestones === 0 && (
                   <WithdrawFunds id={campaign.id} />
                 )}
             </div>
@@ -113,7 +114,10 @@ export default function Details({
             </div>
           </section>
           {campaign.totalMilestones > 0 && (
-            <Milestones campaignId={campaign.id} />
+            <Milestones
+              campaignId={campaign.id}
+              owned={campaign.owner.toLowerCase() === address?.toLowerCase()}
+            />
           )}
         </div>
 

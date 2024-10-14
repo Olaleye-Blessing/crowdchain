@@ -1,13 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonProps } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { ICampaignDetail } from "@/interfaces/campaign";
 import useWalletStore from "@/stores/wallet";
 
-interface WithdrawFundsProps extends Pick<ICampaignDetail, "id"> {}
+interface WithdrawFundsProps extends Pick<ICampaignDetail, "id"> {
+  buttonProps?: ButtonProps;
+}
 
-export default function WithdrawFunds({ id }: WithdrawFundsProps) {
+export default function WithdrawFunds({ id, buttonProps }: WithdrawFundsProps) {
   const writeableCrowdChainContract = useWalletStore(
     (state) => state.writeableCrowdChainContract,
   );
@@ -31,5 +33,9 @@ export default function WithdrawFunds({ id }: WithdrawFundsProps) {
     }
   };
 
-  return <Button onClick={withdraw}>Withdraw</Button>;
+  return (
+    <Button {...buttonProps} onClick={withdraw}>
+      Withdraw
+    </Button>
+  );
 }
