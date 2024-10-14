@@ -13,6 +13,7 @@ import { Milestone, MilestoneStatus } from "@/interfaces/milestone";
 import FetchedData from "@/components/fetched-data";
 import { getMilestoneStatusColor } from "../../_utils/milestone-color";
 import WithdrawFunds from "../withdraw-funds";
+import { EventFilter } from "ethers";
 
 interface Data {
   lists: Milestone[];
@@ -20,13 +21,17 @@ interface Data {
   withdrawable: number;
 }
 
+interface MilestonesProps {
+  campaignId: ICampaignDetail["id"];
+  owned: boolean;
+  campaignClaimedFilter: EventFilter;
+}
+
 export default function Milestones({
   campaignId,
   owned,
-}: {
-  campaignId: ICampaignDetail["id"];
-  owned: boolean;
-}) {
+  campaignClaimedFilter,
+}: MilestonesProps) {
   const readonlyContract = useWalletStore((state) => state.readonlyContract!);
   const [milestones, setMilestones] = useState<IFetch<Data | null>>({
     loading: true,
@@ -62,6 +67,20 @@ export default function Milestones({
     };
 
     fetchCampaignMilestone();
+
+    function listenToFundsClaim(
+      _campaignId: number,
+      _sender: string,
+      _amount: string,
+    ) {
+      fetchCampaignMilestone();
+    }
+
+    readonlyContract.on(campaignClaimedFilter, listenToFundsClaim);
+
+    return () => {
+      readonlyContract.off(campaignClaimedFilter, listenToFundsClaim);
+    };
   }, []);
 
   return (

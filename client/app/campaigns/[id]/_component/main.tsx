@@ -76,6 +76,7 @@ export default function Main({ id }: { id: string }) {
           campaign={campaign.data}
           campaignDonorFilter={campaignDonorFilter}
           campaignRefundFilter={campaignRefundFilter}
+          campaignClaimedFilter={campaignClaimedFilter}
         />
       ) : campaign.error ? (
         <p className="text-red-600">{campaign.error}</p>
