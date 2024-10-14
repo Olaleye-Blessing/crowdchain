@@ -1,5 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
-import { Clock, Users, DollarSign, CheckCircle } from "lucide-react";
+import {
+  Clock,
+  Users,
+  DollarSign,
+  CheckCircle,
+  Milestone as MilestoneIcon,
+  HandCoins,
+  Waypoints,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,6 +21,8 @@ import { buttonVariants } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { ICampaignDetail } from "@/interfaces/campaign";
 import { cn } from "@/lib/utils";
+import CampaignInfo from "./campaign-info";
+import { milestones } from "@/utils/milestone";
 
 interface CampaignProps {
   campaign: ICampaignDetail;
@@ -24,7 +34,7 @@ export default function Campaign({ campaign, className }: CampaignProps) {
 
   return (
     <li className={cn("max-w-[23.4375rem]", className)}>
-      <Card>
+      <Card className="h-full flex flex-col">
         <figure className="w-full h-36 rounded-lg rounded-b-none overflow-hidden block items-center justify-center sm:h-64">
           <img
             src={campaign.coverImage}
@@ -50,41 +60,57 @@ export default function Campaign({ campaign, className }: CampaignProps) {
             </div>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-4 text-sm sm:text-base">
-            <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-blue-500 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Deadline</p>
-                <p>{new Date(campaign.deadline * 1000).toLocaleDateString()}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-green-500 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Total Donors</p>
-                <p>{campaign.totalDonors}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <DollarSign className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Refund Deadline</p>
-                <p>
-                  {new Date(
-                    campaign.refundDeadline * 1000,
-                  ).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-purple-500 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Claimed</p>
-                <p>{campaign.claimed ? "Yes" : "No"}</p>
-              </div>
-            </div>
+            <CampaignInfo
+              Icon={Clock}
+              iconClassName="text-blue-500"
+              title="Deadline"
+              body={new Date(campaign.deadline * 1000).toLocaleDateString()}
+            />
+            <CampaignInfo
+              Icon={Users}
+              iconClassName="text-green-500"
+              title="Total Donors"
+              body={campaign.totalDonors}
+            />
+            <CampaignInfo
+              Icon={DollarSign}
+              iconClassName="text-yellow-500"
+              title="Refund Deadline"
+              body={new Date(
+                campaign.refundDeadline * 1000,
+              ).toLocaleDateString()}
+            />
+            <CampaignInfo
+              Icon={CheckCircle}
+              iconClassName="text-purple-500"
+              title="Claimed"
+              body={campaign.claimed ? "Yes" : "No"}
+            />
+            {Boolean(campaign.totalMilestones) && (
+              <>
+                <CampaignInfo
+                  Icon={MilestoneIcon}
+                  iconClassName="text-primary"
+                  title="Milestones"
+                  body={campaign.totalMilestones}
+                />
+                <CampaignInfo
+                  Icon={Waypoints}
+                  iconClassName="text-yellow-500"
+                  title="Current milestone"
+                  body={`${milestones[campaign.currentMilestone as keyof typeof milestones]}`}
+                />
+                <CampaignInfo
+                  Icon={HandCoins}
+                  iconClassName="text-pink-800"
+                  title="Withdrawable milestone"
+                  body={`${milestones[campaign.nextWithdrawableMilestone as keyof typeof milestones]}`}
+                />
+              </>
+            )}
           </div>
         </CardContent>
-        <CardFooter className="p-3 flex flex-col">
+        <CardFooter className="p-3 flex flex-col mt-auto">
           <p className="break-all mb-2 font-semibold">
             <span>Owner: </span>
             <Link
