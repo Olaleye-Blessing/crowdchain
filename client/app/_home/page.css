@@ -5,3 +5,7 @@ main > section:nth-child(even) {
 main > section:nth-child(n+2) {
   @apply py-20;
 }
+
+main > section:last-child {
+  @apply mb-0;
+}
