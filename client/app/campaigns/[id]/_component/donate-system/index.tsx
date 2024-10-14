@@ -76,7 +76,7 @@ export default function DonateSystem({
 
   return (
     <div className="lg:w-1/3 mt-6 lg:mt-0">
-      <div className="sticky top-4 grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(18.75rem,_1fr))] lg:grid-cols-1">
+      <div className="sticky top-20 grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(18.75rem,_1fr))] lg:grid-cols-1">
         <RefundOrDonate
           deadline={campaign.deadline}
           refundDeadline={campaign.refundDeadline}
