@@ -92,7 +92,9 @@ export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
             <p className="h-full flex items-center justify-center text-center">
               Refund period has been closed!
             </p>
-          ) : (
+          ) : campaign.totalMilestones === 0 ||
+            (campaign.totalMilestones > 0 &&
+              campaign.nextWithdrawableMilestone === 0) ? (
             <Form
               title="Request a Refund"
               description="You can request a refund for your contribution if the campaign hasn't reached its goal."
@@ -104,6 +106,11 @@ export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
               handleSubmit={() => handleAction("refund", refundAmount)}
               btnText="Request Refund"
             />
+          ) : (
+            <p className="h-full flex items-center justify-center text-center">
+              Refund is not possible again because the first milestone has been
+              approved(withdrawn by the campaign owner).
+            </p>
           )}
         </TabsContent>
       </Tabs>
