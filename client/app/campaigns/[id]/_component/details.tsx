@@ -8,15 +8,19 @@ import WithdrawFunds from "./withdraw-funds";
 import useWalletStore from "@/stores/wallet";
 import Link from "next/link";
 import Milestones from "./milestones";
+import { EventFilter } from "ethers";
 
 const currentTime = Date.now() / 1000;
 
-interface DetailsProps extends DonateSystemProps {}
+interface DetailsProps extends DonateSystemProps {
+  campaignClaimedFilter: EventFilter;
+}
 
 export default function Details({
   campaign,
   campaignDonorFilter,
   campaignRefundFilter,
+  campaignClaimedFilter,
 }: DetailsProps) {
   const address = useWalletStore((state) => state.address);
 
@@ -117,6 +121,7 @@ export default function Details({
             <Milestones
               campaignId={campaign.id}
               owned={campaign.owner.toLowerCase() === address?.toLowerCase()}
+              campaignClaimedFilter={campaignClaimedFilter}
             />
           )}
         </div>
