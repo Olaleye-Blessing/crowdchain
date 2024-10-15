@@ -5,10 +5,9 @@
 }
 
 .bar {
-  @apply block w-[25px] h-[3px] mx-auto my-[5px];
+  @apply block w-[1.5625rem] h-[0.1875rem] mx-auto my-[0.325rem] bg-foreground;
   -webkit-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
-  background-color: #101010;
 }
 
 .hamburger.active .bar:nth-child(2) {
@@ -24,7 +23,7 @@
 }
 
 .nav__contents {
-  @apply transition-all h-0 overflow-hidden bg-white flex flex-col absolute left-0 w-full top-[2.88rem];
+  @apply transition-all h-0 overflow-hidden bg-background flex flex-col absolute left-0 w-full top-[2.88rem];
 }
 
 .hamburger.active + .nav__contents {

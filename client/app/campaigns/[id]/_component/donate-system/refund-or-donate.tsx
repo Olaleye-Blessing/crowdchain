@@ -54,7 +54,7 @@ export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
   };
 
   return (
-    <section className="bg-gray-100 p-4 rounded-lg ">
+    <section className="border text-card-foreground shadow bg-card p-4 rounded-lg">
       <Tabs defaultValue="donate">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="donate">Donate</TabsTrigger>
@@ -140,7 +140,7 @@ function Form(props: FormProps) {
         props.handleSubmit();
       }}
     >
-      <p className="text-sm text-gray-600">{props.description}</p>
+      <p className="text-sm text-muted-foreground">{props.description}</p>
       <Input
         type="number"
         placeholder="Amount in ETH"

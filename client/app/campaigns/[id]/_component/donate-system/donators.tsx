@@ -11,7 +11,7 @@ export default function Donators({ donors }: DonatorsProps) {
   const donorsList = donors.data && Object.entries(donors.data);
 
   return (
-    <section className="bg-gray-100 py-4 rounded-lg">
+    <section className="border text-card-foreground shadow bg-card py-4 rounded-lg">
       <h2 className="px-4">Donors</h2>
       <FetchedData item={donors}>
         {donorsList && (
