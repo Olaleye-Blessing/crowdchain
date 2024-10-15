@@ -12,7 +12,7 @@ abstract contract CampaignBase is ICampaign {
     uint256 private constant ONE_DAY = 1 days;
     uint256 private constant ONE_ETH = 1 ether;
     /// @dev This is 0.2%. Always divide the final fee by 1000. It is set at 2 here cause solidity doesn't support decimals.
-    uint8 public constant OWNER_FEE = 2;
+    uint256 public constant OWNER_FEE = 2;
     uint256 private accumulatedFee = 0;
     address payable private immutable i_owner;
 
@@ -100,7 +100,7 @@ abstract contract CampaignBase is ICampaign {
         string memory coverImage,
         BasicMilestone[] memory milestones,
         uint256 goal,
-        uint64 duration,
+        uint256 duration,
         uint256 refundDeadline
     ) public override {
         _validateCampaignCreation(title, description, coverImage, milestones, goal, duration, refundDeadline);
@@ -283,7 +283,7 @@ abstract contract CampaignBase is ICampaign {
         string memory coverImage,
         BasicMilestone[] memory milestones,
         uint256 goal,
-        uint64 duration,
+        uint256 duration,
         uint256 refundDeadline
     ) internal view {
         if (msg.sender == address(0)) {

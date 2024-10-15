@@ -137,7 +137,7 @@ interface ICampaign {
         string memory coverImage,
         BasicMilestone[] memory milestones,
         uint256 goal,
-        uint64 duration,
+        uint256 duration,
         uint256 refundDeadline
     ) external;
 

@@ -35,7 +35,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_CreateCampaignSuccessfully() public {
         uint256 amountNeeded = 6;
-        uint64 deadline = 4; // days
+        uint256 deadline = 4; // days
         uint256 refundDeadline = 6; // days
 
         _createCampaign(
@@ -56,7 +56,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_createCampaignWithMilestonesSuccessfully() public {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
@@ -136,7 +136,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_campaignCreationFailsIfMilestonesAreMoreThan4() public {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](5);
@@ -175,7 +175,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_campaignCreationFailsIfLastMilestoneTargetIsNotEqualToGoal() public {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
@@ -204,7 +204,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_campaignCreationFailsIfMilestoneDeadlineIsNotLessThanDuration() public {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
@@ -234,7 +234,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_CreatedCampaignSavedCorrectly() public {
         uint256 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
+        uint256 _deadline = 4; // days
         uint256 _refundDeadline = 7; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
@@ -256,7 +256,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_getCampaignMilestones() public {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
@@ -358,8 +358,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_withdrawFailIfNotOwner() public {
         uint256 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint64 _refundDeadline = 10; // days
+        uint256 _deadline = 4; // days
+        uint256 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -372,8 +372,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_withdrawFailIfRefundDeadlineIsClosed() public {
         uint256 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint64 _refundDeadline = 10; // days
+        uint256 _deadline = 4; // days
+        uint256 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -386,8 +386,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
     function test_withdrawFailIfThereIsNoDonation() public {
         uint256 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint64 _refundDeadline = 10; // days
+        uint256 _deadline = 4; // days
+        uint256 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -418,7 +418,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         string memory _title,
         string memory _description,
         uint256 _amountNeeded,
-        uint64 _deadline,
+        uint256 _deadline,
         uint256 _refundDeadline
     ) private {
         vm.startPrank(_owner);
@@ -434,8 +434,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
     }
 
     function _shiftCurrentTimestampToAllowWithdraw() private {
-        uint64 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
-        uint64 _deadline = 4; // gotten from createSuccessfulCampaign();
+        uint256 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
+        uint256 _deadline = 4; // gotten from createSuccessfulCampaign();
         vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
     }
 }

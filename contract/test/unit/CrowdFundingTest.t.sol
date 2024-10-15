@@ -719,15 +719,15 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function _shiftCurrentTimestampToAllowWithdraw() private {
-        uint64 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
-        uint64 _deadline = 4; // gotten from createSuccessfulCampaign();
+        uint256 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
+        uint256 _deadline = 4; // gotten from createSuccessfulCampaign();
         vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
     }
 
     function _createSuccessfulCampaign() private {
-        uint32 _amountNeeded = 6;
-        uint64 _deadline = 4; // days
-        uint64 _refundDeadline = 10; // days
+        uint256 _amountNeeded = 6;
+        uint256 _deadline = 4; // days
+        uint256 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
@@ -738,8 +738,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         address _owner,
         string memory _title,
         string memory _description,
-        uint32 _amountNeeded,
-        uint64 _deadline,
+        uint256 _amountNeeded,
+        uint256 _deadline,
         uint256 _refundDeadline
     ) private {
         vm.startPrank(_owner);
@@ -760,7 +760,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     function _createCampignWithMilestones(address owner) private {
         uint256 amountNeeded = 40 * 1 ether;
-        uint64 deadline = 15; // days
+        uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);

@@ -5,7 +5,7 @@ const basicMilestone = `tuple(uint256 targetAmount, uint256 deadline, string des
 const milestone = `tuple(uint8 id, uint256 targetAmount, uint256 deadline, string description, uint8 status)`;
 
 export const crowdChainABI = [
-  `function createCampaign(string title, string description, string coverImage, ${basicMilestone}[] milestones, uint256 goal, uint64 duration, uint256 refundDeadline)`,
+  `function createCampaign(string title, string description, string coverImage, ${basicMilestone}[] milestones, uint256 goal, uint256 duration, uint256 refundDeadline)`,
   "function totalCampaigns() public view returns (uint256)",
   `function getCampaigns(uint256 page, uint256 perPage) external view returns (${campaignDetails}[], uint256)`,
   `function getOwnerCampaigns(address owner, uint256 page, uint256 perPage) external view returns (${campaignDetails}[] memory, uint256)`,
