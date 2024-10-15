@@ -132,10 +132,10 @@ interface ICampaign {
     /// @param duration The duration of the campaign in days
     /// @param refundDeadline The number of days after the campaign ends during which refunds are possible
     function createCampaign(
-        string memory title,
-        string memory description,
-        string memory coverImage,
-        BasicMilestone[] memory milestones,
+        string calldata title,
+        string calldata description,
+        string calldata coverImage,
+        BasicMilestone[] calldata milestones,
         uint256 goal,
         uint256 duration,
         uint256 refundDeadline
