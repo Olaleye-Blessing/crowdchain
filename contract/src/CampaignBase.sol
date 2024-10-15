@@ -168,7 +168,9 @@ abstract contract CampaignBase is ICampaign {
         Campaign storage campaign = campaigns[campaignId];
         milestones = new ICampaign.Milestone[](campaign.totalMilestones);
 
-        for (uint8 index = 0; index < campaign.totalMilestones; index++) {
+        uint8 totalMilestones = campaign.totalMilestones;
+
+        for (uint8 index = 0; index < totalMilestones; index++) {
             milestones[index] = campaign.milestones[index];
         }
 

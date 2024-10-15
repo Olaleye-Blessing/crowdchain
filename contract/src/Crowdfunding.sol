@@ -80,7 +80,9 @@ contract Crowdfunding is CampaignBase {
             if (campaign.currentMilestone < campaign.totalMilestones - 1) {
                 uint8 newMilestone = campaign.currentMilestone;
 
-                for (uint8 i = campaign.currentMilestone; i < campaign.totalMilestones; i++) {
+                uint8 totalMilestones = campaign.totalMilestones;
+
+                for (uint8 i = campaign.currentMilestone; i < totalMilestones; i++) {
                     if (campaign.amountRaised >= campaign.milestones[i].targetAmount) {
                         campaign.milestones[i].status = MilestoneStatus.Completed;
                     } else {
@@ -145,7 +147,9 @@ contract Crowdfunding is CampaignBase {
     function _updateMilestone(Campaign storage campaign) private {
         uint8 newCurrentMilestone = 0;
 
-        for (uint8 i = 0; i < campaign.totalMilestones; i++) {
+        uint8 totalMilestones = campaign.totalMilestones;
+
+        for (uint8 i = 0; i < totalMilestones; i++) {
             if (campaign.amountRaised >= campaign.milestones[i].targetAmount) {
                 campaign.milestones[i].status = MilestoneStatus.Completed;
             } else {
@@ -156,7 +160,8 @@ contract Crowdfunding is CampaignBase {
         }
 
         if (newCurrentMilestone < campaign.currentMilestone) {
-            for (uint8 i = newCurrentMilestone + 1; i <= campaign.currentMilestone; i++) {
+            uint8 currentMilestone = campaign.currentMilestone;
+            for (uint8 i = newCurrentMilestone + 1; i <= currentMilestone; i++) {
                 campaign.milestones[i].status = MilestoneStatus.Pending;
             }
 
@@ -166,14 +171,15 @@ contract Crowdfunding is CampaignBase {
 
     /// @notice Removes an address from an array
     /// @dev Internal function used to remove a donor's address when they have no remaining donation
-    /// @param array The array of addresses to modify
+    /// @param addresses The array of addresses to modify
     /// @param addressToRemove The address to remove from the array
     /// @return bool Returns true if the address was successfully removed, false otherwise
-    function _removeAddress(address[] storage array, address addressToRemove) internal returns (bool) {
-        for (uint256 i = 0; i < array.length; i++) {
-            if (array[i] == addressToRemove) {
-                array[i] = array[array.length - 1];
-                array.pop();
+    function _removeAddress(address[] storage addresses, address addressToRemove) internal returns (bool) {
+        uint256 totalAddresses = addresses.length;
+        for (uint256 i = 0; i < totalAddresses; i++) {
+            if (addresses[i] == addressToRemove) {
+                addresses[i] = addresses[totalAddresses - 1];
+                addresses.pop();
                 return true;
             }
         }
