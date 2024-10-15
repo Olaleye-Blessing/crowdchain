@@ -36,16 +36,16 @@ interface ICampaign {
         uint256 deadline;
         uint256 refundDeadline;
         uint256 goal;
-        address owner;
-        string title;
-        string description;
-        string coverImage;
-        bool claimed;
         uint256 totalDonors;
         uint256 tokensAllocated;
         uint8 totalMilestones;
         uint8 currentMilestone;
         uint8 nextWithdrawableMilestone;
+        address owner;
+        string title;
+        string description;
+        string coverImage;
+        bool claimed;
     }
 
     /// @notice Emitted when a campaign reached a milestone

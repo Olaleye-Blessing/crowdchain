@@ -32,19 +32,19 @@ abstract contract CampaignBase is ICampaign {
         uint256 deadline;
         uint256 refundDeadline;
         uint256 goal; // in wei
+        uint256 tokensAllocated;
         address owner;
         string title;
         string description;
         string coverImage;
-        bool claimed;
-        mapping(address => uint256) donors;
         address[] donorAddresses;
+        mapping(address => uint256) donors;
         mapping(address => bool) hasClaimedTokens;
-        uint256 tokensAllocated;
         mapping(uint8 => Milestone) milestones;
         uint8 totalMilestones;
         uint8 currentMilestone;
         uint8 nextWithdrawableMilestone;
+        bool claimed;
     }
 
     /// @notice Array of all campaigns
