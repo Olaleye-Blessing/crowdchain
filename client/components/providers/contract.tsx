@@ -73,9 +73,11 @@ export default function ContractProviders({
           "any",
         );
 
-        writableProvider.on("network", networkChanged);
-
         setWritableProvider(writableProvider);
+
+        if (!address) return setLoading(false);
+
+        writableProvider.on("network", networkChanged);
 
         (window.ethereum as any).on("accountsChanged", (accounts: string[]) => {
           const account = accounts[0] || null;
@@ -83,8 +85,6 @@ export default function ContractProviders({
 
           if (!account) disconnect();
         });
-
-        if (!address) return setLoading(false);
 
         try {
           await writableProvider.send("eth_requestAccounts", []);
