@@ -157,8 +157,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICampaign.Campaign__CampaignCreationFailed.selector,
-                "You can only have maximum of 4 milestones"
+                ICampaign.Campaign__CampaignCreationFailed.selector, "You can only have maximum of 4 milestones"
             )
         );
         vm.prank(ALICE);
@@ -187,7 +186,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICampaign.Campaign__CampaignCreationFailed.selector, "Last milestone target amount must be equal to campaign goal"
+                ICampaign.Campaign__CampaignCreationFailed.selector,
+                "Last milestone target amount must be equal to campaign goal"
             )
         );
         vm.prank(ALICE);
@@ -280,7 +280,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
             refundDeadline
         );
 
-        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone, uint8 nextWithdrawableMilestone) = campaignBase.getCampaignMileStones(0);
+        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone, uint8 nextWithdrawableMilestone) =
+            campaignBase.getCampaignMileStones(0);
 
         assertEq(currentMilestone, 0);
         assertEq(milestones.length, 3);

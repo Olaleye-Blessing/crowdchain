@@ -126,7 +126,11 @@ contract Crowdfunding is CampaignBase {
         if (amountDonated < amount) revert Crowdfunding__InsufficientDonation(campaignId, amount, amountDonated);
 
         if (campaign.totalMilestones > 0) {
-            if (campaign.nextWithdrawableMilestone != 0) revert Campaign__WithdrawNotAllowed("Refunds not allowed after the first milestone funds have been withdrawn");
+            if (campaign.nextWithdrawableMilestone != 0) {
+                revert Campaign__WithdrawNotAllowed(
+                    "Refunds not allowed after the first milestone funds have been withdrawn"
+                );
+            }
         }
 
         campaign.amountRaised -= amount;

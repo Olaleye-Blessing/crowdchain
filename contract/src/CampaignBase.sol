@@ -228,7 +228,9 @@ abstract contract CampaignBase is ICampaign {
         if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
         if (msg.sender != campaign.owner) revert Campaign__NotCampaignOwner();
 
-        uint256 amountToSend = campaign.totalMilestones == 0 ? _withdrawCampaignFundWithNoMilestone(campaign) :  _withdrawCampaignFundWithMilestone(campaign);
+        uint256 amountToSend = campaign.totalMilestones == 0
+            ? _withdrawCampaignFundWithNoMilestone(campaign)
+            : _withdrawCampaignFundWithMilestone(campaign);
 
         (bool success,) = payable(msg.sender).call{value: amountToSend}("");
         if (!success) revert Campaign__WithdrawalFailed();
@@ -320,19 +322,31 @@ abstract contract CampaignBase is ICampaign {
 
         uint256 totalMilestones = milestones.length;
         if (totalMilestones > 0) {
-            if(totalMilestones > 4) revert Campaign__CampaignCreationFailed("You can only have maximum of 4 milestones");
-            if(milestones[totalMilestones - 1].targetAmount != goal) revert Campaign__CampaignCreationFailed("Last milestone target amount must be equal to campaign goal");
-            if(milestones[totalMilestones - 1].deadline > duration) revert Campaign__CampaignCreationFailed("The deadline of the last milestone must not be greater than the total duration");
+            if (totalMilestones > 4) {
+                revert Campaign__CampaignCreationFailed("You can only have maximum of 4 milestones");
+            }
+            if (milestones[totalMilestones - 1].targetAmount != goal) {
+                revert Campaign__CampaignCreationFailed("Last milestone target amount must be equal to campaign goal");
+            }
+            if (milestones[totalMilestones - 1].deadline > duration) {
+                revert Campaign__CampaignCreationFailed(
+                    "The deadline of the last milestone must not be greater than the total duration"
+                );
+            }
 
             for (uint256 index = 0; index < totalMilestones; index++) {
                 if (index == totalMilestones - 1) continue;
 
-                if (milestones[index].targetAmount > milestones[index + 1].targetAmount){
-                    revert Campaign__CampaignCreationFailed("Target amount of previous milestone must be less than the next one");
+                if (milestones[index].targetAmount > milestones[index + 1].targetAmount) {
+                    revert Campaign__CampaignCreationFailed(
+                        "Target amount of previous milestone must be less than the next one"
+                    );
                 }
 
-                if (milestones[index].deadline > milestones[index + 1].deadline){
-                    revert Campaign__CampaignCreationFailed("Deadline of previous milestone must be less than the next one");
+                if (milestones[index].deadline > milestones[index + 1].deadline) {
+                    revert Campaign__CampaignCreationFailed(
+                        "Deadline of previous milestone must be less than the next one"
+                    );
                 }
             }
         }
@@ -362,7 +376,7 @@ abstract contract CampaignBase is ICampaign {
         });
     }
 
-    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal returns(uint256) {
+    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal returns (uint256) {
         if (block.timestamp < campaign.refundDeadline) {
             revert Campaign__RefundDeadlineActive();
         }
@@ -382,11 +396,17 @@ abstract contract CampaignBase is ICampaign {
         return amount;
     }
 
-    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal returns(uint256) {
+    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal returns (uint256) {
         Milestone storage milestone = campaign.milestones[campaign.nextWithdrawableMilestone];
-        if (milestone.status != MilestoneStatus.Completed) revert Campaign__MilestoneGoalNotCompeleted(campaign.id, campaign.nextWithdrawableMilestone, campaign.amountRaised);
+        if (milestone.status != MilestoneStatus.Completed) {
+            revert Campaign__MilestoneGoalNotCompeleted(
+                campaign.id, campaign.nextWithdrawableMilestone, campaign.amountRaised
+            );
+        }
 
-        uint256 amountToWithdraw = campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1 ? campaign.amountRaised - campaign.amountWithdrawn : milestone.targetAmount - campaign.amountWithdrawn;
+        uint256 amountToWithdraw = campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1
+            ? campaign.amountRaised - campaign.amountWithdrawn
+            : milestone.targetAmount - campaign.amountWithdrawn;
         uint256 fee = 0;
         uint256 amoutToSend = 0;
 
