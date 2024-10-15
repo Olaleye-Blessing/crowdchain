@@ -12,12 +12,12 @@ abstract contract CampaignBase is ICampaign {
     uint256 private constant ONE_DAY = 1 days;
     uint256 private constant ONE_ETH = 1 ether;
     /// @dev This is 0.2%. Always divide the final fee by 1000. It is set at 2 here cause solidity doesn't support decimals.
-    uint256 public constant OWNER_FEE = 2;
+    uint256 internal constant OWNER_FEE = 2;
     uint256 private accumulatedFee = 0;
     address payable private immutable i_owner;
 
     /// @dev Minimum amount required a campaign has to raise for tokens to be allocated to the owner and donors.
-    uint256 public constant MINIMUM_AMOUNT_RAISED = 15 ether;
+    uint256 internal constant MINIMUM_AMOUNT_RAISED = 15 ether;
 
     ERC20 internal crowdchainToken;
 
@@ -80,6 +80,14 @@ abstract contract CampaignBase is ICampaign {
         } else {
             revert Campaign__InvalidPagination();
         }
+    }
+
+    function getOwnerFee() external pure returns (uint256) {
+        return OWNER_FEE;
+    }
+
+    function getMinimumCampaignAmountRaised() external pure returns (uint256) {
+        return MINIMUM_AMOUNT_RAISED;
     }
 
     /// @notice Returns the total number of campaigns

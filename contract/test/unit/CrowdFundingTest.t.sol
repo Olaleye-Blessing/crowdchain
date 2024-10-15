@@ -70,7 +70,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         crowdfunding.donate{value: 4 ether}(campaignID); // total = 7 ethers
 
         uint256 firstMilestoneTarget = 6 ether;
-        uint256 fee = (crowdfunding.OWNER_FEE() * amountNeeded) / 1000;
+        uint256 fee = (crowdfunding.getOwnerFee() * amountNeeded) / 1000;
         uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
         uint256 aliceFirstBalance = ALICE.balance;
 
@@ -186,7 +186,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(DEPLOYER);
         uint256 accumulatedFee = crowdfunding.getAccumulatedFee();
-        uint256 expectedAccumulatedFee = (crowdfunding.OWNER_FEE() * totalDonation) / 1000;
+        uint256 expectedAccumulatedFee = (crowdfunding.getOwnerFee() * totalDonation) / 1000;
 
         assertEq(accumulatedFee, expectedAccumulatedFee);
     }
@@ -231,17 +231,17 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(DEPLOYER);
         uint256 accumulatedFee = crowdfunding.getAccumulatedFee();
-        uint256 expectedAccumulatedFee = (crowdfunding.OWNER_FEE() * totalDonation) / 1000;
+        uint256 expectedAccumulatedFee = (crowdfunding.getOwnerFee() * totalDonation) / 1000;
         assertEq(accumulatedFee, expectedAccumulatedFee);
 
         uint256 amountWithdrawn = crowdfunding.getCampaign(0).amountRaised - accumulatedFee;
-        uint256 tokenAllocated = (amountWithdrawn / crowdfunding.MINIMUM_AMOUNT_RAISED()) * 10 ** 18;
+        uint256 tokenAllocated = (amountWithdrawn / crowdfunding.getMinimumCampaignAmountRaised()) * 10 ** 18;
 
         assertEq(crowdfunding.getCampaign(0).tokensAllocated, tokenAllocated);
     }
 
     function test_allocateZeroTokenIfAmountRaisedIsSmall() public {
-        uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
+        uint256 minimumGoalAmount = crowdfunding.getMinimumCampaignAmountRaised();
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         ICampaign.BasicMilestone[] memory _milestones;
@@ -315,7 +315,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
     }
 
     function test_revertWhenClaimingTokenFromUnderFundedCampaign() public {
-        uint256 minimumGoalAmount = crowdfunding.MINIMUM_AMOUNT_RAISED();
+        uint256 minimumGoalAmount = crowdfunding.getMinimumCampaignAmountRaised();
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         ICampaign.BasicMilestone[] memory _milestones;
@@ -628,7 +628,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         assertEq(BLESSING.balance, BLESSING_FIRST_BALANCE + BLESSING_FIRST_REQUESTED_REFUND);
         assertEq(crowdfunding.getCampaign(campaignID).amountRaised, BLESSING_DONATION + BOB_DONATION - BLESSING_FIRST_REQUESTED_REFUND);
 
-        uint256 fee = (crowdfunding.OWNER_FEE() * amountNeeded) / 1000;
+        uint256 fee = (crowdfunding.getOwnerFee() * amountNeeded) / 1000;
         uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
 
         vm.prank(ALICE);
