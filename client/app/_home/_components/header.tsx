@@ -3,10 +3,11 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="min-h-[60vh] bg-primary/80 flex items-center justify-center">
-      <div className="layout flex flex-col items-center justify-center text-center h-full">
+    <header className="home__header relative">
+      <div className="absolute inset-0 bg-black/10 z-[1]" />
+      <div className="relative z-[2] layout flex flex-col items-center justify-center text-center text-white">
         <h1>Welcome to ČrôwdChǎin</h1>
-        <p>
+        <p className="w-full max-w-[64rem]">
           Empowering innovation through blockchain-based crowdfunding. Launch
           your ideas, support groundbreaking projects or ask for help with
           transparency and security.
