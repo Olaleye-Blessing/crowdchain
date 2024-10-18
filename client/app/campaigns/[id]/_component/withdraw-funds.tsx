@@ -1,28 +1,28 @@
 "use client";
 
 import { Button, ButtonProps } from "@/components/ui/button";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { toast } from "@/hooks/use-toast";
 import { ICampaignDetail } from "@/interfaces/campaign";
-import useWalletStore from "@/stores/wallet";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { useWriteContract } from "wagmi";
 
 interface WithdrawFundsProps extends Pick<ICampaignDetail, "id"> {
   buttonProps?: ButtonProps;
 }
 
 export default function WithdrawFunds({ id, buttonProps }: WithdrawFundsProps) {
-  const writeableCrowdChainContract = useWalletStore(
-    (state) => state.writeableCrowdChainContract,
-  );
+  const { writeContractAsync } = useWriteContract();
+  const contractAddress = useCrowdchainAddress();
 
   const withdraw = async () => {
-    if (!writeableCrowdChainContract) return;
-
     try {
-      const tx = await writeableCrowdChainContract.withdraw(id, {
-        gasLimit: 300000,
+      await writeContractAsync({
+        abi: wagmiAbi,
+        address: contractAddress,
+        functionName: "withdraw",
+        args: [BigInt(id)],
       });
-
-      await tx.wait();
 
       toast({
         title: "Funds has been sent to your wallet",

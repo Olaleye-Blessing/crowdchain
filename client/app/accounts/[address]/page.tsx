@@ -1,7 +1,8 @@
+import { IAddress } from "@/interfaces/address";
 import Main from "./_components/main";
 import { IPage } from "@/interfaces/page";
 
-export default function Page({ params }: IPage<{ address: string }>) {
+export default function Page({ params }: IPage<{ address: IAddress }>) {
   return (
     <div className="mt-4 layout">
       <header>
@@ -11,7 +12,11 @@ export default function Page({ params }: IPage<{ address: string }>) {
         </h1>
       </header>
       <main>
-        <Main address={params.address} />
+        {params.address.startsWith("0x") ? (
+          <Main owner={params.address} />
+        ) : (
+          <p className="text-red-800">Invalid Account</p>
+        )}
       </main>
     </div>
   );

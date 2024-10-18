@@ -9,62 +9,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import "./index.css";
-import useWalletStore from "@/stores/wallet";
-import { ethers } from "ethers";
-import { crowdChainABI } from "@/lib/contracts/crowd-chain/abi";
 import { formatAddress } from "@/utils/format-address";
-import { useStore } from "@/stores/store";
-import { getCrowdChainDetail } from "@/lib/contracts/crowd-chain/address";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { injected } from "wagmi/connectors";
 
 const Wallet = () => {
-  const network = useStore(useWalletStore, (state) => state.network);
-  const setAddress = useWalletStore((state) => state.setAddress);
-  const disconnect = useWalletStore((state) => state.disconnect);
-  const address = useWalletStore((state) => state.address);
-  const writableProvider = useWalletStore((state) => state.writableProvider);
-  const writeableCrowdChainContract = useWalletStore(
-    (state) => state.writeableCrowdChainContract,
-  );
-  const setWritableContracts = useWalletStore(
-    (state) => state.setWritableContracts,
-  );
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const account = useAccount();
+  const address = account.address;
 
-  const connectWallet = async () => {
-    // TODO: Show Modal
-    if (!writableProvider) return alert("Install metamask");
-
-    await writableProvider.send("eth_requestAccounts", []);
-
-    setAddress(await writableProvider.getSigner().getAddress());
-
-    // any writable contract can be used to do the check
-    if (writeableCrowdChainContract) return;
-
-    const connectedSigner = writableProvider.getSigner();
-    setWritableContracts({
-      writeableCrowdChainContract: new ethers.Contract(
-        getCrowdChainDetail(network).crowdchainAddress,
-        crowdChainABI,
-        connectedSigner,
-      ),
-      // TODO: Connect to this contract when you find a way to distribute tokens
-      // writablePlatformTokenContract: new ethers.Contract(
-      //   crowdChainTokenAddress,
-      //   crowdChainTokenABI,
-      //   connectedSigner,
-      // ),
-    });
-  };
-
-  const switchWallet = async () => {
-    await window.ethereum!.request!({
-      method: "wallet_requestPermissions",
-      params: [{ eth_accounts: {} }],
-    });
-
-    await window.ethereum!.request!({
-      method: "eth_requestAccounts",
-    });
+  const connectWallet = () => connect({ connector: injected() });
+  const switchWallet = () => {
+    connectWallet();
   };
 
   return (
@@ -103,7 +60,7 @@ const Wallet = () => {
               <button
                 type="button"
                 className="connected__item"
-                onClick={disconnect}
+                onClick={() => disconnect()}
               >
                 <span>
                   <LogOut />

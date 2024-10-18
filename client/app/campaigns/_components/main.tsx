@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ICampaignDetail } from "@/interfaces/campaign";
-import useWalletStore from "@/stores/wallet";
-import { sleep } from "@/utils/sleep";
+import { useEffect } from "react";
+import { useReadContract } from "wagmi";
+import { formatUnits, parseUnits } from "viem";
 import { constructCampaign } from "../[id]/_utils/construct-campaign";
 import Campaign from "@/components/campaigns/campaign";
 import Loading from "@/app/loading";
 import { Button } from "@/components/ui/button";
 import { useHomeCampaigns } from "./store";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+
+const perPage = process.env.NODE_ENV === "production" ? "20" : "5";
 
 export default function Main() {
-  const readonlyContract = useWalletStore((state) => state.readonlyContract!);
   const page = useHomeCampaigns((state) => state.page);
   const totalPage = useHomeCampaigns((state) => state.totalPage);
   const campaigns = useHomeCampaigns((state) => state.campaigns);
@@ -19,48 +21,29 @@ export default function Main() {
   const setTotalPage = useHomeCampaigns((state) => state.setTotalPage);
   const setCampaigns = useHomeCampaigns((state) => state.setCampaigns);
 
-  const [data, setData] = useState<{ loading: boolean; error: null | string }>({
-    loading: true,
-    error: null,
+  const { data, isFetching, error } = useReadContract({
+    abi: wagmiAbi,
+    address: useCrowdchainAddress(),
+    functionName: "getCampaigns",
+    args: [parseUnits(String(page), 0), parseUnits(perPage, 0)],
+    query: {
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+      refetchOnWindowFocus: false,
+    },
   });
 
-  const fetchCampaigns = async (page = 0) => {
-    if (totalPage && campaigns.length >= totalPage)
-      return setData((prev) => ({ ...prev, loading: false }));
-
-    setData((prev) => ({ ...prev, loading: true }));
-
-    await sleep(2_000);
-
-    try {
-      const [sCampaigns, _total] = (await readonlyContract.getCampaigns(
-        page,
-        2,
-      )) as [any, any];
-
-      setCampaigns(
-        sCampaigns.map((c: any) => constructCampaign(c)) as ICampaignDetail[],
-      );
-      if (totalPage === null) setTotalPage(_total.toNumber());
-    } catch (error) {
-      console.log("__ THERE IS AN ERROR __");
-      console.log(error);
-      setData((prev) => ({ ...prev, error: "There is an error" }));
-    } finally {
-      setData((prev) => ({ ...prev, loading: false }));
-    }
-  };
-
   useEffect(() => {
-    function intialFetch() {
-      if (totalPage !== null)
-        return setData((prev) => ({ ...prev, loading: false }));
+    if (!data) return;
 
-      fetchCampaigns();
-    }
+    const [_campaigns, _total] = data;
 
-    intialFetch();
-  }, []);
+    if (_campaigns.length === 0) return;
+
+    setCampaigns(_campaigns.map((cam) => constructCampaign(cam)));
+
+    if (!totalPage) setTotalPage(+formatUnits(_total, 0));
+  }, [data]);
 
   return (
     <main className="">
@@ -74,13 +57,12 @@ export default function Main() {
         ))}
       </ul>
       <div className="flex items-center justify-center mt-4">
-        {data.error && <p>{data.error}</p>}
-        {data.loading && <Loading />}
-        {!data.loading && totalPage && campaigns.length < totalPage && (
+        {error && <p>error</p>}
+        {isFetching && <Loading />}
+        {!isFetching && campaigns.length < totalPage && (
           <Button
             onClick={() => {
               increasePage();
-              fetchCampaigns(page + 1);
             }}
             className="block mx-auto"
             variant="secondary"

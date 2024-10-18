@@ -1,85 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Details from "./details";
-import useWalletStore from "@/stores/wallet";
-import { IFetch } from "@/interfaces/fetch";
-import { ICampaignDetail } from "@/interfaces/campaign";
 import { constructCampaign } from "../_utils/construct-campaign";
-import { sleep } from "@/utils/sleep";
 import Loading from "@/app/loading";
-import {
-  campaignClaimedEventFilter,
-  campaignDonorEventFilter,
-  campaignRefundEventFilter,
-} from "../_utils/events-filter";
+import { useReadContract, useWatchContractEvent } from "wagmi";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 
 export default function Main({ id }: { id: string }) {
-  const readonlyContract = useWalletStore((state) => state.readonlyContract!);
-  const campaignDonorFilter = campaignDonorEventFilter(readonlyContract, +id);
-  const campaignRefundFilter = campaignRefundEventFilter(readonlyContract, +id);
-  const campaignClaimedFilter = campaignClaimedEventFilter(
-    readonlyContract,
-    +id,
-  );
-  const [campaign, setCampaign] = useState<IFetch<ICampaignDetail | null>>({
-    loading: true,
-    error: null,
-    data: null,
+  const { data, error, refetch } = useReadContract({
+    address: useCrowdchainAddress(),
+    abi: wagmiAbi,
+    functionName: "getCampaign",
+    args: [BigInt(id)],
   });
 
-  useEffect(() => {
-    const fetchCampaign = async () => {
-      await sleep(1_000);
+  const campaign = data && constructCampaign(data);
 
-      try {
-        const _campaign = await readonlyContract.getCampaign(id);
+  useWatchContractEvent({
+    address: useCrowdchainAddress(),
+    abi: wagmiAbi,
+    eventName: "NewDonation",
+    onLogs() {
+      refetch();
+    },
+  });
 
-        setCampaign((prev) => ({
-          ...prev,
-          data: constructCampaign(_campaign),
-        }));
-      } catch (error) {
-        console.log("__ THERE IS AN ERROR __");
-        console.log(error);
-        setCampaign((prev) => ({ ...prev, error: "There is an error" }));
-      } finally {
-        setCampaign((prev) => ({ ...prev, loading: false }));
-      }
-    };
-
-    fetchCampaign();
-
-    function listenToDonateSystemEvent(
-      _donor: any,
-      _campaignId: any,
-      _amount: any,
-    ) {
-      fetchCampaign();
-    }
-
-    readonlyContract.on(campaignDonorFilter, listenToDonateSystemEvent);
-    readonlyContract.on(campaignRefundFilter, listenToDonateSystemEvent);
-    readonlyContract.on(campaignClaimedFilter, listenToDonateSystemEvent);
-
-    return () => {
-      readonlyContract.off(campaignDonorFilter, listenToDonateSystemEvent);
-      readonlyContract.off(campaignRefundFilter, listenToDonateSystemEvent);
-      readonlyContract.off(campaignClaimedFilter, listenToDonateSystemEvent);
-    };
-  }, []);
+  useWatchContractEvent({
+    address: useCrowdchainAddress(),
+    abi: wagmiAbi,
+    eventName: "DonationRefunded",
+    onLogs() {
+      refetch();
+    },
+  });
 
   return (
     <div>
-      {campaign.data ? (
-        <Details
-          campaign={campaign.data}
-          campaignDonorFilter={campaignDonorFilter}
-          campaignRefundFilter={campaignRefundFilter}
-          campaignClaimedFilter={campaignClaimedFilter}
-        />
-      ) : campaign.error ? (
-        <p className="text-red-600">{campaign.error}</p>
+      {campaign ? (
+        <Details campaign={campaign} />
+      ) : error ? (
+        <p className="text-red-600">error</p>
       ) : (
         <Loading />
       )}

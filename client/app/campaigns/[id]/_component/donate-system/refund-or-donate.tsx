@@ -5,18 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ICampaignDetail } from "@/interfaces/campaign";
-import useWalletStore from "@/stores/wallet";
-import { parseEther } from "ethers/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useWriteContract } from "wagmi";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { parseEther } from "viem";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 
 interface RefundOrDonateProps {
   campaign: ICampaignDetail;
 }
 
 export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
-  const writeableCrowdChainContract = useWalletStore(
-    (state) => state.writeableCrowdChainContract,
-  );
+  const { writeContractAsync } = useWriteContract();
+  const contractAddress = useCrowdchainAddress();
   const [donationAmount, setDonationAmount] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
 
@@ -25,21 +26,21 @@ export default function RefundOrDonate({ campaign }: RefundOrDonateProps) {
   const canRefund = currentTime < campaign.refundDeadline;
 
   const handleAction = async (type: "refund" | "donate", amount: string) => {
-    if (!writeableCrowdChainContract || !amount) return;
-
     try {
-      const tx =
-        type === "donate"
-          ? await writeableCrowdChainContract.donate(+campaign.id, {
-              value: parseEther(`${amount}`),
-            })
-          : await writeableCrowdChainContract.refund(
-              +campaign.id,
-              parseEther(`${amount}`),
-              { gasLimit: 5000000 },
-            );
+      const { dismiss } = toast({ title: "Processing..." });
 
-      await tx.wait();
+      await writeContractAsync({
+        abi: wagmiAbi,
+        address: contractAddress,
+        functionName: type === "donate" ? "donate" : "refund",
+        args:
+          type === "donate"
+            ? [BigInt(campaign.id)]
+            : [BigInt(campaign.id), parseEther(`${amount}`)],
+        value: type === "donate" ? parseEther(`${amount}`) : undefined,
+      });
+
+      dismiss();
 
       toast({
         title:

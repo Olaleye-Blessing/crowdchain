@@ -6,7 +6,7 @@ import { arrayOfUniqueObjs } from "@/utils/unique-arr-objects";
 
 interface State {
   page: number;
-  totalPage: number | null;
+  totalPage: number;
   campaigns: ICampaignDetail[];
 }
 
@@ -22,7 +22,7 @@ export const useHomeCampaigns = create<Store>()(
   devtools(
     immer((set) => ({
       page: 0,
-      totalPage: null,
+      totalPage: 0,
       campaigns: [],
       increasePage() {
         set((state) => ({ page: state.page + 1 }));

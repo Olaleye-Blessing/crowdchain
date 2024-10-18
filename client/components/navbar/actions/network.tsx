@@ -1,6 +1,5 @@
 "use client";
 
-import { hexlify } from "ethers/lib/utils";
 import {
   Select,
   SelectContent,
@@ -8,40 +7,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import useWalletStore from "@/stores/wallet";
-import { networkIds, networks } from "@/utils/networks";
+import { useChainId, useSwitchChain } from "wagmi";
 
 export default function SwitchNetwork() {
-  const network = useWalletStore((state) => state.network) || undefined;
+  const currentChain = useChainId();
+  const { chains, switchChainAsync } = useSwitchChain();
 
   return (
     <Select
-      value={network ? `${network}` : undefined}
-      onValueChange={async (val) => {
-        try {
-          if (!val) return;
-
-          const network =
-            networks[networkIds[val as unknown as keyof typeof networkIds]];
-
-          await window?.ethereum?.request?.({
-            method: "wallet_addEthereumChain",
-            params: [{ ...network, chainId: hexlify(network.chainId) }],
-          });
-        } catch (error) {
-          console.log("__ ERROR __");
-          console.log(error);
-        }
+      value={`${currentChain}`}
+      onValueChange={async (chain) => {
+        await switchChainAsync({ chainId: +chain });
+        window.location.reload();
       }}
     >
       <SelectTrigger className="w-[180px] capitalize">
         <SelectValue placeholder="Choose Network" />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(networkIds).map(([id, name]) => {
+        {chains.map((chain) => {
           return (
-            <SelectItem key={id} value={id} className="capitalize">
-              {name}
+            <SelectItem
+              key={chain.id}
+              value={`${chain.id}`}
+              className="capitalize"
+            >
+              {chain.name}
             </SelectItem>
           );
         })}

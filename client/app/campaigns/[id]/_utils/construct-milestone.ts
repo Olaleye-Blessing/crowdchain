@@ -1,5 +1,5 @@
 import { Milestone, MilestoneStatus } from "@/interfaces/milestone";
-import { formatEther } from "ethers/lib/utils";
+import { formatEther, formatUnits } from "viem";
 
 export const milestoneStatuses = {
   0: MilestoneStatus.Pending,
@@ -11,9 +11,9 @@ export const milestoneStatuses = {
 
 export const constructMilestone = (_milestone: any): Milestone => {
   return {
-    id: +_milestone.id,
+    id: _milestone.id,
     targetAmount: +formatEther(_milestone.targetAmount),
-    deadline: _milestone.deadline.toNumber(),
+    deadline: +formatUnits(_milestone.deadline, 0),
     description: _milestone.description,
     status:
       milestoneStatuses[_milestone.status as keyof typeof milestoneStatuses],

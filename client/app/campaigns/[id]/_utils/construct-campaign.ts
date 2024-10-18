@@ -1,21 +1,21 @@
 import { ICampaignDetail } from "@/interfaces/campaign";
-import { formatEther } from "ethers/lib/utils";
+import { formatEther, formatUnits } from "viem";
 
 export const constructCampaign = (_campaign: any): ICampaignDetail => {
   return {
-    id: _campaign.id.toString(),
+    id: +formatUnits(_campaign.id, 0),
     amountRaised: +formatEther(_campaign.amountRaised),
-    deadline: _campaign.deadline.toNumber(),
-    refundDeadline: _campaign.refundDeadline.toNumber(),
+    deadline: +formatUnits(_campaign.deadline, 0),
+    refundDeadline: +formatUnits(_campaign.refundDeadline, 0),
     goal: +formatEther(_campaign.goal),
     owner: _campaign.owner,
     title: _campaign.title,
     description: _campaign.description,
     coverImage: `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/${_campaign.coverImage || "QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS"}`,
     claimed: _campaign.claimed,
-    totalDonors: +_campaign.totalDonors.toString(),
-    totalMilestones: +_campaign.totalMilestones.toString(),
-    currentMilestone: +_campaign.currentMilestone.toString(),
-    nextWithdrawableMilestone: +_campaign.nextWithdrawableMilestone.toString(),
+    totalDonors: +formatUnits(_campaign.totalDonors, 0),
+    totalMilestones: _campaign.totalMilestones,
+    currentMilestone: _campaign.currentMilestone,
+    nextWithdrawableMilestone: _campaign.nextWithdrawableMilestone,
   };
 };

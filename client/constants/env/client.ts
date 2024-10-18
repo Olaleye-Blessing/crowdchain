@@ -11,6 +11,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_METAMASK_ANVIL_RPC_URL: z.string(),
   NEXT_PUBLIC_ANVIL_CHAIN_ID: z.coerce.number(),
   NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL: z.string(),
+  NEXT_PUBLIC_CONTRACT_READ_ADDRESS: z.string(),
 });
 
 const parsedSchema = envSchema.safeParse({
@@ -26,6 +27,8 @@ const parsedSchema = envSchema.safeParse({
     process.env.NEXT_PUBLIC_METAMASK_ANVIL_RPC_URL,
   NEXT_PUBLIC_ANVIL_CHAIN_ID: process.env.NEXT_PUBLIC_ANVIL_CHAIN_ID,
   NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL: process.env.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL,
+  NEXT_PUBLIC_CONTRACT_READ_ADDRESS:
+    process.env.NEXT_PUBLIC_CONTRACT_READ_ADDRESS,
 });
 
 if (!parsedSchema.success) {

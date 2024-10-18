@@ -3,77 +3,58 @@
 import { ICampaignDetail } from "@/interfaces/campaign";
 import Donators from "./donators";
 import RefundOrDonate from "./refund-or-donate";
-import { useEffect, useState } from "react";
-import { IFetch } from "@/interfaces/fetch";
-import useWalletStore from "@/stores/wallet";
-import { sleep } from "@/utils/sleep";
-import { formatEther } from "ethers/lib/utils";
 import { type IContributionSystem } from "@/interfaces/contribution-system";
-import { EventFilter } from "ethers";
+import { useReadContract, useWatchContractEvent } from "wagmi";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { formatEther } from "viem";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 
 export interface DonateSystemProps {
   campaign: ICampaignDetail;
-  campaignDonorFilter: EventFilter;
-  campaignRefundFilter: EventFilter;
 }
 
-export default function DonateSystem({
-  campaign,
-  campaignDonorFilter,
-  campaignRefundFilter,
-}: DonateSystemProps) {
-  console.log("__ CAMPAIGN __", campaign);
-  const readonlyContract = useWalletStore((state) => state.readonlyContract!);
-  const [donors, setDonors] = useState<IFetch<IContributionSystem | null>>({
-    loading: true,
-    error: null,
-    data: null,
+export default function DonateSystem({ campaign }: DonateSystemProps) {
+  const { data, isFetching, error, refetch } = useReadContract({
+    abi: wagmiAbi,
+    address: useCrowdchainAddress(),
+    functionName: "getCampaignDonors",
+    args: [BigInt(campaign.id)],
   });
 
-  useEffect(() => {
-    const fetchDonors = async () => {
-      await sleep(1_000);
+  const [_donors, _contributions] = data || [];
 
-      try {
-        const [_donors, _contributions] =
-          await readonlyContract.getCampaignDonors(campaign.id);
+  const _contributionSystem = _donors?.reduce<IContributionSystem>(
+    (db, current, index) => {
+      db[current] = +formatEther(_contributions![index]);
 
-        const _contributionSystem = (
-          _donors as string[]
-        ).reduce<IContributionSystem>((db, current, index) => {
-          db[current] = +formatEther(_contributions[index]);
+      return db;
+    },
+    {} as IContributionSystem,
+  );
 
-          return db;
-        }, {} as IContributionSystem);
+  const donors = {
+    loading: isFetching,
+    error: error && "There is an error",
+    data: _contributionSystem || null,
+  };
 
-        setDonors((prev) => ({ ...prev, data: _contributionSystem }));
-      } catch (error) {
-        console.log("__ THERE IS AN ERROR __");
-        console.log(error);
-        setDonors((prev) => ({ ...prev, error: "There is an error" }));
-      } finally {
-        setDonors((prev) => ({ ...prev, loading: false }));
-      }
-    };
+  useWatchContractEvent({
+    address: useCrowdchainAddress(),
+    abi: wagmiAbi,
+    eventName: "NewDonation",
+    onLogs() {
+      refetch();
+    },
+  });
 
-    fetchDonors();
-
-    function listenToDonateSystemEvent(
-      _donor: any,
-      campaignId: any,
-      _amount: any,
-    ) {
-      fetchDonors();
-    }
-
-    readonlyContract.on(campaignDonorFilter, listenToDonateSystemEvent);
-    readonlyContract.on(campaignRefundFilter, listenToDonateSystemEvent);
-
-    return () => {
-      readonlyContract.off(campaignDonorFilter, listenToDonateSystemEvent);
-      readonlyContract.off(campaignRefundFilter, listenToDonateSystemEvent);
-    };
-  }, []);
+  useWatchContractEvent({
+    address: useCrowdchainAddress(),
+    abi: wagmiAbi,
+    eventName: "DonationRefunded",
+    onLogs() {
+      refetch();
+    },
+  });
 
   return (
     <div className="lg:w-1/3 mt-6 lg:mt-0">

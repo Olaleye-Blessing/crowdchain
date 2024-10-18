@@ -2,7 +2,6 @@
 "use client";
 
 import { ChangeEvent, useState } from "react";
-import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
-import useWalletStore from "@/stores/wallet";
 import { DatePicker } from "@/components/ui/date-picker";
 import { differenceInDays } from "date-fns";
-import { parseEther } from "ethers/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { uploadImage } from "@/utils/upload-image";
 import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
@@ -26,15 +23,18 @@ import Milestones from "./milestones";
 import { ICampaignForm } from "../_interfaces/form";
 import ImportantNotice from "./important-notice";
 import { validateMilestoneRules } from "../_utils/milestone-rules";
+import { useAccount, useWriteContract } from "wagmi";
+import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { parseEther, parseUnits } from "viem";
+import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
 const CampaignForm = () => {
+  const { address: accountAddress } = useAccount();
+  const contractAddress = useCrowdchainAddress();
+  const { writeContractAsync } = useWriteContract();
   const { crowdchainInstance } = useCrowdchainInstance();
-  const writableProvider = useWalletStore((state) => state.writableProvider);
-  const writeableCrowdChainContract = useWalletStore(
-    (state) => state.writeableCrowdChainContract,
-  );
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>("second");
 
@@ -68,8 +68,11 @@ const CampaignForm = () => {
   } = form;
 
   const onSubmit = async (data: ICampaignForm) => {
-    if (!writableProvider) return alert("Please install metamask!");
-    if (!writeableCrowdChainContract) return alert("Connect your wallet!");
+    if (!accountAddress)
+      return toast({
+        title: "Connect your wallet",
+        variant: "destructive",
+      });
 
     if (!coverImage)
       return toast({
@@ -124,36 +127,33 @@ const CampaignForm = () => {
         });
     }
 
-    // console.log(
-    //   "__ SUBMIT FORM __",
-    //   milestones.map((milestone) => ({
-    //     targetAmount: parseEther(`${milestone.targetAmount}`),
-    //     deadline: differenceInDays(milestone.deadline!, fullNow),
-    //     description: milestone.description,
-    //   })),
-    // );
-
     try {
       console.log("Uploading image....");
       const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
 
       console.log("Called function...");
-      const tx = await writeableCrowdChainContract.createCampaign(
-        data.title,
-        data.description,
-        ifpsImg.IpfsHash,
-        milestones.map((milestone) => ({
-          targetAmount: parseEther(`${milestone.targetAmount}`),
-          deadline: differenceInDays(milestone.deadline!, fullNow),
-          description: milestone.description,
-        })),
-        parseEther(data.goal as any),
-        _deadline,
-        _refundDeadline,
-        { gasLimit: 5000000 },
-      );
 
-      await tx.wait();
+      await writeContractAsync({
+        abi: wagmiAbi,
+        address: contractAddress,
+        functionName: "createCampaign",
+        args: [
+          data.title,
+          data.description,
+          ifpsImg.IpfsHash,
+          milestones.map((milestone) => ({
+            targetAmount: parseEther(`${milestone.targetAmount}`),
+            deadline: parseUnits(
+              String(differenceInDays(milestone.deadline!, fullNow)),
+              0,
+            ),
+            description: milestone.description,
+          })),
+          parseEther(String(data.goal)),
+          parseUnits(String(_deadline), 0),
+          parseUnits(String(_refundDeadline), 0),
+        ],
+      });
 
       toast({ title: "Your campaign has been created" });
       form.reset();

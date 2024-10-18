@@ -5,24 +5,16 @@ import { Clock, Users, DollarSign, CheckCircle } from "lucide-react";
 import CampaignProgrees from "./progress";
 import DonateSystem, { type DonateSystemProps } from "./donate-system";
 import WithdrawFunds from "./withdraw-funds";
-import useWalletStore from "@/stores/wallet";
 import Link from "next/link";
 import Milestones from "./milestones";
-import { EventFilter } from "ethers";
+import { useAccount } from "wagmi";
 
 const currentTime = Date.now() / 1000;
 
-interface DetailsProps extends DonateSystemProps {
-  campaignClaimedFilter: EventFilter;
-}
+interface DetailsProps extends DonateSystemProps {}
 
-export default function Details({
-  campaign,
-  campaignDonorFilter,
-  campaignRefundFilter,
-  campaignClaimedFilter,
-}: DetailsProps) {
-  const address = useWalletStore((state) => state.address);
+export default function Details({ campaign }: DetailsProps) {
+  const { address } = useAccount();
 
   return (
     <section className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -121,16 +113,11 @@ export default function Details({
             <Milestones
               campaignId={campaign.id}
               owned={campaign.owner.toLowerCase() === address?.toLowerCase()}
-              campaignClaimedFilter={campaignClaimedFilter}
             />
           )}
         </div>
 
-        <DonateSystem
-          campaign={campaign}
-          campaignDonorFilter={campaignDonorFilter}
-          campaignRefundFilter={campaignRefundFilter}
-        />
+        <DonateSystem campaign={campaign} />
       </div>
     </section>
   );
