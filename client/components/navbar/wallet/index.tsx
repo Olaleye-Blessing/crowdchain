@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownUp, Copy, LogOut, User } from "lucide-react";
+import { Copy, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -10,19 +10,12 @@ import {
 } from "@/components/ui/popover";
 import "./index.css";
 import { formatAddress } from "@/utils/format-address";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useDisconnect } from "wagmi";
+import ConnectWalletButton from "./connect";
 
 const Wallet = () => {
-  const { connect } = useConnect();
   const { disconnect } = useDisconnect();
-  const account = useAccount();
-  const address = account.address;
-
-  const connectWallet = () => connect({ connector: injected() });
-  const switchWallet = () => {
-    connectWallet();
-  };
+  const { address } = useAccount();
 
   return (
     <div className="border-t border-border px-4 md:border-0 md:flex md:items-center md:justify-start md:px-0 md:ml-4">
@@ -41,17 +34,7 @@ const Wallet = () => {
                 </span>
                 <span>Copy</span>
               </button>
-              <button
-                type="button"
-                className="connected__item"
-                onClick={switchWallet}
-              >
-                <span>
-                  <ArrowDownUp />
-                </span>
-                <span>Switch</span>
-              </button>
-              <Link href={"/"} className="connected__item">
+              <Link href={`/accounts/${address}`} className="connected__item">
                 <span>
                   <User />
                 </span>
@@ -71,9 +54,7 @@ const Wallet = () => {
           </PopoverContent>
         </Popover>
       ) : (
-        <Button className="connection__btn" onClick={connectWallet}>
-          Connect Wallet
-        </Button>
+        <ConnectWalletButton />
       )}
     </div>
   );
