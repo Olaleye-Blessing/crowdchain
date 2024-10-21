@@ -1,6 +1,12 @@
 import { ChangeEvent, useState } from "react";
 import { parseEther, parseUnits } from "viem";
-import { useAccount, useConfig, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useChains,
+  useConfig,
+  useWriteContract,
+} from "wagmi";
 import { useForm } from "react-hook-form";
 import { differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -10,10 +16,14 @@ import { ICampaignForm } from "../_interfaces/form";
 import { validateMilestoneRules } from "../_utils/milestone-rules";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import { clientEnv } from "@/constants/env/client";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
 export const useCreateCampaign = () => {
+  const chains = useChains();
+  const chainId = useChainId();
   const config = useConfig();
   const { address: accountAddress } = useAccount();
   const contractAddress = useCrowdchainAddress();
@@ -113,7 +123,7 @@ export const useCreateCampaign = () => {
 
       console.log("Called function...");
 
-      await writeContractAsync({
+      const txHash = await writeContractAsync({
         abi: wagmiAbi,
         address: contractAddress,
         functionName: "createCampaign",
@@ -133,6 +143,27 @@ export const useCreateCampaign = () => {
           parseUnits(String(_deadline), 0),
           parseUnits(String(_refundDeadline), 0),
         ],
+      });
+
+      const chainExplorer =
+        chainId === clientEnv.NEXT_PUBLIC_ANVIL_CHAIN_ID
+          ? undefined
+          : chains.find((ch) => ch.id === chainId)?.blockExplorers?.default.url;
+
+      const txHashLink = `${chainExplorer}/tx/${txHash}`;
+
+      toast({
+        title: "Confirming hash(pending)",
+        description: chainExplorer && (
+          <a href={txHashLink} target="_blank" className="break-all text-primary underline">
+            {txHashLink}
+          </a>
+        ),
+      });
+
+      await waitForTransactionReceipt(config, {
+        hash: txHash,
+        confirmations: 1,
       });
 
       toast({ title: "Your campaign has been created" });
