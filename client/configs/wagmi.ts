@@ -40,7 +40,10 @@ export const wagmiConfig = createConfig(
     transports:
       process.env.NODE_ENV === "production"
         ? { [sepolia.id]: http(clientEnv.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL) }
-        : { [anvil.id]: http(), [tenderly.id]: http() },
+        : {
+            [anvil.id]: http(),
+            [tenderly.id]: http(clientEnv.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL),
+          },
 
     // Required API Keys
     walletConnectProjectId: clientEnv.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
