@@ -9,7 +9,7 @@ import {
 } from "wagmi";
 import { useForm } from "react-hook-form";
 import { differenceInDays } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { ToasterToast, useToast } from "@/hooks/use-toast";
 import { uploadImage } from "@/utils/upload-image";
 import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
 import { ICampaignForm } from "../_interfaces/form";
@@ -124,11 +124,21 @@ export const useCreateCampaign = () => {
         });
     }
 
+    let txToast: {
+      id: string;
+      dismiss: () => void;
+      update: (props: ToasterToast) => void;
+    } | null = null;
+
     try {
-      console.log("Uploading image....");
+      txToast = toast({
+        title: "Uploading image",
+        duration: 100 * 1 * 60 * 60 * 1000, // 100 mins
+      });
+
       const ifpsImg = await uploadImage(data.coverImage, crowdchainInstance());
 
-      console.log("Called function...");
+      txToast.update({ title: "Creating campaign..", id: txToast.id });
 
       const txHash = await writeContractAsync({
         abi: wagmiAbi,
@@ -159,7 +169,8 @@ export const useCreateCampaign = () => {
 
       const txHashLink = `${chainExplorer}/tx/${txHash}`;
 
-      toast({
+      txToast.update({
+        id: txToast.id,
         title: "Confirming hash(pending)",
         description: chainExplorer && (
           <a
@@ -177,18 +188,26 @@ export const useCreateCampaign = () => {
         confirmations: 1,
       });
 
-      toast({ title: "Your campaign has been created" });
+      txToast.update({
+        id: txToast.id,
+        title: "Your campaign has been created",
+      });
 
       form.reset();
       setPreview(null);
     } catch (error) {
       // TODO: Learn how to handle errors
-      toast({
+      txToast!.update({
+        id: txToast!.id,
         title:
           (error as Error).message ||
           "There is an error creating your campaign",
         variant: "destructive",
       });
+    } finally {
+      setTimeout(() => {
+        txToast?.dismiss();
+      }, 3_000);
     }
   };
 
