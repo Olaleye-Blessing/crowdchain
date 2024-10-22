@@ -102,7 +102,7 @@ export default function Details({ campaign }: DetailsProps) {
                 </span>
                 <Link
                   href={`/accounts/${campaign.owner}`}
-                  className="block font-mono text-sm break-all text-primary"
+                  className="address__long block font-mono"
                 >
                   {campaign.owner}
                 </Link>

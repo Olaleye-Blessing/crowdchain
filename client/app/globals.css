@@ -109,4 +109,8 @@
   .layout {
     @apply px-4 mx-auto w-full max-w-7xl;
   }
+
+  .address__long {
+    @apply break-all text-primary text-sm inline-block leading-tight;
+  }
 }

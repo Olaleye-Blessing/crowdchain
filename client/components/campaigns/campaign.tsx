@@ -111,11 +111,11 @@ export default function Campaign({ campaign, className }: CampaignProps) {
           </div>
         </CardContent>
         <CardFooter className="p-3 flex flex-col mt-auto">
-          <p className="break-all mb-2 font-semibold">
+          <p className="mb-2 font-semibold">
             <span>Owner: </span>
             <Link
               href={`/accounts/${campaign.owner}`}
-              className="text-sm text-primary"
+              className="address__long"
             >
               {campaign.owner}
             </Link>
