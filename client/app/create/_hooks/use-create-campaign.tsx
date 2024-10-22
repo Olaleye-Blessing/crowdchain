@@ -40,9 +40,9 @@ export const useCreateCampaign = () => {
       deadline: new Date(Date.now() + oneDay),
       refundDeadline: new Date(Date.now() + 6 * oneDay),
       milestones: [],
+      coverImage: null,
     },
   });
-  const [coverImage, setCoverImage] = useState<File | null>(null);
 
   function handleChangeImage(e: ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -51,9 +51,16 @@ export const useCreateCampaign = () => {
 
     const file = files[0];
 
+    const oneMb = 1024 * 1024;
+
+    if (file.size > oneMb)
+      return form.setError("coverImage", { message: "File is too large" });
+
+    form.clearErrors("coverImage");
+
     const preview = URL.createObjectURL(file);
 
-    setCoverImage(file);
+    form.setValue("coverImage", file);
     setPreview(preview);
   }
 
@@ -64,7 +71,7 @@ export const useCreateCampaign = () => {
         variant: "destructive",
       });
 
-    if (!coverImage)
+    if (!data.coverImage)
       return toast({
         title: "Add your campaign cover image",
         variant: "destructive",
@@ -119,7 +126,7 @@ export const useCreateCampaign = () => {
 
     try {
       console.log("Uploading image....");
-      const ifpsImg = await uploadImage(coverImage, crowdchainInstance());
+      const ifpsImg = await uploadImage(data.coverImage, crowdchainInstance());
 
       console.log("Called function...");
 
@@ -155,7 +162,11 @@ export const useCreateCampaign = () => {
       toast({
         title: "Confirming hash(pending)",
         description: chainExplorer && (
-          <a href={txHashLink} target="_blank" className="break-all text-primary underline">
+          <a
+            href={txHashLink}
+            target="_blank"
+            className="break-all text-primary underline"
+          >
             {txHashLink}
           </a>
         ),
@@ -169,15 +180,17 @@ export const useCreateCampaign = () => {
       toast({ title: "Your campaign has been created" });
 
       form.reset();
-      setCoverImage(null);
       setPreview(null);
     } catch (error) {
-      console.log("__ ERROR ___");
       // TODO: Learn how to handle errors
-      console.log(error);
-      toast({ title: "There is an error creating your campaign" });
+      toast({
+        title:
+          (error as Error).message ||
+          "There is an error creating your campaign",
+        variant: "destructive",
+      });
     }
   };
 
-  return { form, coverImage, preview, handleChangeImage, onSubmit };
+  return { form, preview, handleChangeImage, onSubmit };
 };

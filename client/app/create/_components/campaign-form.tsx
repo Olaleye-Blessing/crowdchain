@@ -20,8 +20,7 @@ import { useCreateCampaign } from "../_hooks/use-create-campaign";
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
 const CampaignForm = () => {
-  const { form, coverImage, handleChangeImage, onSubmit, preview } =
-    useCreateCampaign();
+  const { form, handleChangeImage, onSubmit, preview } = useCreateCampaign();
   const {
     formState: { errors },
   } = form;
@@ -170,8 +169,13 @@ const CampaignForm = () => {
                 accept="image/*"
                 multiple={false}
               />
-              {!coverImage && (
-                <p className="text-red-500 text-sm">Cover Image is required</p>
+              <p className="text-muted-foreground text-sm !mt-0">
+                Maximum: 1MB
+              </p>
+              {errors.coverImage && (
+                <p className="text-red-500 text-sm !mt-0">
+                  {errors.coverImage.message}
+                </p>
               )}
               {preview && (
                 <figure className="flex items-center justify-center rounded-lg max-h-[25rem] overflow-hidden">

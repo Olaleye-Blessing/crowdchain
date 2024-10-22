@@ -11,6 +11,7 @@ export interface ICampaignForm
   deadline: Date | undefined;
   refundDeadline: Date | undefined;
   milestones: TMilestone[];
+  coverImage: File | null;
 }
 
 export type IRuleKey =

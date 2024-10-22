@@ -1,5 +1,4 @@
-import { AxiosInstance } from "axios";
-import { hanldeCrowdChainApiError } from "./handle-api-error";
+import { AxiosInstance, isAxiosError } from "axios";
 
 // from Pinata
 interface UploadResponse {
@@ -22,6 +21,15 @@ export const uploadImage = async (image: File, _axios: AxiosInstance) => {
 
     return data.data.image;
   } catch (error) {
-    throw new Error(hanldeCrowdChainApiError(error));
+    let msg = "";
+
+    if (isAxiosError(error)) {
+      const data = error.response?.data;
+      msg = data.err?.message || data.message;
+    } else {
+      msg = "Unknown error! Try again later";
+    }
+
+    throw new Error(msg);
   }
 };
