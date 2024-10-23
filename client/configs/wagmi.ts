@@ -6,6 +6,7 @@ import { sepolia } from "wagmi/chains";
 import { coinbaseWallet, injected, metaMask } from "wagmi/connectors";
 import { clientEnv } from "@/constants/env/client";
 import { getDefaultConfig } from "connectkit";
+import { appDescription } from "@/utils/site-metadata";
 
 // local
 const anvil = defineChain({
@@ -34,7 +35,17 @@ const tenderly = defineChain({
 export const wagmiConfig = createConfig(
   getDefaultConfig({
     ssr: true,
-    connectors: [injected(), metaMask(), coinbaseWallet()],
+    connectors: [
+      injected(),
+      metaMask({
+        dappMetadata: {
+          name: "Crowdchain",
+          url: "https://crowdchain-two.vercel.app",
+          iconUrl: "https://crowdchain-two.vercel.app/favicon-32x32.png",
+        },
+      }),
+      coinbaseWallet(),
+    ],
     chains: (() =>
       process.env.NODE_ENV === "production" ? [sepolia] : [anvil, tenderly])(),
     transports:
@@ -50,11 +61,11 @@ export const wagmiConfig = createConfig(
 
     // TODO: Update this info
     // Required App Info
-    appName: "Crowdfunding",
+    appName: "Crowdchain",
 
     // Optional App Info
-    appDescription: "Coming soon",
-    appUrl: "https://family.co", // your app's url
-    appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
+    appDescription: appDescription,
+    appUrl: "https://crowdchain-two.vercel.app", // your app's url
+    appIcon: "https://crowdchain-two.vercel.app/favicon-32x32.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
   }),
 );
