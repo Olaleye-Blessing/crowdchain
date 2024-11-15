@@ -209,27 +209,29 @@ abstract contract CampaignBase is ICampaign {
         return (paginatedCampaigns, campaigns.length);
     }
 
+    // TODO: Make search case insensitive. Better still, make categories an Enum. Do this when you learn about upgradable contract.
+    /// @inheritdoc ICampaign
+    function getCampaignsByCategory(string calldata category, uint256 page, uint256 perPage)
+        external
+        view
+        override
+        validPagination(page, perPage)
+        returns (CampaignDetails[] memory, uint256)
+    {
+        uint256[] memory categoryIds = campaignsByCategory[category];
+        return _getCampaignsByUniqueIds(categoryIds, page, perPage);
+    }
+
     /// @inheritdoc ICampaign
     function getOwnerCampaigns(address owner, uint256 page, uint256 perPage)
-        public
+        external
         view
         override
         validPagination(page, perPage)
         returns (CampaignDetails[] memory, uint256)
     {
         uint256[] memory ownerCampaignIds = campaignsOwner[owner];
-        uint256 start = page * perPage;
-        uint256 end = (start + perPage > ownerCampaignIds.length) ? ownerCampaignIds.length : start + perPage;
-        uint256 totalCampaignsToReturn = end - start;
-
-        CampaignDetails[] memory paginatedCampaigns = new CampaignDetails[](totalCampaignsToReturn);
-
-        for (uint256 i = 0; i < totalCampaignsToReturn; i++) {
-            uint256 campaignId = ownerCampaignIds[start + i];
-            paginatedCampaigns[i] = _createCampaignDetails(campaigns[campaignId]);
-        }
-
-        return (paginatedCampaigns, ownerCampaignIds.length);
+        return _getCampaignsByUniqueIds(ownerCampaignIds, page, perPage);
     }
 
     /// @inheritdoc ICampaign
@@ -462,5 +464,24 @@ abstract contract CampaignBase is ICampaign {
         }
 
         return amoutToSend;
+    }
+
+    function _getCampaignsByUniqueIds(uint256[] memory campaignIds, uint256 page, uint256 perPage)
+        internal
+        view
+        returns (CampaignDetails[] memory, uint256)
+    {
+        uint256 start = page * perPage;
+        uint256 end = (start + perPage > campaignIds.length) ? campaignIds.length : start + perPage;
+        uint256 totalCampaignsToReturn = end - start;
+
+        CampaignDetails[] memory paginatedCampaigns = new CampaignDetails[](totalCampaignsToReturn);
+
+        for (uint256 i = 0; i < totalCampaignsToReturn; i++) {
+            uint256 campaignId = campaignIds[start + i];
+            paginatedCampaigns[i] = _createCampaignDetails(campaigns[campaignId]);
+        }
+
+        return (paginatedCampaigns, campaignIds.length);
     }
 }

@@ -370,6 +370,56 @@ contract CampaignBaseTest is Test, ConstantsTest {
         _campaigns[3];
     }
 
+    function test_getCampaignsByCategory() public {
+        uint256 _amountNeeded = 6;
+        uint256 _deadline = 4; // days
+        uint256 _refundDeadline = 10; // days
+        string memory _description = "My little description from my heart, soul and mind";
+
+        string[] memory categoriesOne = new string[](2);
+        categoriesOne[0] = "Cat 1";
+        categoriesOne[1] = "Cat 2";
+
+        string[] memory categoriesTwo = new string[](2);
+        categoriesTwo[0] = "Cat 3";
+        categoriesTwo[1] = "Cat 4";
+
+        string[] memory categoriesThree = new string[](2);
+        categoriesThree[0] = "Cat 3";
+        categoriesThree[1] = "Cat 2";
+
+        _createCampaign(BOB, "Cam 1", _description, _amountNeeded, _deadline, _refundDeadline, categoriesOne);
+        _createCampaign(BOB, "Cam 2", _description, _amountNeeded, _deadline, _refundDeadline, categoriesTwo); // 1st
+        _createCampaign(BOB, "Cam 3", _description, _amountNeeded, _deadline, _refundDeadline, categoriesThree); // second
+        _createCampaign(BOB, "Cam 5", _description, _amountNeeded, _deadline, _refundDeadline, categoriesOne);
+        _createCampaign(BOB, "Cam 6", _description, _amountNeeded, _deadline, _refundDeadline, categoriesTwo); // third
+        _createCampaign(BOB, "Cam 7", _description, _amountNeeded, _deadline, _refundDeadline, categoriesThree); // fourth
+
+        string memory _category = "Cat 3";
+        uint256 _page = 0;
+        uint256 _perPage = 2;
+
+        (ICampaign.CampaignDetails[] memory campaigns, uint256 totalCampaigns) =
+            campaignBase.getCampaignsByCategory(_category, _page, _perPage);
+
+        assertEq(totalCampaigns, 4);
+        assertEq(campaigns.length, 2);
+
+        for (uint256 index = 0; index < campaigns.length; index++) {
+            bool categoryFound = false;
+            string[] memory categories = campaigns[index].categories;
+
+            for (uint256 j = 0; j < categories.length; j++) {
+                if (keccak256(bytes(categories[j])) == keccak256(bytes(_category))) {
+                    categoryFound = true;
+                    break;
+                }
+            }
+
+            assertEq(categoryFound, true);
+        }
+    }
+
     function test_getOwnerCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
             _createCampaign(

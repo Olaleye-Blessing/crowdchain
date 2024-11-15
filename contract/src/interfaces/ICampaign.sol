@@ -163,6 +163,16 @@ interface ICampaign {
     /// @return An array of CampaignDetails structs and the total number of campaigns
     function getCampaigns(uint256 page, uint256 perPage) external view returns (CampaignDetails[] memory, uint256);
 
+    /// @notice Retrieves a paginated list of campaigns by category
+    /// @param category One of the catgeory the campaigns belong to
+    /// @param page The page number to retrieve
+    /// @param perPage The number of campaigns per page
+    /// @return An array of CampaignDetails structs and the total number of campaigns
+    function getCampaignsByCategory(string calldata category, uint256 page, uint256 perPage)
+        external
+        view
+        returns (CampaignDetails[] memory, uint256);
+
     /// @notice Retrieves a paginated list of campaigns for a specific owner
     /// @param owner The address of the campaign owner
     /// @param page The page number to retrieve
