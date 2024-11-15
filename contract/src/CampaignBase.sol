@@ -23,6 +23,7 @@ abstract contract CampaignBase is ICampaign {
 
     /// @notice Mapping of owner addresses to their campaign IDs
     mapping(address => uint256[]) private campaignsOwner;
+    mapping(string category => uint256[] campaignIds) private campaignsByCategory;
 
     /// @notice Struct representing a single campaign
     struct Campaign {
@@ -37,6 +38,7 @@ abstract contract CampaignBase is ICampaign {
         string title;
         string description;
         string coverImage;
+        string[] categories;
         address[] donorAddresses;
         mapping(address => uint256) donors;
         mapping(address => bool) hasClaimedTokens;
@@ -107,11 +109,14 @@ abstract contract CampaignBase is ICampaign {
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
+        string[] calldata categories,
         uint256 goal,
         uint256 duration,
         uint256 refundDeadline
-    ) public override {
-        _validateCampaignCreation(title, description, coverImage, milestones, goal, duration, refundDeadline);
+    ) external override {
+        _validateCampaignCreation(
+            title, description, coverImage, milestones, categories, goal, duration, refundDeadline
+        );
 
         uint256 deadline = block.timestamp + (duration * ONE_DAY);
         uint256 campaignId = campaigns.length;
@@ -141,6 +146,12 @@ abstract contract CampaignBase is ICampaign {
             }
         }
         newCampaign.totalMilestones = totalMilestones;
+
+        uint256 totalCategories = categories.length;
+        for (uint256 i = 0; i < totalCategories; i++) {
+            newCampaign.categories.push(categories[i]);
+            campaignsByCategory[categories[i]].push(campaignId);
+        }
 
         campaignsOwner[msg.sender].push(campaignId);
     }
@@ -294,6 +305,7 @@ abstract contract CampaignBase is ICampaign {
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
+        string[] calldata categories,
         uint256 goal,
         uint256 duration,
         uint256 refundDeadline
@@ -318,6 +330,24 @@ abstract contract CampaignBase is ICampaign {
         }
         if (refundDeadline < 5) {
             revert Campaign__CampaignCreationFailed("Refund deadline must be at least 5 days after deadline");
+        }
+
+        uint256 totalCategories = categories.length;
+
+        if (totalCategories == 0) revert Campaign__CampaignCreationFailed("Provide at least one category");
+
+        if (totalCategories > 5) revert Campaign__CampaignCreationFailed("Maximum of 5 categories");
+
+        // check for duplicate categories
+        for (uint256 i = 0; i < totalCategories; i++) {
+            if (bytes(categories[i]).length == 0) {
+                revert Campaign__CampaignCreationFailed("Category can not be an empty string");
+            }
+            for (uint256 j = i + 1; j < totalCategories; j++) {
+                if (keccak256(bytes(categories[i])) == keccak256(bytes(categories[j]))) {
+                    revert Campaign__CampaignCreationFailed("Remove duplicate category");
+                }
+            }
         }
 
         uint256 totalMilestones = milestones.length;
@@ -372,7 +402,8 @@ abstract contract CampaignBase is ICampaign {
             tokensAllocated: campaign.tokensAllocated,
             totalMilestones: campaign.totalMilestones,
             currentMilestone: campaign.currentMilestone,
-            nextWithdrawableMilestone: campaign.nextWithdrawableMilestone
+            nextWithdrawableMilestone: campaign.nextWithdrawableMilestone,
+            categories: campaign.categories
         });
     }
 

@@ -150,6 +150,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -157,6 +159,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -195,6 +198,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -202,6 +207,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -245,6 +251,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -252,6 +260,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -282,6 +291,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -289,6 +300,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -319,6 +331,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = minimumGoalAmount - 6 ether;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -326,6 +340,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -362,6 +377,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 _amountNeeded = 16 * ONE_ETH;
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         vm.prank(ALICE);
         crowdfunding.createCampaign(
@@ -369,6 +386,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             _amountNeeded,
             4,
             10
@@ -755,10 +773,12 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.startPrank(_owner);
 
         ICampaign.BasicMilestone[] memory _milestones;
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         // TODO: Use forge to get image metadata
         crowdfunding.createCampaign(
-            _title, _description, "coverImage", _milestones, _amountNeeded, _deadline, _refundDeadline
+            _title, _description, "coverImage", _milestones, categories, _amountNeeded, _deadline, _refundDeadline
         );
 
         vm.stopPrank();
@@ -773,6 +793,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
 
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
 
         _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
@@ -789,6 +811,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline

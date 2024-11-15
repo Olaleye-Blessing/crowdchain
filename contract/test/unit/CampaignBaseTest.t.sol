@@ -33,31 +33,13 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(DEPLOYER, owner);
     }
 
-    function test_CreateCampaignSuccessfully() public {
-        uint256 amountNeeded = 6;
-        uint256 deadline = 4; // days
-        uint256 refundDeadline = 6; // days
-
-        _createCampaign(
-            ALICE,
-            "My Title",
-            "My little description from my heart, soul and mind",
-            amountNeeded,
-            deadline,
-            refundDeadline
-        );
-
-        ICampaign.CampaignDetails memory campaign = campaignBase.getCampaign(0);
-        assertEq(campaign.title, "My Title");
-        assertEq(campaign.description, "My little description from my heart, soul and mind");
-        assertEq(campaign.goal, amountNeeded);
-        assertEq(campaign.owner, ALICE);
-    }
-
     function test_createCampaignWithMilestonesSuccessfully() public {
         uint256 amountNeeded = 40 * 1 ether;
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
+
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
 
@@ -75,6 +57,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline
@@ -132,12 +115,58 @@ contract CampaignBaseTest is Test, ConstantsTest {
             )
         );
         _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 4);
+
+        // category
+        string[] memory _categories = new string[](0);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__CampaignCreationFailed.selector, "Provide at least one category")
+        );
+        _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 5, _categories);
+
+        // More than max categories
+        string[] memory _moreCategories = new string[](6);
+        _moreCategories[0] = "Tester";
+        _moreCategories[1] = "Tester1";
+        _moreCategories[2] = "Tester2";
+        _moreCategories[3] = "Tester3";
+        _moreCategories[4] = "Tester4";
+        _moreCategories[5] = "Tester5";
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__CampaignCreationFailed.selector, "Maximum of 5 categories")
+        );
+        _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 5, _moreCategories);
+
+        // An empty category
+        string[] memory _emptyCategories = new string[](2);
+        _emptyCategories[0] = "Tester";
+        _emptyCategories[1] = "";
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ICampaign.Campaign__CampaignCreationFailed.selector, "Category can not be an empty string"
+            )
+        );
+        _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 5, _emptyCategories);
+
+        // Duplicate category
+        string[] memory _duplicateCategories = new string[](2);
+        _duplicateCategories[0] = "Tester";
+        _duplicateCategories[1] = "Tester";
+
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaign.Campaign__CampaignCreationFailed.selector, "Remove duplicate category")
+        );
+        _createCampaign(ALICE, _title, _description, _amountNeeded, 4, 5, _duplicateCategories);
     }
 
     function test_campaignCreationFailsIfMilestonesAreMoreThan4() public {
         uint256 amountNeeded = 40 * 1 ether;
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
+
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](5);
 
@@ -166,6 +195,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline
@@ -176,6 +206,9 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint256 amountNeeded = 40 * 1 ether;
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
+
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
 
@@ -196,6 +229,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline
@@ -206,6 +240,9 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint256 amountNeeded = 40 * 1 ether;
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
+
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](2);
 
@@ -226,6 +263,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline
@@ -238,8 +276,10 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint256 _refundDeadline = 7; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
+        string[] memory categories = new string[](1);
+        categories[0] = "Cat 1";
 
-        _createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
+        _createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline, categories);
 
         ICampaign.CampaignDetails memory campaign = campaignBase.getCampaign(0);
 
@@ -252,12 +292,17 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(campaign.totalDonors, 0);
         assertEq(campaign.id, 0);
         assertEq(campaign.tokensAllocated, 0);
+        assertEq(campaign.categories.length, 1);
+        assertEq(campaign.categories[0], categories[0]);
     }
 
     function test_getCampaignMilestones() public {
         uint256 amountNeeded = 40 * 1 ether;
         uint256 deadline = 15; // days
         uint256 refundDeadline = 10; // days
+
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
 
         ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
 
@@ -275,6 +320,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
+            categories,
             amountNeeded,
             deadline,
             refundDeadline
@@ -422,13 +468,28 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint256 _deadline,
         uint256 _refundDeadline
     ) private {
+        string[] memory categories = new string[](1);
+        categories[0] = "Tester";
+
+        _createCampaign(_owner, _title, _description, _amountNeeded, _deadline, _refundDeadline, categories);
+    }
+
+    function _createCampaign(
+        address _owner,
+        string memory _title,
+        string memory _description,
+        uint256 _amountNeeded,
+        uint256 _deadline,
+        uint256 _refundDeadline,
+        string[] memory _categories
+    ) private {
         vm.startPrank(_owner);
 
         ICampaign.BasicMilestone[] memory _milestones;
 
         // TODO: Use forge to get image metadata
         campaignBase.createCampaign(
-            _title, _description, "coverImage", _milestones, _amountNeeded, _deadline, _refundDeadline
+            _title, _description, "coverImage", _milestones, _categories, _amountNeeded, _deadline, _refundDeadline
         );
 
         vm.stopPrank();

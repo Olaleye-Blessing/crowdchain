@@ -46,6 +46,7 @@ interface ICampaign {
         string description;
         string coverImage;
         bool claimed;
+        string[] categories;
     }
 
     /// @notice Emitted when a campaign reached a milestone
@@ -136,6 +137,7 @@ interface ICampaign {
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
+        string[] calldata categories,
         uint256 goal,
         uint256 duration,
         uint256 refundDeadline
