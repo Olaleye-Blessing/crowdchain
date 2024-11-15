@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Copy, LogOut, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import "./index.css";
 import { formatAddress } from "@/utils/format-address";
 import { useAccount, useDisconnect } from "wagmi";
@@ -15,44 +17,63 @@ import ConnectWalletButton from "./connect";
 
 const Wallet = () => {
   const { disconnect } = useDisconnect();
-  const { address } = useAccount();
+  const { address, chain } = useAccount();
+
+  const connetedPages = [
+    { label: "My Account", href: `/accounts/${address}` },
+    { label: "My Projects", href: `/accounts/${address}` },
+    { label: "Create a Campaign", href: "/create" },
+  ];
 
   return (
-    <div className="border-t border-border px-4 md:border-0 md:flex md:items-center md:justify-start md:px-0 md:ml-4">
+    <div className="ml-2">
       {address ? (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button className="connection__btn">
+        <Sheet>
+          <SheetTrigger>
+            <Button className="connection__btn bg-white text-primary hover:bg-white">
               {formatAddress(address)}
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="!p-0">
-            <ul className="flex flex-col text-left">
-              <button type="button" className="connected__item">
-                <span>
-                  <Copy />
-                </span>
-                <span>Copy</span>
-              </button>
-              <Link href={`/accounts/${address}`} className="connected__item">
-                <span>
-                  <User />
-                </span>
-                <span>My Account</span>
-              </Link>
-              <button
+          </SheetTrigger>
+          <SheetContent className="px-4">
+            <SheetHeader>
+              <SheetTitle className="pl-4">
+                <p className="flex flex-col items-start justify-start text-sm mt-[-0.8rem]">
+                  <span>{formatAddress(address)}</span>
+                  <span className="text-[0.6rem] text-primary">
+                    Connected to {chain?.name || "-"}
+                  </span>
+                </p>
+              </SheetTitle>
+            </SheetHeader>
+            <div className="h-[0.1px] w-full bg-muted" />
+            <ul className="flex flex-col text-left mt-2">
+              {connetedPages.map((page) => {
+                const href = "";
+                return (
+                  <li key={page.label} className="mb-2">
+                    <Link
+                      href={page.href}
+                      className={buttonVariants({
+                        variant: "ghost",
+                        className: "w-full !justify-start font-light",
+                      })}
+                    >
+                      {page.label}
+                    </Link>
+                  </li>
+                );
+              })}
+              <Button
                 type="button"
-                className="connected__item"
+                variant="destructive"
+                className="w-full !justify-start font-light"
                 onClick={() => disconnect()}
               >
-                <span>
-                  <LogOut />
-                </span>
-                <span>Disconnect</span>
-              </button>
+                Disconnect
+              </Button>
             </ul>
-          </PopoverContent>
-        </Popover>
+          </SheetContent>
+        </Sheet>
       ) : (
         <ConnectWalletButton />
       )}

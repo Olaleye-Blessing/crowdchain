@@ -1,7 +1,9 @@
 .connection__btn {
-  @apply block w-full mt-2 text-center py-2;
+  @apply block w-full text-center py-2 shadow-2xl border border-white;
 
   @apply md:mt-0;
+
+  box-shadow: rgba(212, 218, 238, 0.7) 0px 3px 20px;
 }
 
 .connected__item {

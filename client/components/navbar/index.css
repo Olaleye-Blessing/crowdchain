@@ -1,5 +1,5 @@
 .hamburger {
-  @apply block cursor-pointer;
+  @apply block cursor-pointer mr-auto;
 
   @apply md:hidden;
 }
@@ -23,13 +23,14 @@
 }
 
 .nav__contents {
-  @apply transition-all h-0 overflow-hidden bg-background flex flex-col absolute left-0 w-full top-[2.88rem];
+  @apply transition-all h-0 overflow-hidden bg-background flex flex-col absolute left-0 w-full top-[3.4rem] max-w-[23rem] shadow-xl duration-500;
+  @apply md:shadow-none md:max-w-none;
 }
 
 .hamburger.active + .nav__contents {
-  @apply h-screen max-h-[70vh] overflow-auto;
+  @apply h-screen max-h-[90vh] overflow-auto;
 }
 
 .nav__contents, .hamburger.active + .nav__contents {
-  @apply md:static md:h-auto md:max-h-none md:flex md:items-center md:justify-between md:flex-row;
+  @apply md:static md:h-auto md:max-h-none md:flex md:items-center md:justify-center md:flex-row md:overflow-visible md:space-x-3;
 }
