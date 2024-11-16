@@ -36,6 +36,7 @@ abstract contract CampaignBase is ICampaign {
         uint256 tokensAllocated;
         address owner;
         string title;
+        string summary;
         string description;
         string coverImage;
         string[] categories;
@@ -106,6 +107,7 @@ abstract contract CampaignBase is ICampaign {
     /// @inheritdoc ICampaign
     function createCampaign(
         string calldata title,
+        string calldata summary,
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
@@ -115,7 +117,7 @@ abstract contract CampaignBase is ICampaign {
         uint256 refundDeadline
     ) external override {
         _validateCampaignCreation(
-            title, description, coverImage, milestones, categories, goal, duration, refundDeadline
+            title, summary, description, coverImage, milestones, categories, goal, duration, refundDeadline
         );
 
         uint256 deadline = block.timestamp + (duration * ONE_DAY);
@@ -304,6 +306,7 @@ abstract contract CampaignBase is ICampaign {
     /// @param refundDeadline The number of days after the campaign ends during which refunds are possible
     function _validateCampaignCreation(
         string calldata title,
+        string calldata summary,
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
@@ -317,6 +320,9 @@ abstract contract CampaignBase is ICampaign {
         }
         if (bytes(title).length == 0 || bytes(title).length > 200) {
             revert Campaign__CampaignCreationFailed("Invalid title length");
+        }
+        if (bytes(summary).length < 200) {
+            revert Campaign__CampaignCreationFailed("Summary too short");
         }
         if (bytes(description).length < 10) {
             revert Campaign__CampaignCreationFailed("Description too short");
@@ -397,6 +403,7 @@ abstract contract CampaignBase is ICampaign {
             goal: campaign.goal,
             owner: campaign.owner,
             title: campaign.title,
+            summary: campaign.summary,
             description: campaign.description,
             coverImage: campaign.coverImage,
             claimed: campaign.claimed,

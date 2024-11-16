@@ -7,7 +7,7 @@ type TMilestone = Pick<IBasicMilestone, "description" | "targetAmount"> & {
 };
 
 export interface ICampaignForm
-  extends Pick<ICampaign, "description" | "goal" | "title"> {
+  extends Pick<ICampaign, "description" | "goal" | "title" | "summary"> {
   deadline: Date | undefined;
   refundDeadline: Date | undefined;
   milestones: TMilestone[];

@@ -35,6 +35,7 @@ export const useCreateCampaign = () => {
   const form = useForm<ICampaignForm>({
     defaultValues: {
       title: "",
+      summary: "",
       description: "# Provide a detailed description of your campaign",
       goal: 1,
       deadline: new Date(Date.now() + oneDay),
@@ -146,6 +147,8 @@ export const useCreateCampaign = () => {
       update: (props: ToasterToast) => void;
     } | null = null;
 
+    console.log("__ Submit form __");
+
     try {
       txToast = toast({
         title: "Uploading image",
@@ -162,6 +165,7 @@ export const useCreateCampaign = () => {
         functionName: "createCampaign",
         args: [
           data.title,
+          data.summary,
           data.description,
           ifpsImg.IpfsHash,
           milestones.map((milestone) => ({

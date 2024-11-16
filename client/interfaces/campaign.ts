@@ -6,6 +6,7 @@ export interface ICampaign {
   goal: number;
   owner: string;
   title: string;
+  summary: string;
   description: string;
   coverImage: string;
   claimed: boolean;

@@ -21,6 +21,7 @@ import Milestones from "./milestones";
 import ImportantNotice from "./important-notice";
 import { useCreateCampaign } from "../_hooks/use-create-campaign";
 import { categories } from "@/utils/categories";
+import { Textarea } from "@/components/ui/textarea";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
@@ -37,7 +38,7 @@ const validateCategories = (cats: string[]) => {
 };
 
 const CampaignForm = () => {
-  const ref = useRef<MDXEditorMethods>(null);
+  const mdxRef = useRef<MDXEditorMethods>(null);
   const { form, onChangeCategory, handleChangeImage, onSubmit, preview } =
     useCreateCampaign();
   const {
@@ -45,6 +46,7 @@ const CampaignForm = () => {
     control,
   } = form;
   const deadline = form.watch("deadline");
+  const summaryLength = form.watch("summary", "").length;
 
   return (
     <div className="mx-auto px-4 py-8">
@@ -79,6 +81,32 @@ const CampaignForm = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="summary">Summary</Label>
+              <div className="relative">
+                <Textarea
+                  id="summary"
+                  {...form.register("summary", {
+                    required: "Summary is required",
+                    minLength: {
+                      value: 200,
+                      message: "Summary is too short (200 character expected)",
+                    },
+                  })}
+                  placeholder="Summary of your campaign"
+                  rows={4}
+                />
+                <p
+                  className={`absolute bottom-[0.3rem] right-4 bg-white text-[0.7rem] ${summaryLength < 200 ? "text-red-600" : "text-green-600"}`}
+                >
+                  {summaryLength}
+                </p>
+              </div>
+              {errors.summary && (
+                <p className="text-red-500 text-sm">{errors.summary.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Controller
                 name="description"
@@ -92,7 +120,7 @@ const CampaignForm = () => {
                 control={control}
                 render={({ field }) => (
                   <MDXEditor
-                    ref={ref}
+                    ref={mdxRef}
                     markdown={field.value}
                     onChange={(markdown) => {
                       field.onChange(markdown);

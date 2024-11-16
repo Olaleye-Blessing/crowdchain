@@ -156,6 +156,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -204,6 +205,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -257,6 +259,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -297,6 +300,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -337,6 +341,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -383,6 +388,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(ALICE);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,
@@ -759,12 +765,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        _createCampaign(ALICE, _title, _description, _amountNeeded, _deadline, _refundDeadline);
+        _createCampaign(ALICE, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
     }
 
     function _createCampaign(
         address _owner,
         string memory _title,
+        string memory _summary,
         string memory _description,
         uint256 _amountNeeded,
         uint256 _deadline,
@@ -778,7 +785,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // TODO: Use forge to get image metadata
         crowdfunding.createCampaign(
-            _title, _description, "coverImage", _milestones, categories, _amountNeeded, _deadline, _refundDeadline
+            _title, _summary, _description, "coverImage", _milestones, categories, _amountNeeded, _deadline, _refundDeadline
         );
 
         vm.stopPrank();
@@ -808,6 +815,7 @@ contract CrowdFundingTest is Test, ConstantsTest {
         vm.prank(owner);
         crowdfunding.createCampaign(
             "My Title",
+            SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
             _milestones,

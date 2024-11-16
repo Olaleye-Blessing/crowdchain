@@ -43,6 +43,7 @@ interface ICampaign {
         uint8 nextWithdrawableMilestone;
         address owner;
         string title;
+        string summary;
         string description;
         string coverImage;
         bool claimed;
@@ -134,6 +135,7 @@ interface ICampaign {
     /// @param refundDeadline The number of days after the campaign ends during which refunds are possible
     function createCampaign(
         string calldata title,
+        string calldata summary,
         string calldata description,
         string calldata coverImage,
         BasicMilestone[] calldata milestones,
