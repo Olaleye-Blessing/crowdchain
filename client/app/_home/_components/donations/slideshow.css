@@ -1,0 +1,15 @@
+.slideshow {
+  @apply w-full h-auto py-2 sm:py-4;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    white 10%,
+    white 90%,
+    transparent 100%
+  );
+}
+
+.slideshow > .swiper-wrapper {
+  transition-timing-function: linear;
+  @apply mx-auto;
+}
