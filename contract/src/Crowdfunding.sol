@@ -12,7 +12,7 @@ contract Crowdfunding is CampaignBase {
     /// @param donor The address of the donor
     /// @param campaignId The ID of the campaign receiving the donation
     /// @param amount The amount donated
-    event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount);
+    event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount, string campaignTitle);
 
     /// @notice Emitted when a donation is refunded
     /// @param donor The address of the donor receiving the refund
@@ -70,7 +70,7 @@ contract Crowdfunding is CampaignBase {
         campaign.amountRaised += msg.value;
         campaign.donors[msg.sender] += msg.value;
 
-        emit NewDonation(msg.sender, campaignId, msg.value);
+        emit NewDonation(msg.sender, campaignId, msg.value, campaign.title);
 
         if (campaign.amountRaised >= campaign.goal) {
             emit CampaignGoalCompleted(campaign.owner, campaignId, campaign.amountRaised);

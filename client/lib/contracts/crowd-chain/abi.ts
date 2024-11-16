@@ -18,7 +18,7 @@ export const wagmiAbi = parseAbi([
   "function withdraw(uint256 campaignId)",
 
   // =============== EVENTS ==============
-  "event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount)",
+  "event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount, string campaignTitle)",
   "event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount)",
   "event CampaignFundWithdrawn(uint256 indexed campaignId, address indexed owner, uint256 amount)",
 ]);

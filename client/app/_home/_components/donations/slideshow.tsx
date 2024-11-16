@@ -14,6 +14,7 @@ export interface IDonation {
   amount: number;
   campaignId: string;
   donor: IAddress;
+  campaignTitle: string;
 }
 
 interface SlideShowProps {
@@ -59,9 +60,8 @@ export default function SlideShow({ donations }: SlideShowProps) {
               </span>
               <span>
                 <span>to </span>{" "}
-                {/* Todo: Provide campaign name in the event */}
                 <span className="text-black font-semibold">
-                  campaign {donation.campaignId.slice(0, 12)}
+                  {donation.campaignTitle.slice(0, 25)}
                 </span>
               </span>
             </Link>

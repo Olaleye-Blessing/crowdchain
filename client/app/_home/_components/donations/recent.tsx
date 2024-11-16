@@ -4,15 +4,8 @@ import { useState } from "react";
 import { formatEther, formatUnits } from "viem";
 import { useWatchContractEvent } from "wagmi";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
-import { IAddress } from "@/interfaces/address";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
-import SlideShow from "./slideshow";
-
-export interface IDonation {
-  amount: number;
-  campaignId: string;
-  donor: IAddress;
-}
+import SlideShow, { IDonation } from "./slideshow";
 
 export default function Recent() {
   const [donations, setDonations] = useState<IDonation[]>([]);
@@ -29,6 +22,7 @@ export default function Recent() {
             donor: donation.donor!,
             campaignId: formatUnits(donation.campaignId!, 0),
             amount: +formatEther(donation.amount!),
+            campaignTitle: donation.campaignTitle!,
           },
         ];
 

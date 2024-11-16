@@ -32,8 +32,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
         crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
         _shiftCurrentTimestampToAllowWithdraw();
@@ -56,13 +56,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // ========== first milestone amount -> 7 ether ==========
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID);
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -86,13 +86,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // ========== second milestone amount -> 16 ether ==========
         uint256 aliceSecondBalance = ALICE.balance;
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID);
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -115,18 +115,18 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // ========== third milestone amount -> 40 ether ==========
         uint256 aliceThirdBalance = ALICE.balance;
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether, "My Title");
         crowdfunding.donate{value: 5 ether}(campaignID); // total = 21 ethers
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID); // total = 24 ethers
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
         crowdfunding.donate{value: 36 ether}(campaignID); // total = 60 ethers
@@ -170,13 +170,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 DONATION = 3 * ONE_ETH;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
@@ -217,20 +217,14 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         uint256 campaignID = 0;
         uint256 DONATION = 9 * ONE_ETH;
+        uint256 totalDonation = DONATION * 2;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
-        crowdfunding.donate{value: DONATION}(campaignID);
-
-        vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
-        crowdfunding.donate{value: DONATION}(campaignID);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, totalDonation, "My Title");
+        crowdfunding.donate{value: totalDonation}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        uint256 totalDonation = DONATION * 2;
 
         vm.prank(ALICE);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -273,8 +267,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 DONATION = _amountNeeded - 4 ether;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
@@ -314,8 +308,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 DONATION = 18 * ONE_ETH;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
@@ -355,8 +349,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 DONATION = _amountNeeded - 4 ether;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
@@ -402,13 +396,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 DONATION = 3 * ONE_ETH;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, DONATION, "My Title");
         crowdfunding.donate{value: DONATION}(campaignID);
 
         vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
@@ -438,8 +432,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // first donation
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
         crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
         ICampaign.CampaignDetails memory campaign = crowdfunding.getCampaign(campaignID);
@@ -449,8 +443,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         // second donation
         vm.prank(BOB);
         uint256 BOB_DONATION = 1;
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION, "My Title");
         crowdfunding.donate{value: BOB_DONATION}(campaignID);
 
         campaign = crowdfunding.getCampaign(campaignID);
@@ -464,19 +458,19 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION);
-        crowdfunding.donate{value: BLESSING_DONATION * ONE_ETH}(campaignID);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
+        crowdfunding.donate{value: BLESSING_DONATION}(campaignID);
 
         vm.prank(BOB);
         uint256 BOB_DONATION = 100;
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, BOB_DONATION, "My Title");
 
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, BLESSING_DONATION + BOB_DONATION);
 
-        crowdfunding.donate{value: BOB_DONATION * ONE_ETH}(campaignID);
+        crowdfunding.donate{value: BOB_DONATION}(campaignID);
     }
 
     function test_startNextMilestoneWhenCurrentIsMet() public {
@@ -490,13 +484,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // ========== first milestone amount -> 7 ether ==========
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID);
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 4 ether, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -506,13 +500,13 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // ========== second milestone amount -> 16 ether ==========
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID);
 
         vm.prank(BOB);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether);
+        emit Crowdfunding.NewDonation(BOB, campaignID, 6 ether, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
@@ -522,18 +516,18 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // ========== third milestone amount -> 40 ether ==========
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 5 ether, "My Title");
         crowdfunding.donate{value: 5 ether}(campaignID); // total = 21 ethers
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
         crowdfunding.donate{value: 3 ether}(campaignID); // total = 24 ethers
 
         vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether); // total = 60 ethers
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BOB, campaignID, 36 ether, "My Title"); // total = 60 ethers
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
         crowdfunding.donate{value: 36 ether}(campaignID); // total = 16 ethers
@@ -609,8 +603,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint256 refundAmount = 3 * ONE_ETH;
 
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation, "My Title");
         crowdfunding.donate{value: donation}(campaignID);
 
         vm.prank(BLESSING);
@@ -685,8 +679,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // donate
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH, "My Title");
         crowdfunding.donate{value: ONE_ETH}(campaignID);
 
         vm.warp(block.timestamp + 15 * ONE_DAY);
@@ -709,8 +703,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // donate
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, ONE_ETH, "My Title");
         crowdfunding.donate{value: ONE_ETH}(campaignID);
 
         vm.warp(block.timestamp + 17 * ONE_DAY);
@@ -738,8 +732,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // donate
         vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(BLESSING, campaignID, donation, "My Title");
         crowdfunding.donate{value: donation}(campaignID);
 
         // refund
@@ -828,8 +822,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
     function _donate(uint256 campaignID, address donor, uint256 amount) private {
         vm.prank(donor);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(donor, campaignID, amount);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(donor, campaignID, amount, "My Title");
         crowdfunding.donate{value: amount}(campaignID);
     }
 
@@ -842,8 +836,8 @@ contract CrowdFundingTest is Test, ConstantsTest {
         uint8 nextMilestoneID
     ) private {
         vm.prank(donor);
-        vm.expectEmit(true, false, false, false, address(crowdfunding));
-        emit Crowdfunding.NewDonation(donor, campaignID, amount);
+        vm.expectEmit(true, true, false, true, address(crowdfunding));
+        emit Crowdfunding.NewDonation(donor, campaignID, amount, "My Title");
         vm.expectEmit(true, false, false, false, address(crowdfunding));
         emit ICampaign.MilestoneReached(campaignID, currentMilestoneID, milestoneAmount);
         vm.expectEmit(true, false, false, false, address(crowdfunding));
