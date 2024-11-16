@@ -130,6 +130,7 @@ abstract contract CampaignBase is ICampaign {
         newCampaign.refundDeadline = deadline + (refundDeadline * ONE_DAY);
         newCampaign.owner = msg.sender;
         newCampaign.title = title;
+        newCampaign.summary = summary;
         newCampaign.description = description;
         newCampaign.coverImage = coverImage;
 

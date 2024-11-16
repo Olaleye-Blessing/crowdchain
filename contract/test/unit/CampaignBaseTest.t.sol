@@ -293,14 +293,17 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         ICampaign.CampaignDetails memory campaign = campaignBase.getCampaign(0);
 
-        assertEq(campaign.goal, _amountNeeded);
+        // arrange according to campaign detail return keys
+        assertEq(campaign.id, 0);
         assertEq(campaign.amountRaised, 0);
+        assertEq(campaign.goal, _amountNeeded);
         assertEq(campaign.owner, ALICE);
         assertEq(campaign.title, _title);
+        assertEq(campaign.summary, SUMMARY);
         assertEq(campaign.description, _description);
+        assertEq(campaign.coverImage, "coverImage");
         assertEq(campaign.claimed, false);
         assertEq(campaign.totalDonors, 0);
-        assertEq(campaign.id, 0);
         assertEq(campaign.tokensAllocated, 0);
         assertEq(campaign.categories.length, 1);
         assertEq(campaign.categories[0], categories[0]);
