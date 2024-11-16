@@ -35,14 +35,30 @@ export const useCreateCampaign = () => {
   const form = useForm<ICampaignForm>({
     defaultValues: {
       title: "",
-      description: "",
+      description: "# Provide a detailed description of your campaign",
       goal: 1,
       deadline: new Date(Date.now() + oneDay),
       refundDeadline: new Date(Date.now() + 6 * oneDay),
       milestones: [],
       coverImage: null,
+      categories: [],
     },
   });
+
+  function onChangeCategory(category: string, checked: boolean) {
+    let categories = [...(form.getValues("categories") || [])];
+
+    if (checked) {
+      categories.push(category);
+    } else {
+      categories = categories.filter((cat) => cat !== category);
+    }
+
+    form.setValue("categories", categories);
+
+    if (categories.length > 0 && categories.length <= 5)
+      form.clearErrors("categories");
+  }
 
   function handleChangeImage(e: ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -156,6 +172,7 @@ export const useCreateCampaign = () => {
             ),
             description: milestone.description,
           })),
+          data.categories,
           parseEther(String(data.goal)),
           parseUnits(String(_deadline), 0),
           parseUnits(String(_refundDeadline), 0),
@@ -211,5 +228,5 @@ export const useCreateCampaign = () => {
     }
   };
 
-  return { form, preview, handleChangeImage, onSubmit };
+  return { form, preview, onChangeCategory, handleChangeImage, onSubmit };
 };

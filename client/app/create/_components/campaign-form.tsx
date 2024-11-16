@@ -1,9 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { useRef } from "react";
+import { MDXEditorMethods } from "@mdxeditor/editor";
+import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -13,21 +16,38 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import { MDXEditor } from "@/components/markdown/editor";
 import Milestones from "./milestones";
 import ImportantNotice from "./important-notice";
 import { useCreateCampaign } from "../_hooks/use-create-campaign";
+import { categories } from "@/utils/categories";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
+const _categories = [...categories];
+
+const validateCategories = (cats: string[]) => {
+  if (cats.length === 0) {
+    return "Select at least 1 category";
+  } else if (cats.length > 5) {
+    return "Maximum of 4 categories";
+  } else {
+    return true;
+  }
+};
+
 const CampaignForm = () => {
-  const { form, handleChangeImage, onSubmit, preview } = useCreateCampaign();
+  const ref = useRef<MDXEditorMethods>(null);
+  const { form, onChangeCategory, handleChangeImage, onSubmit, preview } =
+    useCreateCampaign();
   const {
     formState: { errors },
+    control,
   } = form;
   const deadline = form.watch("deadline");
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto px-4 py-8">
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="max-w-2xl mx-auto"
@@ -60,14 +80,25 @@ const CampaignForm = () => {
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...form.register("description", {
-                  required: "Description is required",
-                  minLength: 10,
-                })}
-                placeholder="Describe your campaign"
-                rows={4}
+              <Controller
+                name="description"
+                rules={{
+                  required: true,
+                  minLength: {
+                    value: 100,
+                    message: "Provide at least 100 character",
+                  },
+                }}
+                control={control}
+                render={({ field }) => (
+                  <MDXEditor
+                    ref={ref}
+                    markdown={field.value}
+                    onChange={(markdown) => {
+                      field.onChange(markdown);
+                    }}
+                  />
+                )}
               />
               {errors.description && (
                 <p className="text-red-500 text-sm">
@@ -83,7 +114,6 @@ const CampaignForm = () => {
                 type="number"
                 {...form.register("goal", {
                   required: "Funding goal is required",
-                  // min: { value: 0, message: "Goal must be positive" },
                   validate: (value) =>
                     value > 0 || "Goal must be greater than 0",
                 })}
@@ -181,6 +211,53 @@ const CampaignForm = () => {
                 <figure className="flex items-center justify-center rounded-lg max-h-[25rem] overflow-hidden">
                   <img src={preview} alt="" />
                 </figure>
+              )}
+            </div>
+
+            <div className="space-y-2 -mt-3">
+              <p className="font-medium">Categories</p>
+              <p className="text-muted-foreground text-sm !-mt-0.5">
+                Minimum of 1, maximum of 5
+              </p>
+              <Controller
+                name="categories"
+                rules={{ validate: validateCategories }}
+                control={control}
+                render={({ field }) => {
+                  const selectedCategories = field.value;
+
+                  return (
+                    <ul className="grid gap-x-8 gap-y-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                      {_categories.map((category) => {
+                        const value = category
+                          .replaceAll(" ", "_")
+                          .toLowerCase();
+
+                        return (
+                          <div
+                            key={category}
+                            className="flex items-center justify-start"
+                          >
+                            <Checkbox
+                              id={value}
+                              disabled={selectedCategories.length >= 5}
+                              className="mr-1"
+                              onCheckedChange={(checked) =>
+                                onChangeCategory(value, checked as boolean)
+                              }
+                            />
+                            <Label htmlFor={value}>{category}</Label>
+                          </div>
+                        );
+                      })}
+                    </ul>
+                  );
+                }}
+              />
+              {errors.categories && (
+                <p className="text-red-500 text-sm">
+                  {errors.categories.message}
+                </p>
               )}
             </div>
           </CardContent>
