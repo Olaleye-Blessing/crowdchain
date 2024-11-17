@@ -63,7 +63,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
     <>
       <section className="mt-2">
         <header className="mb-4">
-          <h2>Milestones</h2>
+          <h2 className="sr-only">Milestones</h2>
           <div className="-mt-2 flex items-center justify-start">
             <p className="mr-2">Statuses: </p>
             <ul className="inline-flex items-center justify-start">

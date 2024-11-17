@@ -10,6 +10,7 @@ export const constructCampaign = (_campaign: any): ICampaignDetail => {
     goal: +formatEther(_campaign.goal),
     owner: _campaign.owner,
     title: _campaign.title,
+    summary: _campaign.summary,
     description: _campaign.description,
     coverImage: `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/${_campaign.coverImage || "QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS"}`,
     claimed: _campaign.claimed,
