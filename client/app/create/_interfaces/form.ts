@@ -7,12 +7,14 @@ type TMilestone = Pick<IBasicMilestone, "description" | "targetAmount"> & {
 };
 
 export interface ICampaignForm
-  extends Pick<ICampaign, "description" | "goal" | "title" | "summary"> {
+  extends Pick<
+    ICampaign,
+    "description" | "goal" | "title" | "summary" | "categories"
+  > {
   deadline: Date | undefined;
   refundDeadline: Date | undefined;
   milestones: TMilestone[];
   coverImage: File | null;
-  categories: string[];
 }
 
 export type IRuleKey =

@@ -10,6 +10,7 @@ export interface ICampaign {
   description: string;
   coverImage: string;
   claimed: boolean;
+  categories: string[];
 }
 
 export interface ICampaignDetail extends ICampaign {
