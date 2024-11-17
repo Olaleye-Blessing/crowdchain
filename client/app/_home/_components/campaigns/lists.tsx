@@ -29,7 +29,8 @@ export default function Lists() {
           campaigns={campaigns}
           emptyClass="text-sm"
           ulClass="flex flex-col sm:flex-row sm:justify-between sm:flex-wrap"
-          liClass="max-w-none sm:flex-1 sm:min-w-[20rem] sm:max-w-[23.4375rem]"
+          liClass="max-w-none sm:flex-1 sm:min-w-[20rem] sm:max-w-[21rem]"
+          detailClassName="lg:group-hover:top-60"
         />
       ) : null}
     </div>
