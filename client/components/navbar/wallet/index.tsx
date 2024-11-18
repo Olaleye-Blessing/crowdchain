@@ -21,7 +21,8 @@ const Wallet = () => {
 
   const connetedPages = [
     { label: "My Account", href: `/accounts/${address}` },
-    { label: "My Projects", href: `/accounts/${address}` },
+    { label: "My Campaigns", href: `/accounts/${address}?tab=campaigns` },
+    { label: "My Donations", href: `/accounts/${address}?tab=donations` },
     { label: "Create a Campaign", href: "/create" },
   ];
 
