@@ -1,5 +1,8 @@
 import { parseAbi } from "viem";
 
+export const donationEvent =
+  "event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount, string campaignTitle)";
+
 export const wagmiAbi = parseAbi([
   "struct BasicMilestone {uint256 targetAmount; uint256 deadline; string description; }",
   "struct CampaignDetails { uint256 id; uint256 amountRaised; uint256 deadline; uint256 refundDeadline; uint256 goal; uint256 totalDonors; uint256 tokensAllocated; uint8 totalMilestones; uint8 currentMilestone; uint8 nextWithdrawableMilestone; address owner; string title; string summary; string description; string coverImage; bool claimed; string[] categories; }",
@@ -19,7 +22,7 @@ export const wagmiAbi = parseAbi([
   "function withdraw(uint256 campaignId)",
 
   // =============== EVENTS ==============
-  "event NewDonation(address indexed donor, uint256 indexed campaignId, uint256 amount, string campaignTitle)",
+  donationEvent,
   "event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount)",
   "event CampaignFundWithdrawn(uint256 indexed campaignId, address indexed owner, uint256 amount)",
 ]);
