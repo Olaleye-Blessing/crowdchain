@@ -2,9 +2,7 @@
 
 CrowdChain is a decentralized crowdfunding platform built on the Ethereum blockchain. It allows users to create and contribute to various campaigns, with the option to set up milestones for the campaigns.
 
-![Testing Screenshot](images/website_screenshot.png)
-
-![Testing Screenshot](images/website_campaign_screenshot.png)
+![UI screenshot](images/desktop_home.png)
 
 ## Table Of Content
 - [CrowdChain](#crowdchain)
@@ -25,7 +23,7 @@ CrowdChain is a decentralized crowdfunding platform built on the Ethereum blockc
   - [Testing](#testing)
   - [Deployment](#deployment)
   - [Upcoming Features](#upcoming-features)
-  - [Getting Started](#getting-started)
+  - [Screenshots](#screenshots)
 
 ## About
 
@@ -101,7 +99,7 @@ The server folder contains the Express.js-based backend server responsible for h
 
 The important functions in the smart contracts have been thoroughly tested using foundry.
 
-![Testing Screenshot](images/test_screenshot.png)
+![Testing Screenshot](images/test.png)
 
 ## Deployment
 
@@ -109,10 +107,35 @@ CrowdChain is currently deployed on the Sepolia Ethereum test network.
 
 ## Upcoming Features
 
+- [ ] Display total donations and donors on the home page
+- [ ] Display recent donations on the home page
+- [ ] Allow campaign owners to post updates
 - [ ] Allow donors to claim their CrowdChain (CC) tokens.
 - [ ] Allow donors with `CC` tokens to vote in a milestoned campaign.
 - [ ] Allow donors with `CC` tokens to vote for urgent withdraw of campaign funds.
 - [ ] Allow donors to also donate `USDT` as it's a stablecoin.
 - [ ] Provide a means to get current price of `ETH`.
 
-## Getting Started
+## Screenshots
+
+Mobile -> home page
+
+![Mobile home page](images/mobile_home_1.png)
+
+---
+
+Mobile -> create campaign page
+
+![Mobile create campaign page](images/mobile_create.png)
+
+---
+
+Desktop -> home page
+
+![Desktop home page](images/desktop_home.png)
+
+---
+
+Desktop -> create campaign page
+
+![Desktop -> create campaign page](images/desktop_create.png)
