@@ -779,7 +779,15 @@ contract CrowdFundingTest is Test, ConstantsTest {
 
         // TODO: Use forge to get image metadata
         crowdfunding.createCampaign(
-            _title, _summary, _description, "coverImage", _milestones, categories, _amountNeeded, _deadline, _refundDeadline
+            _title,
+            _summary,
+            _description,
+            "coverImage",
+            _milestones,
+            categories,
+            _amountNeeded,
+            _deadline,
+            _refundDeadline
         );
 
         vm.stopPrank();

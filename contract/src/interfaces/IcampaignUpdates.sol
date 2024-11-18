@@ -14,12 +14,7 @@ interface ICampaignUpdates {
     }
 
     /// @notice Emitted when a new update is posted
-    event NewUpdate(
-        uint256 indexed campaignId,
-        uint256 indexed updateId,
-        address indexed owner,
-        string title
-    );
+    event NewUpdate(uint256 indexed campaignId, uint256 indexed updateId, address indexed owner, string title);
 
     /// @notice Error thrown when updates content is invalid
     error CampaignUpdates__IvalidData(string reason);
@@ -31,11 +26,7 @@ interface ICampaignUpdates {
     /// @param campaignId The ID of the campaign
     /// @param title The title of the update
     /// @param content The content of the update
-    function postUpdate(
-        uint256 campaignId,
-        string calldata title,
-        string calldata content
-    ) external;
+    function postUpdate(uint256 campaignId, string calldata title, string calldata content) external;
 
     /// @notice Retrieves a single update by ID
     /// @param campaignId The ID of the campaign
@@ -49,9 +40,8 @@ interface ICampaignUpdates {
     /// @param perPage Number of updates per page
     /// @return updates Array of updates for the specified page
     /// @return total Total number of updates for the campaign
-    function getCampaignUpdates(
-        uint256 campaignId,
-        uint256 page,
-        uint256 perPage
-    ) external view returns (Update[] memory updates, uint256 total);
+    function getCampaignUpdates(uint256 campaignId, uint256 page, uint256 perPage)
+        external
+        view
+        returns (Update[] memory updates, uint256 total);
 }

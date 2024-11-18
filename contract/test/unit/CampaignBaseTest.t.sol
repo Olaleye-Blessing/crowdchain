@@ -437,7 +437,13 @@ contract CampaignBaseTest is Test, ConstantsTest {
     function test_getOwnerCampaignsReturnsPaginatedResult() public {
         for (uint256 index = 0; index < NUMBER_IN_WORDS.length; index++) {
             _createCampaign(
-                ALICE, string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"), SUMMARY, WORD_CHARACTERS_201, 20, 10, 10
+                ALICE,
+                string.concat(NUMBER_IN_WORDS[index], "Alice", "_title_title"),
+                SUMMARY,
+                WORD_CHARACTERS_201,
+                20,
+                10,
+                10
             );
             _createCampaign(
                 BLESSING,
@@ -449,8 +455,13 @@ contract CampaignBaseTest is Test, ConstantsTest {
                 10
             );
             _createCampaign(
-                BOB, string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"),
-                SUMMARY, WORD_CHARACTERS_201, 20, 10, 10
+                BOB,
+                string.concat(NUMBER_IN_WORDS[index], "Bob", "_title_title"),
+                SUMMARY,
+                WORD_CHARACTERS_201,
+                20,
+                10,
+                10
             );
         }
 
@@ -558,7 +569,15 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         // TODO: Use forge to get image metadata
         campaignBase.createCampaign(
-            _title, _summary, _description, "coverImage", _milestones, _categories, _amountNeeded, _deadline, _refundDeadline
+            _title,
+            _summary,
+            _description,
+            "coverImage",
+            _milestones,
+            _categories,
+            _amountNeeded,
+            _deadline,
+            _refundDeadline
         );
 
         vm.stopPrank();
