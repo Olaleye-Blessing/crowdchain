@@ -5,9 +5,9 @@ import {CampaignBase} from "./CampaignBase.sol";
 
 /// @title Crowdfunding
 /// @author Olaleye Blessing
-/// @notice Main contract for crowdfunding functionality, extending CampaignBase
+/// @notice Abstract contract for crowdfunding functionality, extending CampaignBase
 /// @dev Implements donation and refund mechanisms
-contract Crowdfunding is CampaignBase {
+abstract contract Crowdfunding is CampaignBase {
     /// @notice Emitted when a new donation is made to a campaign
     /// @param donor The address of the donor
     /// @param campaignId The ID of the campaign receiving the donation
