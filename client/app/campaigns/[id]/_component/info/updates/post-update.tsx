@@ -139,7 +139,7 @@ export default function PostUpdates({
               control={control}
               render={({ field }) => (
                 <MDXEditor
-                  className="min-h-64"
+                  className="min-h-64 max-h-[28rem] overflow-y-auto"
                   markdown={field.value}
                   onChange={(markdown) => {
                     field.onChange(markdown);
