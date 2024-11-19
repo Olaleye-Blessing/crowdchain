@@ -1,0 +1,7 @@
+.update__content {
+  @apply sm:pb-5;
+}
+
+.update:last-child .update__content {
+  @apply pb-0;
+}

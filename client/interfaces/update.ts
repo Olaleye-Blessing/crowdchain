@@ -1,6 +1,6 @@
 export interface IUpdate {
   id: number;
-  timestamp: string;
+  timestamp: number;
   title: string;
   content: string;
 }

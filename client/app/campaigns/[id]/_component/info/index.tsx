@@ -7,6 +7,7 @@ import Milestones from "../milestones";
 import { useAccount } from "wagmi";
 import Donations from "./donations";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Updates from "./updates";
 
 const tabs = ["about", "donations", "milestones", "updates"];
 
@@ -58,7 +59,7 @@ export default function Info({ campaign }: { campaign: ICampaignDetail }) {
           />
         </TabsContent>
         <TabsContent value="updates">
-          <p className="text-center">Coming Soon</p>
+          <Updates campaign={campaign} />
         </TabsContent>
       </Tabs>
     </section>
