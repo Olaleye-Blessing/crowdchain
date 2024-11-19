@@ -21,6 +21,8 @@ export const wagmiAbi = parseAbi([
   "function refund(uint256 campaignId, uint256 amount) public",
   "function withdraw(uint256 campaignId)",
 
+  "function postUpdate(uint256 campaignId, string title, string content) external",
+
   // =============== EVENTS ==============
   donationEvent,
   "event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount)",

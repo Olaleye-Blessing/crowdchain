@@ -6,9 +6,9 @@ import CampaignProgrees from "./progress";
 import DonateSystem, { type DonateSystemProps } from "./donate-system";
 import WithdrawFunds from "./withdraw-funds";
 import Link from "next/link";
-import Milestones from "./milestones";
 import { useAccount } from "wagmi";
 import Info from "./info";
+import PostUpdates from "./info/updates/post-update";
 
 const currentTime = Date.now() / 1000;
 
@@ -45,16 +45,20 @@ export default function Details({ campaign }: DetailsProps) {
                     {campaign.owner}
                   </Link>
                 </p>
-                {address === campaign.owner &&
-                  campaign.amountRaised > campaign.goal &&
-                  !campaign.claimed &&
-                  currentTime > campaign.refundDeadline &&
-                  campaign.totalMilestones === 0 && (
-                    <WithdrawFunds
-                      id={campaign.id}
-                      buttonProps={{ className: "mt-4 max-w-max ml-auto" }}
-                    />
-                  )}
+                {address === campaign.owner && (
+                  <div className="mt-2">
+                    {campaign.amountRaised > campaign.goal &&
+                      !campaign.claimed &&
+                      currentTime > campaign.refundDeadline &&
+                      campaign.totalMilestones === 0 && (
+                        <WithdrawFunds
+                          id={campaign.id}
+                          buttonProps={{ className: "mt-4 max-w-max ml-auto" }}
+                        />
+                      )}
+                    <PostUpdates className="mt-2" campaignId={campaign.id} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
