@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { envVars } from './utils/env-data';
 import { globalErrorHanlder } from './utils/errors/global-err-handler';
+import crowdchainRoute from './contract/crowdchain/router';
 import ipfsRoute from './ipfs/router';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1/ipfs', ipfsRoute);
+app.use('/api/v1/crowdchain', crowdchainRoute);
 
 app.use(globalErrorHanlder);
 

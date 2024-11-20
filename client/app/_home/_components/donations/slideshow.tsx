@@ -60,7 +60,7 @@ export default function SlideShow({ donations }: SlideShowProps) {
               </span>
               <span>
                 <span>to </span>{" "}
-                <span className="text-black font-semibold">
+                <span className="text-black font-semibold address__long">
                   {donation.campaignTitle.slice(0, 25)}
                 </span>
               </span>

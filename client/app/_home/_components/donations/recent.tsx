@@ -1,37 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { formatEther, formatUnits } from "viem";
-import { useWatchContractEvent } from "wagmi";
-import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
-import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import SlideShow, { IDonation } from "./slideshow";
+import { useQuery } from "@tanstack/react-query";
+import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
 
 export default function Recent() {
-  const [donations, setDonations] = useState<IDonation[]>([]);
+  const { crowdchainInstance } = useCrowdchainInstance();
+  const {
+    data: donations,
+    error,
+    isFetching,
+  } = useQuery({
+    queryKey: ["recentDonations"],
+    staleTime: 1000 * 60 * 59,
+    queryFn: async () => {
+      try {
+        const {
+          data: { data: donations },
+        } = await crowdchainInstance().get<{ data: IDonation[] }>(
+          "/crowdchain/recentDonations",
+        );
 
-  useWatchContractEvent({
-    address: useCrowdchainAddress(),
-    abi: wagmiAbi,
-    eventName: "NewDonation",
-    onLogs([{ args: donation }]) {
-      setDonations((prev) => {
-        const newDonations = [
-          ...prev,
-          {
-            donor: donation.donor!,
-            campaignId: formatUnits(donation.campaignId!, 0),
-            amount: +formatEther(donation.amount!),
-            campaignTitle: donation.campaignTitle!,
-          },
-        ];
-
-        return newDonations;
-      });
+        return donations;
+      } catch (error) {
+        throw new Error("Internal server error");
+      }
     },
   });
 
-  if (donations.length === 0) return null;
+  if (isFetching || error || !donations || donations?.length === 0) return null;
 
   return (
     <section className="mt-6">
