@@ -10,6 +10,8 @@ const envSchema = z.object({
       z.literal('production'),
     ])
     .default('development'),
+  PINATA_JWT: z.string(),
+  PINATA_GATEWAY: z.string(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

@@ -4,8 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { envVars } from './utils/env-data';
 import { globalErrorHanlder } from './utils/errors/global-err-handler';
-import { imgsUpload } from './utils/multer';
-import { uploadImage } from './campaign/controller';
+import ipfsRoute from './ipfs/router';
 
 const app = express();
 
@@ -24,7 +23,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post('/api/v1/image', imgsUpload.single('image'), uploadImage);
+app.use('/api/v1/ipfs', ipfsRoute);
 
 app.use(globalErrorHanlder);
 

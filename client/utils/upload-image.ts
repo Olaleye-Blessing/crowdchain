@@ -15,7 +15,7 @@ export const uploadImage = async (image: File, _axios: AxiosInstance) => {
     formData.set("image", image);
 
     const { data } = await _axios.post<{ data: { image: UploadResponse } }>(
-      "/image",
+      "/ipfs/image",
       formData,
     );
 
