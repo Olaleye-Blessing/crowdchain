@@ -5,6 +5,21 @@ export interface IDonation {
   campaignId: number;
   amount: string;
   campaignTitle: string;
-  timestamp: number;
-  blockNumber: number;
 }
+
+export interface IUpdate {
+  campaignId: number;
+  updateId: number;
+  owner: string;
+  title: string;
+}
+
+export interface ITotalStats {
+  totalDonated: number;
+  totalDonors: number;
+}
+
+export type IBLOCK_RANGES = {
+  RECENT: number;
+  TOTAL: number;
+};

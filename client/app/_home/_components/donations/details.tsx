@@ -1,9 +1,17 @@
 "use client";
 
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { useQuery } from "@tanstack/react-query";
 import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
+import { formatDigit } from "./format-digit";
+
+interface TotalStats {
+  totalDonated: number;
+  totalDonors: number;
+}
 
 export default function Details() {
   const { data } = useReadContract({
@@ -11,8 +19,30 @@ export default function Details() {
     functionName: "totalCampaigns",
     abi: wagmiAbi,
   });
+  const { crowdchainInstance } = useCrowdchainInstance();
+  const { data: totalStats } = useQuery({
+    queryKey: ["crowdchain-stats", "homepage"],
+    staleTime: 1000 * 60 * 59,
+    queryFn: async () => {
+      try {
+        const { data } = await crowdchainInstance().get<{ data: TotalStats }>(
+          "/crowdchain/totalStats",
+        );
 
-  // TODO: Fetch from contract
+        return data.data;
+      } catch (error) {
+        throw new Error("Internal server error");
+      }
+    },
+  });
+
+  const totalDonated = totalStats?.totalDonated
+    ? `~${formatDigit(totalStats.totalDonated)} ETH`
+    : "-";
+  const donors = totalStats?.totalDonors
+    ? `${formatDigit(totalStats.totalDonors)}`
+    : "-";
+
   return (
     <section className="layout">
       <ul className="bg-primary grid grid-cols-1 gap-4 max-w-[75rem] mx-auto rounded-md py-10 px-5 md:grid-cols-3">
@@ -20,8 +50,8 @@ export default function Details() {
           title="Campaigns on Crowdchain"
           body={data ? formatUnits(data, 0) : "-"}
         />
-        <Detail title="Amount Donated" body="3,500,200 ETH" />
-        <Detail title="Donators" body="15,000" />
+        <Detail title="Amount Donated" body={totalDonated} />
+        <Detail title="Donators" body={donors} />
       </ul>
     </section>
   );
