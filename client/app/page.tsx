@@ -5,6 +5,7 @@ import Ready from "./_home/_components/ready";
 import Reasons from "./_home/_components/reasons";
 import Donations from "./_home/_components/donations";
 import Cause from "./_home/_components/cause";
+import RecentUpdates from "./_home/_components/recent-updates";
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
         <Campaigns />
         <Cause />
         <HowItWorks />
+        <RecentUpdates />
         <Reasons />
         <Ready />
       </main>

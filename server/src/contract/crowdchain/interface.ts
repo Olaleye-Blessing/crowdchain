@@ -10,7 +10,7 @@ export interface IDonation {
 export interface IUpdate {
   campaignId: number;
   updateId: number;
-  owner: string;
+  owner: Address;
   title: string;
 }
 
