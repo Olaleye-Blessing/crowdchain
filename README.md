@@ -17,6 +17,7 @@ CrowdChain is a decentralized crowdfunding platform built on the Ethereum blockc
     - [Contracts](#contracts)
       - [CampaignBase Contract](#campaignbase-contract)
       - [Crowdfunding Contract](#crowdfunding-contract)
+      - [CrowdfundingUpdates Contract](#crowdfundingupdates-contract)
       - [CrowdchainToken Contract](#crowdchaintoken-contract)
     - [Client](#client)
     - [Server](#server)
@@ -32,6 +33,8 @@ CrowdChain is designed to provide a decentralized and transparent platform for c
 For campaign without milestones, donors can request for a refund before the campaign refund deadline has passed. Campaign owner can withdraw the campaign funds once the refund deadline is over.
 
 For campaigns with milestone, donors can request for a refund before the first milestone is approved. Milestone approval happens when the campaign owner has withdrawn the funds raised for the milestone.
+
+Campaign owners can update their donors about the current status of their campaign by posting updates.
 
 Tokens are awarded to donors at the end of each successful campaign. Also, a fee of 2% is paid to the creator of the contract(me of course😅).
 
@@ -66,6 +69,8 @@ Tokens are awarded to donors at the end of each successful campaign. Also, a fee
 
 - **`Express.js`**: Backend server.
 - **`Pinata-web3`**: Library for uploading campaign cover images to the IPFS decentralized storage network.
+- **`Redis`**: To cache some information displayed on the home page.
+- **`Viem`**: To communicate with the blockchain.
 
 ## Project Structure
 
@@ -82,6 +87,10 @@ This is an abstract contract that provides the core functionality to create a ca
 #### Crowdfunding Contract
 
 This contract extends the CampaignBase contract and adds the donation and refund functions.
+
+#### CrowdfundingUpdates Contract
+
+This contract extends the Crowdfunding contract and adds functionality to post and get updates.
 
 #### CrowdchainToken Contract
 
@@ -105,11 +114,13 @@ The important functions in the smart contracts have been thoroughly tested using
 
 CrowdChain is currently deployed on the Sepolia Ethereum test network.
 
+Address: `0x33b8AA943D007A5b39e2f56BF3bb6575e7EEB487`
+
 ## Upcoming Features
 
-- [ ] Display total donations and donors on the home page
-- [ ] Display recent donations on the home page
-- [ ] Allow campaign owners to post updates
+- [x] Display total donations and donors on the home page
+- [x] Display recent donations on the home page
+- [x] Allow campaign owners to post updates
 - [ ] Allow donors to claim their CrowdChain (CC) tokens.
 - [ ] Allow donors with `CC` tokens to vote in a milestoned campaign.
 - [ ] Allow donors with `CC` tokens to vote for urgent withdraw of campaign funds.
