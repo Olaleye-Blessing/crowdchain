@@ -11,16 +11,16 @@ export const wagmiAbi = parseAbi([
   "struct Update { uint256 id; uint256 timestamp; string title; string content; }",
 
   // =============== FUNCTIONS ==============
-  "function createCampaign(string title, string summary, string description, string coverImage, BasicMilestone[] milestones, string[] categories, uint256 goal, uint256 duration, uint256 refundDeadline) public",
-  "function totalCampaigns() public view returns (uint256)",
+  "function createCampaign(string title, string summary, string description, string coverImage, BasicMilestone[] milestones, string[] categories, uint256 goal, uint256 duration, uint256 refundDeadline) external",
+  "function totalCampaigns() external view returns (uint256)",
   "function getCampaigns(uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
   "function getCampaignsByCategory(string category, uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
   "function getOwnerCampaigns(address owner, uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
   "function getCampaign(uint256 campaignId) view returns (CampaignDetails)",
   "function getCampaignMileStones(uint256 campaignId) view returns (Milestone[], uint8, uint8)",
-  "function donate(uint256 campaignId) public payable",
-  "function getCampaignDonors(uint256 campaignId) public view returns (address[] donors, uint256[] contributions)",
-  "function refund(uint256 campaignId, uint256 amount) public",
+  "function donate(uint256 campaignId) external payable",
+  "function getCampaignDonors(uint256 campaignId) external view returns (address[] donors, uint256[] contributions)",
+  "function refund(uint256 campaignId, uint256 amount) external",
   "function withdraw(uint256 campaignId)",
 
   "function postUpdate(uint256 campaignId, string title, string content) external",

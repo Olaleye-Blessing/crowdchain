@@ -29,6 +29,31 @@ interface ICampaign {
         string description;
     }
 
+    /// @notice Struct representing a single campaign
+    struct Campaign {
+        uint256 id;
+        uint256 amountRaised;
+        uint256 amountWithdrawn;
+        uint256 deadline;
+        uint256 refundDeadline;
+        uint256 goal; // in wei
+        uint256 tokensAllocated;
+        address owner;
+        string title;
+        string summary;
+        string description;
+        string coverImage;
+        string[] categories;
+        address[] donorAddresses;
+        mapping(address => uint256) donors;
+        mapping(address => bool) hasClaimedTokens;
+        mapping(uint8 => Milestone) milestones;
+        uint8 totalMilestones;
+        uint8 currentMilestone;
+        uint8 nextWithdrawableMilestone;
+        bool claimed;
+    }
+
     /// @notice Struct containing details of a campaign
     struct CampaignDetails {
         uint256 id;

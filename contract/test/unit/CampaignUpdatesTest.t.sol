@@ -2,13 +2,13 @@
 pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
-import {DeployCrowdfundingUpdates} from "./../../script/DeployCrowdfundingUpdates.s.sol";
-import {CrowdfundingUpdates, ICampaignUpdates} from "./../../src/CrowdfundingUpdates.sol";
 import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
+import {DeployCampaignUpdates, CampaignUpdatesCopy} from "./../../script/DeployCampaignUpdates.s.sol";
+import {ICampaignUpdates} from "./../../src/interfaces/IcampaignUpdates.sol";
 
-contract CrowdfundingUpdatesTest is Test, ConstantsTest {
-    CrowdfundingUpdates public crowdfundingUpdates;
+contract CampaignUpdatesTest is Test, ConstantsTest {
+    CampaignUpdatesCopy public campaignUpdates;
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     string private VALID_TITLE = "Valid title for real";
@@ -16,8 +16,8 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
 
     function setUp() external {
         vm.deal(DEPLOYER, 100 ether);
-        DeployCrowdfundingUpdates deployCrowdfundingUpdates = new DeployCrowdfundingUpdates();
-        (crowdfundingUpdates,) = deployCrowdfundingUpdates.run();
+        DeployCampaignUpdates deployCampaignUpdates = new DeployCampaignUpdates();
+        (campaignUpdates,) = deployCampaignUpdates.run();
 
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
@@ -29,9 +29,9 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
         uint256 campaignID = 0;
 
         vm.prank(ALICE);
-        vm.expectEmit(true, true, true, true, address(crowdfundingUpdates));
+        vm.expectEmit(true, true, true, true, address(campaignUpdates));
         emit ICampaignUpdates.NewUpdate(campaignID, 0, ALICE, VALID_TITLE);
-        crowdfundingUpdates.postUpdate(campaignID, VALID_TITLE, VALID_CONTENT);
+        campaignUpdates.postUpdate(campaignID, VALID_TITLE, VALID_CONTENT);
     }
 
     function test_revertUpdateIfNotFromCampaignOwner() external {
@@ -71,7 +71,7 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
         uint256 currentTime = block.timestamp;
         _createUpdate(ALICE, campaignID, VALID_TITLE, VALID_CONTENT);
 
-        CrowdfundingUpdates.Update memory update = crowdfundingUpdates.getUpdate(campaignID, 0);
+        CampaignUpdatesCopy.Update memory update = campaignUpdates.getUpdate(campaignID, 0);
 
         assertEq(update.id, 0);
         assertEq(update.title, VALID_TITLE);
@@ -85,7 +85,7 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
         _createCampaign(ALICE);
 
         vm.expectRevert(abi.encodeWithSelector(ICampaignUpdates.CampaignUpdates__UpdateNotExist.selector, 0));
-        crowdfundingUpdates.getUpdate(campaignID, 0);
+        campaignUpdates.getUpdate(campaignID, 0);
     }
 
     function test_getCorrectNumberOfUpdates() external {
@@ -105,7 +105,7 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
         uint256 perPage = 2;
 
         (ICampaignUpdates.Update[] memory updates, uint256 totalUpdates) =
-            crowdfundingUpdates.getCampaignUpdates(0, page, perPage);
+            campaignUpdates.getCampaignUpdates(0, page, perPage);
 
         assertEq(totalUpdates, totalUpdatesToCreate);
 
@@ -120,7 +120,7 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
 
     function _createUpdate(address owner, uint256 campaignID, string memory title, string memory content) private {
         vm.prank(owner);
-        crowdfundingUpdates.postUpdate(campaignID, title, content);
+        campaignUpdates.postUpdate(campaignID, title, content);
     }
 
     function _createCampaign(address _owner) private {
@@ -137,7 +137,7 @@ contract CrowdfundingUpdatesTest is Test, ConstantsTest {
 
         vm.startPrank(_owner);
 
-        crowdfundingUpdates.createCampaign(
+        campaignUpdates.createCampaign(
             title, summary, description, coverImage, milestones, categories, amountNeeded, deadline, refundDeadline
         );
 

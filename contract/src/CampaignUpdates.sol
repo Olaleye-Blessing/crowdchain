@@ -2,13 +2,17 @@
 pragma solidity ^0.8.26;
 
 import {ICampaignUpdates} from "./interfaces/IcampaignUpdates.sol";
-import {Crowdfunding} from "./Crowdfunding.sol";
+import {CampaignDonation} from "./CampaignDonation.sol";
 
-contract CrowdfundingUpdates is Crowdfunding, ICampaignUpdates {
+/// @title CampaignUpdates
+/// @author Olaleye Blessing
+/// @notice Abstract contract for CampaignUpdates functionality, extending CampaignDonation
+/// @dev Implements campaign updates mechanism
+abstract contract CampaignUpdates is CampaignDonation, ICampaignUpdates {
     /// @dev Mapping of campaign ID to array of updates
     mapping(uint256 campaignId => Update[] updates) private campaignUpdates;
 
-    constructor(address _crowdchainTokenAddress) Crowdfunding(_crowdchainTokenAddress) {}
+    constructor(address _crowdchainTokenAddress) CampaignDonation(_crowdchainTokenAddress) {}
 
     /// @inheritdoc ICampaignUpdates
     function postUpdate(uint256 campaignId, string calldata title, string calldata content)

@@ -8,15 +8,15 @@ local_rpc_url := http://127.0.0.1:$(local_port)
 
 .PHONY: deploy-to-sepolia
 deploy-to-sepolia:
-	forge script script/DeployCrowdfundingUpdates.s.sol --rpc-url $(ETH_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
+	forge script script/DeployCrowdfunding.s.sol --rpc-url $(ETH_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
 
 .PHONY: virtual-tenderly-sepolia
 virtual-tenderly-sepolia:
-	forge script script/DeployCrowdfundingUpdates.s.sol --rpc-url $(TENDERLY_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
+	forge script script/DeployCrowdfunding.s.sol --rpc-url $(TENDERLY_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
 
 .PHONY: deploy-local-anvil
 deploy-local-anvil:
-	forge script script/DeployCrowdfundingUpdates.s.sol --rpc-url $(local_rpc_url) --broadcast --private-key $(private_key)
+	forge script script/DeployCrowdfunding.s.sol --rpc-url $(local_rpc_url) --broadcast --private-key $(private_key)
 
 .PHONY: start-anvil
 start-anvil:

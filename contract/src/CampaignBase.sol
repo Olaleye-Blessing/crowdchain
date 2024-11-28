@@ -10,53 +10,18 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// @dev Implements the ICampaign interface
 abstract contract CampaignBase is ICampaign {
     uint256 private constant ONE_DAY = 1 days;
-    uint256 private constant ONE_ETH = 1 ether;
     /// @dev This is 0.2%. Always divide the final fee by 1000. It is set at 2 here cause solidity doesn't support decimals.
     uint256 internal constant OWNER_FEE = 2;
     uint256 private accumulatedFee = 0;
     address payable private immutable i_owner;
-
     /// @dev Minimum amount required a campaign has to raise for tokens to be allocated to the owner and donors.
     uint256 internal constant MINIMUM_AMOUNT_RAISED = 15 ether;
-
     ERC20 internal crowdchainToken;
-
     /// @notice Mapping of owner addresses to their campaign IDs
-    mapping(address => uint256[]) private campaignsOwner;
+    mapping(address owner => uint256[] campaignIds) private campaignsOwner;
     mapping(string category => uint256[] campaignIds) private campaignsByCategory;
-
-    /// @notice Struct representing a single campaign
-    struct Campaign {
-        uint256 id;
-        uint256 amountRaised;
-        uint256 amountWithdrawn;
-        uint256 deadline;
-        uint256 refundDeadline;
-        uint256 goal; // in wei
-        uint256 tokensAllocated;
-        address owner;
-        string title;
-        string summary;
-        string description;
-        string coverImage;
-        string[] categories;
-        address[] donorAddresses;
-        mapping(address => uint256) donors;
-        mapping(address => bool) hasClaimedTokens;
-        mapping(uint8 => Milestone) milestones;
-        uint8 totalMilestones;
-        uint8 currentMilestone;
-        uint8 nextWithdrawableMilestone;
-        bool claimed;
-    }
-
     /// @notice Array of all campaigns
     Campaign[] internal campaigns;
-
-    constructor(address _crowdchainTokenAddress) {
-        i_owner = payable(msg.sender);
-        crowdchainToken = ERC20(_crowdchainTokenAddress);
-    }
 
     modifier onlyOwner() {
         if (i_owner != msg.sender) revert Campaign__NotContractOwner(msg.sender);
@@ -85,6 +50,11 @@ abstract contract CampaignBase is ICampaign {
         }
     }
 
+    constructor(address _crowdchainTokenAddress) {
+        i_owner = payable(msg.sender);
+        crowdchainToken = ERC20(_crowdchainTokenAddress);
+    }
+
     function getOwnerFee() external pure returns (uint256) {
         return OWNER_FEE;
     }
@@ -95,12 +65,12 @@ abstract contract CampaignBase is ICampaign {
 
     /// @notice Returns the total number of campaigns
     /// @return The number of campaigns created
-    function totalCampaigns() public view returns (uint256) {
+    function totalCampaigns() external view returns (uint256) {
         return campaigns.length;
     }
 
     /// @inheritdoc ICampaign
-    function getOwner() public view returns (address) {
+    function getOwner() external view returns (address) {
         return i_owner;
     }
 
@@ -161,7 +131,7 @@ abstract contract CampaignBase is ICampaign {
 
     /// @inheritdoc ICampaign
     function getCampaign(uint256 campaignId)
-        public
+        external
         view
         override
         campaignExists(campaignId)
@@ -173,7 +143,7 @@ abstract contract CampaignBase is ICampaign {
 
     /// @inheritdoc ICampaign
     function getCampaignMileStones(uint256 campaignId)
-        public
+        external
         view
         override
         campaignExists(campaignId)
@@ -193,7 +163,7 @@ abstract contract CampaignBase is ICampaign {
 
     /// @inheritdoc ICampaign
     function getCampaigns(uint256 page, uint256 perPage)
-        public
+        external
         view
         override
         validPagination(page, perPage)
@@ -238,7 +208,7 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function withdraw(uint256 campaignId) public override campaignExists(campaignId) {
+    function withdraw(uint256 campaignId) external override campaignExists(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
@@ -255,7 +225,7 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function withdrawFee() public onlyOwner {
+    function withdrawFee() external onlyOwner {
         uint256 amount = accumulatedFee;
         accumulatedFee = 0;
 
@@ -264,14 +234,14 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function getAccumulatedFee() public view onlyOwner returns (uint256) {
+    function getAccumulatedFee() external view onlyOwner returns (uint256) {
         return accumulatedFee;
     }
 
     // TODO: Think about how to make this work. Currently, the _distributeToken won't work
     // because msg.sender != the address that deployed the token.
     // msg.sender is from the internal ERC20
-    function claimToken(uint256 _campaignId) public campaignExists(_campaignId) {
+    function claimToken(uint256 _campaignId) external campaignExists(_campaignId) {
         Campaign storage campaign = campaigns[_campaignId];
 
         if (campaign.hasClaimedTokens[msg.sender]) revert Campaign__TokensClaimed();
