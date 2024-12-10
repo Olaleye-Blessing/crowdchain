@@ -12,7 +12,9 @@ abstract contract CampaignUpdates is CampaignDonation, ICampaignUpdates {
     /// @dev Mapping of campaign ID to array of updates
     mapping(uint256 campaignId => Update[] updates) private campaignUpdates;
 
-    constructor(address _crowdchainTokenAddress) CampaignDonation(_crowdchainTokenAddress) {}
+    constructor(address _crowdchainTokenAddress, address[] memory _supportedCoins, address[] memory _coinPriceFeeds)
+        CampaignDonation(_crowdchainTokenAddress, _supportedCoins, _coinPriceFeeds)
+    {}
 
     /// @inheritdoc ICampaignUpdates
     function postUpdate(uint256 campaignId, string calldata title, string calldata content)
@@ -23,7 +25,7 @@ abstract contract CampaignUpdates is CampaignDonation, ICampaignUpdates {
 
         Campaign storage campaign = campaigns[campaignId];
 
-        if (campaign.owner != msg.sender) revert Campaign__NotCampaignOwner();
+        if (campaign.owner != msg.sender) revert CampaignDonation__NotCampaignOwner();
 
         Update memory newUpdate =
             Update({id: campaignUpdates[campaignId].length, timestamp: block.timestamp, title: title, content: content});
@@ -31,6 +33,21 @@ abstract contract CampaignUpdates is CampaignDonation, ICampaignUpdates {
         campaignUpdates[campaignId].push(newUpdate);
 
         emit NewUpdate(campaignId, newUpdate.id, msg.sender, title);
+    }
+
+    function withdraw(uint256 campaignId) public override {
+        super.withdraw(campaignId);
+
+        Update memory newUpdate = Update({
+            id: campaignUpdates[campaignId].length,
+            timestamp: block.timestamp,
+            title: "Owner made a withdrawal",
+            content: ""
+        });
+
+        campaignUpdates[campaignId].push(newUpdate);
+
+        emit NewUpdate(campaignId, newUpdate.id, msg.sender, "Owner made a withdrawal");
     }
 
     /// @inheritdoc ICampaignUpdates

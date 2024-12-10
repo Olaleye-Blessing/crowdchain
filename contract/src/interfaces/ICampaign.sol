@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {Donation} from "./../structs.sol";
+
 /// @title ICampaign
 /// @author Olaleye Blessing
 /// @notice Interface for the core functionality of a crowdfunding campaign system
 interface ICampaign {
     enum MilestoneStatus {
-        Pending, // Milestone is yet to be started
-        InProgress, // Milestone is currently being worked on
-        Completed, // Milestone has been completed
-        Approved, // Milestone has been approved by the campaign owner or stakeholders
-        Rejected // Milestone was rejected
+        Pending, // Funding is yet to start
+        Funding, // Funding has started
+        Withdrawn, // Funding has been withdrawn
+        Started, // Funding is been used
+        Completed, // Work done
+        Rejected // Funding is rejected
 
     }
 
@@ -24,7 +27,7 @@ interface ICampaign {
     }
 
     struct BasicMilestone {
-        uint256 targetAmount;
+        uint256 targetAmount; // in USD -> decimal 8
         uint256 deadline;
         string description;
     }
@@ -36,7 +39,7 @@ interface ICampaign {
         uint256 amountWithdrawn;
         uint256 deadline;
         uint256 refundDeadline;
-        uint256 goal; // in wei
+        uint256 goal; // in USD -> decimal 8
         uint256 tokensAllocated;
         address owner;
         string title;
@@ -45,12 +48,15 @@ interface ICampaign {
         string coverImage;
         string[] categories;
         address[] donorAddresses;
-        mapping(address => uint256) donors;
+        mapping(address donor => uint256 donated) isDonor; // 1 -> true 0 -> false
+        Donation[] donations;
+        mapping(address donor => mapping(address coin => uint256 total)) donorTotalAmountPerCoin;
+        mapping(address coin => uint256 amount) amountRaisedPerCoin;
+        mapping(address coin => uint256 amount) amountWithdrawnPerCoin;
         mapping(address => bool) hasClaimedTokens;
         mapping(uint8 => Milestone) milestones;
         uint8 totalMilestones;
         uint8 currentMilestone;
-        uint8 nextWithdrawableMilestone;
         bool claimed;
     }
 
@@ -65,7 +71,6 @@ interface ICampaign {
         uint256 tokensAllocated;
         uint8 totalMilestones;
         uint8 currentMilestone;
-        uint8 nextWithdrawableMilestone;
         address owner;
         string title;
         string summary;
@@ -87,20 +92,6 @@ interface ICampaign {
     /// @param milestoneId The id of the completed milestone
     event NextMilestoneStarted(uint256 indexed campaignId, uint8 milestoneId);
 
-    /// @notice Emitted when campaign funds are withdrawn by the owner
-    /// @param campaignId The ID of the campaign
-    /// @param owner The address of the campaign owner
-    /// @param amount The amount withdrawn
-    event CampaignFundWithdrawn(uint256 indexed campaignId, address indexed owner, uint256 amount);
-
-    /// @notice Emitted when a campaign reaches its funding goal
-    /// @param owner The address of the campaign owner
-    /// @param campaignId The ID of the campaign
-    /// @param amountRaised The total amount raised by the campaign
-    event CampaignGoalCompleted(address indexed owner, uint256 indexed campaignId, uint256 amountRaised);
-
-    error Campaign__MilestoneGoalNotCompeleted(uint256 campaignId, uint8 milestoneId, uint256 amountRaised);
-
     /// @notice Error thrown when the account performing an operation is not the contract's owner
     error Campaign__NotContractOwner(address account);
 
@@ -110,43 +101,14 @@ interface ICampaign {
     /// @notice Error thrown when campaign creation fails
     error Campaign__CampaignCreationFailed(string reason);
 
-    /// @notice Error thrown when attempting to make an empty donation
-    error Campaign__EmptyDonation();
-
-    /// @notice Error thrown when attempting to interact with a closed campaign
-    error Campaign__CampaignClosed();
-
-    /// @notice Error thrown when attempting to interact with an already claimed campaign
-    error Campaign__CampaignAlreadyClaimed();
-
-    /// @notice Error thrown when a non-owner attempts to perform an owner-only action
-    error Campaign__NotCampaignOwner();
-
-    /// @notice Error thrown when a withdrawal fails
-    error Campaign__WithdrawalFailed();
-
-    error Campaign__WithdrawNotAllowed(string message);
-
     /// @notice Error thrown when invalid pagination parameters are provided
     error Campaign__InvalidPagination();
 
     /// @notice Error thrown when attempting to interact with a campaign that hasn't ended
     error Campaign__CampaignNotEnded();
 
-    /// @notice Error thrown when attempting to interact with a campaign that has insufficient donation to get tokens
-    error Campaign__InsufficientDonationsForTokens(uint256 campaignId, uint256 amountRaised, uint256 minimumDonation);
-
-    /// @notice Error thrown when token distribution fails
-    error Campaign__TokenDistributionFailed();
-
-    /// @notice Error thrown when an address interacting with a campaign has claimed their tokens
-    error Campaign__TokensClaimed();
-
-    /// @notice Error thrown when attempting to withdraw funds while the refund deadline is still active
-    error Campaign__RefundDeadlineActive();
-
-    /// @notice Error thrown when attempting to refund after the refund deadline has elapsed
-    error Campaign__RefundDeadlineElapsed(uint256 campaignId);
+    /// @notice Coin not supported for donation
+    error Campaign__CoinNotSupported(address coin);
 
     /// @dev Returns the address of the contract owner.
     function getOwner() external returns (address owner);
@@ -182,7 +144,7 @@ interface ICampaign {
     function getCampaignMileStones(uint256 campaignId)
         external
         view
-        returns (Milestone[] memory milestones, uint8 currentMileStone, uint8 nextWithdrawableMilestone);
+        returns (Milestone[] memory milestones, uint8 currentMileStone);
 
     /// @notice Retrieves a paginated list of all campaigns
     /// @param page The page number to retrieve
@@ -210,16 +172,16 @@ interface ICampaign {
         view
         returns (CampaignDetails[] memory, uint256);
 
-    /// @notice Allows the campaign owner to withdraw funds after the campaign and refund period have ended
-    /// @param campaignId The ID of the campaign to withdraw funds from
-    function withdraw(uint256 campaignId) external;
+    /// @notice Add a new supported coin
+    /// @param coin Address of the coin to add
+    function addSupportedCoin(address coin) external;
 
-    /// @dev Allows contract owner to withdraw accumulated fee
-    function withdrawFee() external;
+    /// @notice Get list of supported stablecoins
+    /// @return Array of supported stablecoin addresses
+    function getSupportedCoins() external view returns (address[] memory);
 
-    /// @dev Retrieves contract accumulated fee
-    function getAccumulatedFee() external returns (uint256);
-
-    /// @notice Allows donor to claim their token from a campaign
-    function claimToken(uint256 campaignId) external;
+    /// @notice Check if a coin is supported for donation
+    /// @param coin Address of the coin to check
+    /// @return Boolean indicating if the coin is supported
+    function isCoinSupported(address coin) external view returns (bool);
 }

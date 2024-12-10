@@ -7,6 +7,7 @@ import {CrowdchainToken} from "./../../src/tokens/crowdchain.sol";
 import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {DeployCampaignBase} from "./../../script/DeployCampaignBase.s.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
+import {ERC20Mock} from "./../mocks/ERC20Mock.sol";
 
 contract CampaignBaseTest is Test, ConstantsTest {
     CampaignBase public campaignBase;
@@ -14,6 +15,8 @@ contract CampaignBaseTest is Test, ConstantsTest {
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
+    address usdc;
+    address dai;
 
     function setUp() external {
         vm.deal(DEPLOYER, 100 ether);
@@ -24,6 +27,17 @@ contract CampaignBaseTest is Test, ConstantsTest {
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
         vm.deal(BLESSING, 100 ether);
+
+        address[] memory supportedCoins = campaignBase.getSupportedCoins();
+        usdc = supportedCoins[1];
+        dai = supportedCoins[2];
+
+        // ERC20Mock(usdc).mint(BLESSING, 1000e18);
+        // ERC20Mock(dai).mint(BLESSING, 1000e18);
+        // ERC20Mock(usdc).mint(BOB, 1000e18);
+        // ERC20Mock(dai).mint(BOB, 1000e18);
+        // ERC20Mock(usdc).mint(ALICE, 1000e18);
+        // ERC20Mock(dai).mint(ALICE, 1000e18);
     }
 
     function test_contractBelongsToTheCorrectOwner() public view {
@@ -31,6 +45,34 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         assertNotEq(BOB, owner);
         assertEq(DEPLOYER, owner);
+    }
+
+    function test_getSupportedCoins() public view {
+        uint256 totalCoins = 3;
+
+        assertEq(campaignBase.getSupportedCoins().length, totalCoins);
+    }
+
+    function test_addNewSupportedCoin() public {
+        uint256 totalSupportedCoins = campaignBase.getSupportedCoins().length;
+        uint8 decimals = 18;
+        uint256 intialSupply = 1000e18;
+
+        vm.startBroadcast();
+        ERC20Mock usdt = new ERC20Mock("USDT", "usdt", msg.sender, intialSupply, decimals);
+        vm.stopBroadcast();
+
+        vm.prank(DEPLOYER);
+        campaignBase.addSupportedCoin(address(usdt));
+
+        assertEq(campaignBase.getSupportedCoins().length, totalSupportedCoins + 1);
+    }
+
+    function test_checkIfCoinIsSupported() public view {
+        assertEq(campaignBase.isCoinSupported(address(1)), false);
+        assertEq(campaignBase.isCoinSupported(ETH_ADDRESS), true);
+        assertEq(campaignBase.isCoinSupported(usdc), true);
+        assertEq(campaignBase.isCoinSupported(dai), true);
     }
 
     function test_createCampaignWithMilestonesSuccessfully() public {
@@ -340,12 +382,10 @@ contract CampaignBaseTest is Test, ConstantsTest {
             refundDeadline
         );
 
-        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone, uint8 nextWithdrawableMilestone) =
-            campaignBase.getCampaignMileStones(0);
+        (ICampaign.Milestone[] memory milestones, uint8 currentMilestone) = campaignBase.getCampaignMileStones(0);
 
         assertEq(currentMilestone, 0);
         assertEq(milestones.length, 3);
-        assertEq(nextWithdrawableMilestone, 0);
     }
 
     function test_getTotalCampaignsCreated() public {
@@ -480,64 +520,6 @@ contract CampaignBaseTest is Test, ConstantsTest {
         }
     }
 
-    function test_withdrawFailIfNotOwner() public {
-        uint256 _amountNeeded = 6;
-        uint256 _deadline = 4; // days
-        uint256 _refundDeadline = 10; // days
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        _createCampaign(BOB, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        vm.startPrank(ALICE);
-        vm.expectRevert(ICampaign.Campaign__NotCampaignOwner.selector);
-        campaignBase.withdraw(0);
-    }
-
-    function test_withdrawFailIfRefundDeadlineIsClosed() public {
-        uint256 _amountNeeded = 6;
-        uint256 _deadline = 4; // days
-        uint256 _refundDeadline = 10; // days
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        _createCampaign(BOB, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        vm.startPrank(BOB);
-        vm.expectRevert(ICampaign.Campaign__RefundDeadlineActive.selector);
-        campaignBase.withdraw(0);
-    }
-
-    function test_withdrawFailIfThereIsNoDonation() public {
-        uint256 _amountNeeded = 6;
-        uint256 _deadline = 4; // days
-        uint256 _refundDeadline = 10; // days
-        string memory _title = "My Title";
-        string memory _description = "My little description from my heart, soul and mind";
-
-        _createCampaign(BOB, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
-
-        vm.startPrank(BOB);
-        vm.expectRevert(ICampaign.Campaign__RefundDeadlineActive.selector);
-        campaignBase.withdraw(0);
-    }
-
-    function test_claimingTokenFailsIfCampaignIsActive() public {
-        _createCampaign(
-            ALICE,
-            "title title title title",
-            SUMMARY,
-            "description description description description description description",
-            1 ether,
-            3,
-            6
-        );
-
-        vm.prank(BLESSING);
-        vm.expectRevert(ICampaign.Campaign__CampaignNotEnded.selector);
-        campaignBase.claimToken(0);
-    }
-
     function _createCampaign(
         address _owner,
         string memory _title,
@@ -581,11 +563,5 @@ contract CampaignBaseTest is Test, ConstantsTest {
         );
 
         vm.stopPrank();
-    }
-
-    function _shiftCurrentTimestampToAllowWithdraw() private {
-        uint256 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
-        uint256 _deadline = 4; // gotten from createSuccessfulCampaign();
-        vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
     }
 }

@@ -2,26 +2,31 @@
 pragma solidity ^0.8.26;
 
 import {ICampaign} from "./interfaces/ICampaign.sol";
+import {IAggregatorV3} from "./interfaces/IAggregatorV3.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title CampaignBase
 /// @author Olaleye Blessing
 /// @notice Abstract contract implementing core functionality for crowdfunding campaigns
 /// @dev Implements the ICampaign interface
 abstract contract CampaignBase is ICampaign {
+    using SafeERC20 for ERC20;
+
+    uint256 internal constant DECIMAL_PRECISION = 18;
     uint256 private constant ONE_DAY = 1 days;
-    /// @dev This is 0.2%. Always divide the final fee by 1000. It is set at 2 here cause solidity doesn't support decimals.
-    uint256 internal constant OWNER_FEE = 2;
-    uint256 private accumulatedFee = 0;
     address payable private immutable i_owner;
     /// @dev Minimum amount required a campaign has to raise for tokens to be allocated to the owner and donors.
-    uint256 internal constant MINIMUM_AMOUNT_RAISED = 15 ether;
     ERC20 internal crowdchainToken;
     /// @notice Mapping of owner addresses to their campaign IDs
     mapping(address owner => uint256[] campaignIds) private campaignsOwner;
     mapping(string category => uint256[] campaignIds) private campaignsByCategory;
     /// @notice Array of all campaigns
     Campaign[] internal campaigns;
+    /// @notice Supported coins for donations
+    address[] internal supportedCoins;
+    /// @notice Chainlink aggregator pricefeed
+    mapping(address coin => address priceFeed) internal coinPriceFeeds;
 
     modifier onlyOwner() {
         if (i_owner != msg.sender) revert Campaign__NotContractOwner(msg.sender);
@@ -50,17 +55,16 @@ abstract contract CampaignBase is ICampaign {
         }
     }
 
-    constructor(address _crowdchainTokenAddress) {
+    constructor(address _crowdchainTokenAddress, address[] memory _supportedCoins, address[] memory _coinPriceFeeds) {
         i_owner = payable(msg.sender);
         crowdchainToken = ERC20(_crowdchainTokenAddress);
-    }
+        supportedCoins = _supportedCoins;
 
-    function getOwnerFee() external pure returns (uint256) {
-        return OWNER_FEE;
-    }
-
-    function getMinimumCampaignAmountRaised() external pure returns (uint256) {
-        return MINIMUM_AMOUNT_RAISED;
+        uint256 totalCoins = _supportedCoins.length;
+        uint256 coinIndex = 0;
+        for (coinIndex; coinIndex < totalCoins; coinIndex++) {
+            coinPriceFeeds[_supportedCoins[coinIndex]] = _coinPriceFeeds[coinIndex];
+        }
     }
 
     /// @notice Returns the total number of campaigns
@@ -113,7 +117,7 @@ abstract contract CampaignBase is ICampaign {
                     targetAmount: milestones[i].targetAmount,
                     deadline: block.timestamp + (milestones[i].deadline * ONE_DAY),
                     description: milestones[i].description,
-                    status: i == 0 ? MilestoneStatus.InProgress : MilestoneStatus.Pending
+                    status: i == 0 ? MilestoneStatus.Funding : MilestoneStatus.Pending
                 });
                 newCampaign.milestones[i] = _milestone;
             }
@@ -147,7 +151,7 @@ abstract contract CampaignBase is ICampaign {
         view
         override
         campaignExists(campaignId)
-        returns (Milestone[] memory milestones, uint8 currentMileStone, uint8 nextWithdrawableMilestone)
+        returns (Milestone[] memory milestones, uint8 currentMileStone)
     {
         Campaign storage campaign = campaigns[campaignId];
         milestones = new ICampaign.Milestone[](campaign.totalMilestones);
@@ -158,7 +162,7 @@ abstract contract CampaignBase is ICampaign {
             milestones[index] = campaign.milestones[index];
         }
 
-        return (milestones, campaign.currentMilestone, campaign.nextWithdrawableMilestone);
+        return (milestones, campaign.currentMilestone);
     }
 
     /// @inheritdoc ICampaign
@@ -208,63 +212,37 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function withdraw(uint256 campaignId) external override campaignExists(campaignId) {
-        Campaign storage campaign = campaigns[campaignId];
+    function addSupportedCoin(address coin) external onlyOwner {
+        if (_isCoinSupported(coin, supportedCoins)) return;
 
-        if (campaign.claimed) revert Campaign__CampaignAlreadyClaimed();
-        if (msg.sender != campaign.owner) revert Campaign__NotCampaignOwner();
-
-        uint256 amountToSend = campaign.totalMilestones == 0
-            ? _withdrawCampaignFundWithNoMilestone(campaign)
-            : _withdrawCampaignFundWithMilestone(campaign);
-
-        (bool success,) = payable(msg.sender).call{value: amountToSend}("");
-        if (!success) revert Campaign__WithdrawalFailed();
-
-        emit CampaignFundWithdrawn(campaign.id, msg.sender, amountToSend);
+        supportedCoins.push(coin);
     }
 
     /// @inheritdoc ICampaign
-    function withdrawFee() external onlyOwner {
-        uint256 amount = accumulatedFee;
-        accumulatedFee = 0;
-
-        (bool success,) = i_owner.call{value: amount}("");
-        if (!success) revert();
+    function getSupportedCoins() public view returns (address[] memory) {
+        return supportedCoins;
     }
 
     /// @inheritdoc ICampaign
-    function getAccumulatedFee() external view onlyOwner returns (uint256) {
-        return accumulatedFee;
+    function isCoinSupported(address coin) public view returns (bool) {
+        address[] memory _supportedCoins = supportedCoins;
+
+        return _isCoinSupported(coin, _supportedCoins);
     }
 
-    // TODO: Think about how to make this work. Currently, the _distributeToken won't work
-    // because msg.sender != the address that deployed the token.
-    // msg.sender is from the internal ERC20
-    function claimToken(uint256 _campaignId) external campaignExists(_campaignId) {
-        Campaign storage campaign = campaigns[_campaignId];
+    /// @notice Check if a coin is supported for donation
+    /// @param coin Address of the coin to check
+    /// @param _supportedCoins Array of currently supported coins
+    /// @return Boolean indicating if the coin is supported
+    function _isCoinSupported(address coin, address[] memory _supportedCoins) private pure returns (bool) {
+        uint256 index = 0;
+        uint256 totalSupportedCoins = _supportedCoins.length;
 
-        if (campaign.hasClaimedTokens[msg.sender]) revert Campaign__TokensClaimed();
-
-        if (!campaign.claimed) revert Campaign__CampaignNotEnded();
-
-        if (campaign.donors[msg.sender] == 0) revert Campaign__EmptyDonation();
-
-        if (campaign.amountRaised < MINIMUM_AMOUNT_RAISED) {
-            revert Campaign__InsufficientDonationsForTokens(_campaignId, campaign.amountRaised, MINIMUM_AMOUNT_RAISED);
+        for (index = 0; index < totalSupportedCoins; index++) {
+            if (_supportedCoins[index] == coin) return true;
         }
 
-        campaign.hasClaimedTokens[msg.sender] = true;
-
-        uint256 _numberOfTokens = (campaign.donors[msg.sender] * campaign.tokensAllocated) / campaign.amountRaised;
-
-        _distributeToken(msg.sender, _numberOfTokens);
-    }
-
-    function _distributeToken(address _recipient, uint256 _amount) private {
-        bool result = crowdchainToken.transfer(_recipient, _amount);
-
-        if (!result) revert Campaign__TokenDistributionFailed();
+        return false;
     }
 
     /// @notice Validates the parameters for creating a new campaign
@@ -382,66 +360,8 @@ abstract contract CampaignBase is ICampaign {
             tokensAllocated: campaign.tokensAllocated,
             totalMilestones: campaign.totalMilestones,
             currentMilestone: campaign.currentMilestone,
-            nextWithdrawableMilestone: campaign.nextWithdrawableMilestone,
             categories: campaign.categories
         });
-    }
-
-    function _withdrawCampaignFundWithNoMilestone(Campaign storage campaign) internal returns (uint256) {
-        if (block.timestamp < campaign.refundDeadline) {
-            revert Campaign__RefundDeadlineActive();
-        }
-        if (campaign.amountRaised == 0) revert Campaign__EmptyDonation();
-
-        campaign.claimed = true;
-        uint256 fee = (campaign.amountRaised * OWNER_FEE) / 1000;
-
-        uint256 amount = campaign.amountRaised - fee;
-
-        accumulatedFee += fee;
-
-        if (amount > MINIMUM_AMOUNT_RAISED) {
-            campaign.tokensAllocated = (amount / MINIMUM_AMOUNT_RAISED) * 10 ** uint256(crowdchainToken.decimals());
-        }
-
-        return amount;
-    }
-
-    function _withdrawCampaignFundWithMilestone(Campaign storage campaign) internal returns (uint256) {
-        Milestone storage milestone = campaign.milestones[campaign.nextWithdrawableMilestone];
-        if (milestone.status != MilestoneStatus.Completed) {
-            revert Campaign__MilestoneGoalNotCompeleted(
-                campaign.id, campaign.nextWithdrawableMilestone, campaign.amountRaised
-            );
-        }
-
-        uint256 amountToWithdraw = campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1
-            ? campaign.amountRaised - campaign.amountWithdrawn
-            : milestone.targetAmount - campaign.amountWithdrawn;
-        uint256 fee = 0;
-        uint256 amoutToSend = 0;
-
-        // TODO: During donation, you might want to check if amountRaised + fee is greater than first milestone target before moving to the next.
-        if (campaign.nextWithdrawableMilestone == 0) {
-            // deduct fee from the goal amount as some campign might stop and request for emergency refund before completing the total milestone. This is a loss on our part as far as fee is concerned.
-            fee = (campaign.goal * OWNER_FEE) / 1000;
-            amoutToSend = amountToWithdraw - fee;
-
-            accumulatedFee += fee;
-        } else {
-            amoutToSend = amountToWithdraw;
-        }
-
-        milestone.status = MilestoneStatus.Approved;
-        campaign.amountWithdrawn += amountToWithdraw;
-
-        if (campaign.nextWithdrawableMilestone == campaign.totalMilestones - 1) {
-            campaign.claimed = true;
-        } else {
-            campaign.nextWithdrawableMilestone += 1;
-        }
-
-        return amoutToSend;
     }
 
     function _getCampaignsByUniqueIds(uint256[] memory campaignIds, uint256 page, uint256 perPage)

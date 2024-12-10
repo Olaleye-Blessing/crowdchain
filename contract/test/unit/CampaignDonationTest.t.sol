@@ -7,7 +7,8 @@ import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {ICampaignDonation} from "./../../src/interfaces/ICampaignDonation.sol";
 import {DeployCampaignDonation, CampaignDonationCopy} from "./../../script/DeployCampaignDonation.s.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
-import {CampaignDonation} from "./../../src/CampaignDonation.sol";
+import {CampaignDonation, Donation} from "./../../src/CampaignDonation.sol";
+import {ERC20Mock} from "./../mocks/ERC20Mock.sol";
 
 contract CampaignDonationTest is Test, ConstantsTest {
     CampaignDonationCopy public campaignDonation;
@@ -15,6 +16,8 @@ contract CampaignDonationTest is Test, ConstantsTest {
     address ALICE = makeAddr("alice");
     address BOB = makeAddr("bob");
     address BLESSING = makeAddr("blessing");
+    address usdc;
+    address dai;
 
     function setUp() external {
         vm.deal(DEPLOYER, 100 ether);
@@ -25,719 +28,463 @@ contract CampaignDonationTest is Test, ConstantsTest {
         vm.deal(ALICE, 100 ether);
         vm.deal(BOB, 100 ether);
         vm.deal(BLESSING, 100 ether);
-    }
 
-    function test_withdrawSuccessfully() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
-
-        _shiftCurrentTimestampToAllowWithdraw();
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, BLESSING_DONATION);
-        campaignDonation.withdraw(campaignID);
-    }
-
-    function test_withdrawMilestonedCampaign() public {
-        _createCampignWithMilestones(ALICE);
-        uint256 amountNeeded = 40 * 1 ether; // gotten from _createCampignWithMilestones above
-
-        uint8 firstMilestoneID = 0;
-        uint8 secondMilestoneID = 1;
-        uint8 thirdMilestoneID = 2;
-
-        uint256 campaignID = 0;
-
-        // ========== first milestone amount -> 7 ether ==========
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID);
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 4 ether, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.NextMilestoneStarted(campaignID, secondMilestoneID);
-        campaignDonation.donate{value: 4 ether}(campaignID); // total = 7 ethers
-
-        uint256 firstMilestoneTarget = 6 ether;
-        uint256 fee = (campaignDonation.getOwnerFee() * amountNeeded) / 1000;
-        uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
-        uint256 aliceFirstBalance = ALICE.balance;
-
-        vm.prank(ALICE);
-        // assert withdraw was successful
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, firstAmountWithdrawn);
-        campaignDonation.withdraw(campaignID);
-
-        // assert correct amount was withdrawn
-        assertEq(ALICE.balance, aliceFirstBalance + firstAmountWithdrawn);
-
-        // ========== second milestone amount -> 16 ether ==========
-        uint256 aliceSecondBalance = ALICE.balance;
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID);
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 6 ether, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.NextMilestoneStarted(campaignID, thirdMilestoneID);
-        campaignDonation.donate{value: 6 ether}(campaignID); // total = 16 ethers
-        // ========== second milestone amount -> 16 ether ==========
-
-        uint256 secondMilestoneTarget = 16 ether;
-        uint256 secondAmountWithdrawn = secondMilestoneTarget - firstMilestoneTarget;
-
-        vm.prank(ALICE);
-        // assert withdraw was successful
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, secondAmountWithdrawn);
-        campaignDonation.withdraw(campaignID);
-
-        // assert correct amount was withdrawn
-        assertEq(ALICE.balance, aliceSecondBalance + secondAmountWithdrawn);
-
-        // ========== third milestone amount -> 40 ether ==========
-        uint256 aliceThirdBalance = ALICE.balance;
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 5 ether, "My Title");
-        campaignDonation.donate{value: 5 ether}(campaignID); // total = 21 ethers
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID); // total = 24 ethers
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 36 ether, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
-        campaignDonation.donate{value: 36 ether}(campaignID); // total = 60 ethers
-        // ========== third milestone amount -> 40 ether ==========
-
-        uint256 amountRaised = 60 ether;
-        uint256 thirdAmountWithdrawn = amountRaised - (firstAmountWithdrawn + fee + secondAmountWithdrawn);
-
-        vm.prank(ALICE);
-        // assert withdraw was successful
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, thirdAmountWithdrawn);
-        campaignDonation.withdraw(campaignID);
-
-        // assert correct amount was withdrawn
-        assertEq(ALICE.balance, aliceThirdBalance + thirdAmountWithdrawn);
-        assertEq(ALICE.balance, aliceFirstBalance + firstAmountWithdrawn + secondAmountWithdrawn + thirdAmountWithdrawn);
-    }
-
-    function test_savesAccumalatedFeeCorrectly() public {
-        uint256 _amountNeeded = 16 * ONE_ETH;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = 3 * ONE_ETH;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        uint256 totalDonation = DONATION * 2;
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
-        campaignDonation.withdraw(campaignID);
-
-        vm.prank(DEPLOYER);
-        uint256 accumulatedFee = campaignDonation.getAccumulatedFee();
-        uint256 expectedAccumulatedFee = (campaignDonation.getOwnerFee() * totalDonation) / 1000;
-
-        assertEq(accumulatedFee, expectedAccumulatedFee);
-    }
-
-    function test_allocateCorrectAmountOfTokensAfterOwnerWithdraw() public {
-        uint256 _amountNeeded = 16 * ONE_ETH;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = 9 * ONE_ETH;
-        uint256 totalDonation = DONATION * 2;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, totalDonation, "My Title");
-        campaignDonation.donate{value: totalDonation}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
-        campaignDonation.withdraw(campaignID);
-
-        vm.prank(DEPLOYER);
-        uint256 accumulatedFee = campaignDonation.getAccumulatedFee();
-        uint256 expectedAccumulatedFee = (campaignDonation.getOwnerFee() * totalDonation) / 1000;
-        assertEq(accumulatedFee, expectedAccumulatedFee);
-
-        uint256 amountWithdrawn = campaignDonation.getCampaign(0).amountRaised - accumulatedFee;
-        uint256 tokenAllocated = (amountWithdrawn / campaignDonation.getMinimumCampaignAmountRaised()) * 10 ** 18;
-
-        assertEq(campaignDonation.getCampaign(0).tokensAllocated, tokenAllocated);
-    }
-
-    function test_allocateZeroTokenIfAmountRaisedIsSmall() public {
-        uint256 minimumGoalAmount = campaignDonation.getMinimumCampaignAmountRaised();
-        uint256 _amountNeeded = minimumGoalAmount - 6 ether;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = _amountNeeded - 4 ether;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
-        campaignDonation.withdraw(campaignID);
-
-        assertEq(campaignDonation.getCampaign(campaignID).tokensAllocated, 0);
-    }
-
-    // TODO: Write a test for this case
-    function test_allowDonorToClaimToken() public {}
-
-    function test_revertClaimTokenWhenUserHasNoDonation() public {
-        uint256 _amountNeeded = 16 * ONE_ETH;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = 18 * ONE_ETH;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
-        campaignDonation.withdraw(campaignID);
-
-        vm.prank(BOB);
-        vm.expectRevert(ICampaign.Campaign__EmptyDonation.selector);
-        campaignDonation.claimToken(campaignID);
-    }
-
-    function test_revertWhenClaimingTokenFromUnderFundedCampaign() public {
-        uint256 minimumGoalAmount = campaignDonation.getMinimumCampaignAmountRaised();
-        uint256 _amountNeeded = minimumGoalAmount - 6 ether;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = _amountNeeded - 4 ether;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, DONATION);
-        campaignDonation.withdraw(campaignID);
-
-        console.log("___ AMOUNTRAISED ___");
-        console.log(campaignDonation.getCampaign(campaignID).amountRaised);
-
-        vm.prank(BLESSING);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ICampaign.Campaign__InsufficientDonationsForTokens.selector, 0, DONATION, minimumGoalAmount
-            )
-        );
-        campaignDonation.claimToken(campaignID);
-    }
-
-    function test_onlyDeployerCanWithdrawAccumulatedFees() public {
-        uint256 _amountNeeded = 16 * ONE_ETH;
-
-        ICampaign.BasicMilestone[] memory _milestones;
-        string[] memory categories = new string[](1);
-        categories[0] = "Tester";
-
-        vm.prank(ALICE);
-        campaignDonation.createCampaign(
-            "My Title",
-            SUMMARY,
-            "My little description from my heart, soul and mind",
-            "coverImage",
-            _milestones,
-            categories,
-            _amountNeeded,
-            4,
-            10
-        );
-
-        uint256 campaignID = 0;
-        uint256 DONATION = 3 * ONE_ETH;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, DONATION, "My Title");
-        campaignDonation.donate{value: DONATION}(campaignID);
-
-        vm.warp(block.timestamp + ((4 + 10) * ONE_DAY));
-
-        uint256 totalDonation = DONATION * 2;
-
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, totalDonation);
-        campaignDonation.withdraw(campaignID);
-
-        vm.prank(BOB);
-        vm.expectRevert(abi.encodeWithSelector(ICampaign.Campaign__NotContractOwner.selector, BOB));
-        campaignDonation.withdrawFee();
-
-        vm.startPrank(DEPLOYER);
-        assertNotEq(campaignDonation.getAccumulatedFee(), 0);
-
-        campaignDonation.withdrawFee();
-        assertEq(campaignDonation.getAccumulatedFee(), 0);
+        address[] memory supportedCoins = campaignDonation.getSupportedCoins();
+        usdc = supportedCoins[1];
+        dai = supportedCoins[2];
+
+        ERC20Mock(usdc).mint(BLESSING, 1_000_000e18);
+        ERC20Mock(dai).mint(BLESSING, 1_000_000e18);
+        ERC20Mock(usdc).mint(BOB, 1_000_0000e8);
+        ERC20Mock(dai).mint(BOB, 1_000_0000e18);
+        ERC20Mock(usdc).mint(ALICE, 1_000_0000e8);
+        ERC20Mock(dai).mint(ALICE, 1_000_0000e18);
     }
 
     function test_donationSuccessful() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        // first donation
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
-
-        ICampaign.CampaignDetails memory campaign = campaignDonation.getCampaign(campaignID);
-
-        assertEq(BLESSING_DONATION, campaign.amountRaised);
-
-        // second donation
-        vm.prank(BOB);
-        uint256 BOB_DONATION = 1;
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, BOB_DONATION, "My Title");
-        campaignDonation.donate{value: BOB_DONATION}(campaignID);
-
-        campaign = campaignDonation.getCampaign(campaignID);
-
-        assertEq(BOB_DONATION + BLESSING_DONATION, campaign.amountRaised);
-    }
-
-    function test_emitAnEventWhenGoalIsMet() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, BLESSING_DONATION, "My Title");
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
-
-        vm.prank(BOB);
-        uint256 BOB_DONATION = 100;
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, BOB_DONATION, "My Title");
-
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, BLESSING_DONATION + BOB_DONATION);
-
-        campaignDonation.donate{value: BOB_DONATION}(campaignID);
-    }
-
-    function test_startNextMilestoneWhenCurrentIsMet() public {
-        _createCampignWithMilestones();
-
-        uint8 firstMilestoneID = 0;
-        uint8 secondMilestoneID = 1;
-        uint8 thirdMilestoneID = 2;
+        _createSuccessfulCampaign(ALICE, 4e18);
 
         uint256 campaignID = 0;
+        uint256 ETH_DONATION = 4 ether;
+        uint256 USDC_DONATION = 1e8;
+        uint256 DAI_DONATION = 3e18;
 
-        // ========== first milestone amount -> 7 ether ==========
-        vm.prank(BLESSING);
+        _approveERC20(BLESSING, usdc, USDC_DONATION);
+        _approveERC20(BLESSING, dai, DAI_DONATION);
+
+        vm.startPrank(BLESSING);
+
         vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID);
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
+        campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
 
-        vm.prank(BOB);
         vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 4 ether, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.MilestoneReached(campaignID, firstMilestoneID, 7 ether);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.NextMilestoneStarted(campaignID, secondMilestoneID);
-        campaignDonation.donate{value: 4 ether}(campaignID); // total = 7 ethers
-        // ========== first milestone amount -> 7 ether ==========
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, usdc, USDC_DONATION, "My Title");
+        campaignDonation.donateToken(campaignID, USDC_DONATION, usdc);
 
-        // ========== second milestone amount -> 16 ether ==========
-        vm.prank(BLESSING);
         vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID);
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, dai, DAI_DONATION, "My Title");
+        campaignDonation.donateToken(campaignID, DAI_DONATION, dai);
 
-        vm.prank(BOB);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 6 ether, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.MilestoneReached(campaignID, secondMilestoneID, 16 ether);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.NextMilestoneStarted(campaignID, thirdMilestoneID);
-        campaignDonation.donate{value: 6 ether}(campaignID); // total = 16 ethers
-        // ========== second milestone amount -> 16 ether ==========
+        (, uint256[] memory amount) = campaignDonation.getAmountRaisedPerCoin(campaignID);
 
-        // ========== third milestone amount -> 40 ether ==========
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 5 ether, "My Title");
-        campaignDonation.donate{value: 5 ether}(campaignID); // total = 21 ethers
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, 3 ether, "My Title");
-        campaignDonation.donate{value: 3 ether}(campaignID); // total = 24 ethers
-
-        vm.prank(BOB);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BOB, campaignID, 36 ether, "My Title"); // total = 60 ethers
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignGoalCompleted(ALICE, campaignID, 60 ether);
-        campaignDonation.donate{value: 36 ether}(campaignID); // total = 16 ethers
-            // ========== third milestone amount -> 40 ether ==========
-    }
-
-    function test_getAllDonors() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
-
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 2;
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
-
-        vm.prank(BOB);
-        uint256 BOB_DONATION = 1;
-        campaignDonation.donate{value: BOB_DONATION}(campaignID);
-
-        (address[] memory donors, uint256[] memory contributions) = campaignDonation.getCampaignDonors(campaignID);
-
-        assertEq(donors[0], BLESSING);
-        assertEq(donors[1], BOB);
-
-        assertEq(contributions[0], BLESSING_DONATION);
-        assertEq(contributions[1], BOB_DONATION);
+        assertEq(amount[0], ETH_DONATION);
+        assertEq(amount[1], USDC_DONATION);
+        assertEq(amount[2], DAI_DONATION);
     }
 
     function test_donationFailsIfNoMoneyIsDonated() public {
-        _createSuccessfulCampaign();
+        _createSuccessfulCampaign(ALICE, 4e18);
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         uint256 BLESSING_DONATION = 0;
-        vm.expectRevert(ICampaign.Campaign__EmptyDonation.selector);
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
+        vm.expectRevert(ICampaignDonation.CampaignDonation__EmptyDonation.selector);
+        campaignDonation.donateETH{value: BLESSING_DONATION}(campaignID);
     }
 
     function test_donationFailsIfCampaignHasBeenClaimed() public {
-        _createSuccessfulCampaign();
+        uint256 ETH_DONATION = 12 ether;
+        _createFundAndClaimCampaign(BLESSING, ETH_ADDRESS, ETH_DONATION);
+
         uint256 campaignID = 0;
 
-        vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 1;
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
-
-        vm.warp(block.timestamp + 15 * ONE_DAY);
-
-        vm.prank(ALICE);
-        campaignDonation.withdraw(campaignID);
-
-        vm.prank(BLESSING);
-        vm.expectRevert(ICampaign.Campaign__CampaignAlreadyClaimed.selector);
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
+        vm.prank(BOB);
+        uint256 BOB_DONATION = 1 ether;
+        vm.expectRevert(ICampaignDonation.CampaignDonation__CampaignAlreadyClaimed.selector);
+        campaignDonation.donateETH{value: BOB_DONATION}(campaignID);
     }
 
     function test_donationFailsIfCampaignIsClosed() public {
-        _createSuccessfulCampaign();
+        uint256 goal = 4000e18; // $4,000
+        _createSuccessfulCampaign(ALICE, goal);
         uint256 campaignID = 0;
 
-        vm.warp(block.timestamp + 15 * ONE_DAY);
+        vm.warp(block.timestamp + 15 days);
 
         vm.prank(BLESSING);
-        uint256 BLESSING_DONATION = 1;
-        vm.expectRevert(ICampaign.Campaign__CampaignClosed.selector);
-        campaignDonation.donate{value: BLESSING_DONATION}(campaignID);
+        uint256 BLESSING_DONATION = 1 ether;
+        vm.expectRevert(ICampaignDonation.CampaignDonation__CampaignClosed.selector);
+        campaignDonation.donateETH{value: BLESSING_DONATION}(campaignID);
+    }
+
+    function test_getTotalDonors() public {
+        _createSuccessfulCampaign(ALICE, 4e18);
+
+        uint256 campaignID = 0;
+        uint256 ETH_DONATION = 4 ether;
+        uint256 USDC_DONATION = 1e18;
+        uint256 DAI_DONATION = 3e18;
+
+        vm.startPrank(BLESSING);
+        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
+        campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
+
+        ERC20Mock(usdc).approve(address(campaignDonation), USDC_DONATION);
+
+        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, usdc, USDC_DONATION, "My Title");
+        campaignDonation.donateToken(campaignID, USDC_DONATION, usdc);
+
+        vm.stopPrank();
+
+        vm.startPrank(BOB);
+        ERC20Mock(dai).approve(address(campaignDonation), DAI_DONATION);
+
+        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        emit ICampaignDonation.NewDonation(BOB, campaignID, dai, DAI_DONATION, "My Title");
+        campaignDonation.donateToken(campaignID, DAI_DONATION, dai);
+
+        uint256 expectedTotalDonors = 2;
+
+        assertEq(campaignDonation.getTotalCampaignDonors(0).length, expectedTotalDonors);
+    }
+
+    function test_getCampaignDonations() external {
+        _createSuccessfulCampaign(ALICE, 4e18);
+
+        uint256 campaignID = 0;
+        uint256 ETH_DONATION = 4 ether;
+        uint256 USDC_DONATION = 1e8;
+        uint256 DAI_DONATION = 3e18;
+
+        // ============ Donations ========
+        // ============ Donations ========
+        // ============ Donations ========
+        _donate(BLESSING, ETH_ADDRESS, ETH_DONATION);
+        Donation memory firstDonation =
+            Donation({donor: BLESSING, coin: ETH_ADDRESS, amount: ETH_DONATION, timestamp: 0});
+
+        _approveAndDonateERC20(BOB, dai, DAI_DONATION);
+        Donation memory secondDonation = Donation({donor: BOB, coin: dai, amount: DAI_DONATION, timestamp: 0});
+
+        _approveAndDonateERC20(ALICE, dai, DAI_DONATION);
+        Donation memory thirdDonation = Donation({donor: ALICE, coin: dai, amount: DAI_DONATION, timestamp: 0});
+
+        _approveAndDonateERC20(BOB, usdc, USDC_DONATION);
+
+        _approveAndDonateERC20(BLESSING, dai, DAI_DONATION);
+
+        _donate(BOB, ETH_ADDRESS, ETH_DONATION);
+
+        _approveAndDonateERC20(ALICE, usdc, USDC_DONATION);
+        // ============ Donations ========
+        // ============ Donations ========
+        // ============ Donations ========
+
+        uint256 page = 0;
+        uint256 perPage = 3;
+
+        (Donation[] memory donations, uint256 totalDonations) =
+            campaignDonation.getCampaignDonations(campaignID, page, perPage);
+
+        assertEq(totalDonations, 7);
+        assertEq(donations.length, perPage);
+
+        assertEq(donations[0].donor, firstDonation.donor);
+        assertEq(donations[0].coin, firstDonation.coin);
+        assertEq(donations[0].amount, firstDonation.amount);
+
+        assertEq(donations[1].donor, secondDonation.donor);
+        assertEq(donations[1].coin, secondDonation.coin);
+        assertEq(donations[1].amount, secondDonation.amount);
+
+        assertEq(donations[2].donor, thirdDonation.donor);
+        assertEq(donations[2].coin, thirdDonation.coin);
+        assertEq(donations[2].amount, thirdDonation.amount);
+    }
+
+    function test_withdrawSuccessfully() public {
+        uint256 goal = 4000e18; // $4,000
+        _createSuccessfulCampaign(ALICE, goal);
+
+        uint256 campaignID = 0;
+
+        uint256 USDC_DONATION = 2e8;
+        _approveAndDonateERC20(BLESSING, usdc, USDC_DONATION);
+
+        uint256 ETH_DONATION = 2 ether;
+        _donate(BLESSING, ETH_ADDRESS, ETH_DONATION);
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        uint256 ALICE_ETH_BALANCE = ALICE.balance;
+        uint256 ALICE_USDC_BALANCE = ERC20Mock(usdc).balanceOf(ALICE);
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
+        emit ICampaignDonation.CampaignFundWithdrawn(campaignID, ALICE, ETH_ADDRESS, ETH_DONATION);
+        emit ICampaignDonation.CampaignFundWithdrawn(campaignID, ALICE, usdc, USDC_DONATION);
+        campaignDonation.withdraw(campaignID);
+
+        uint256 ALICE_ETH_NEW_BALANCE = ALICE.balance;
+        uint256 ALICE_USDC_NEW_BALANCE = ERC20Mock(usdc).balanceOf(ALICE);
+
+        assertEq(ALICE_ETH_BALANCE + ETH_DONATION, ALICE_ETH_NEW_BALANCE);
+        assertEq(ALICE_USDC_BALANCE + USDC_DONATION, ALICE_USDC_NEW_BALANCE);
+    }
+
+    function test_withdrawMilestonedCampaign() public {
+        uint256 goal = 4000e18; // $4,000
+        uint256 firstMilestoneGoal = 2000e18;
+        uint256 secondMilestoneGoal = 4000e18;
+
+        ICampaign.BasicMilestone[] memory milestones = new ICampaign.BasicMilestone[](2);
+
+        milestones[0] = ICampaign.BasicMilestone({
+            targetAmount: firstMilestoneGoal,
+            deadline: 3, // days
+            description: "First milestone"
+        });
+
+        milestones[1] = ICampaign.BasicMilestone({
+            targetAmount: secondMilestoneGoal,
+            deadline: 6, // days
+            description: "Second milestone"
+        });
+
+        _createCampignWithMilestones(ALICE, goal, milestones);
+        uint256 campaignID = 0;
+        uint256 ALICE_ETH_BALANCE = ALICE.balance;
+        uint256 ALICE_USDC_BALANCE = ERC20Mock(usdc).balanceOf(ALICE);
+        uint256 ALICE_DAI_BALANCE = ERC20Mock(dai).balanceOf(ALICE);
+
+        uint256 BLESSING_ETH_DONATION = 0.5 ether; // $1500
+        uint256 BLESSING_FIRST_USDC_DONATION = 600e8; // $600
+
+        _donate(BLESSING, ETH_ADDRESS, BLESSING_ETH_DONATION);
+        _approveAndDonateERC20(BLESSING, usdc, BLESSING_FIRST_USDC_DONATION);
+
+        _shiftCurrentTimestampToAllowWithdraw(4 days);
+
+        vm.prank(ALICE);
+        _listenToWithdrawnEmit(ALICE, ETH_ADDRESS, BLESSING_ETH_DONATION);
+        _listenToWithdrawnEmit(ALICE, usdc, BLESSING_FIRST_USDC_DONATION);
+        campaignDonation.withdraw(campaignID);
+
+        uint256 ALICE_FIRST_ETH_BALANCE = ALICE.balance;
+        uint256 ALICE_FIRST_USDC_BALANCE = ERC20Mock(usdc).balanceOf(ALICE);
+        uint256 ALICE_FIRST_DAI_BALANCE = ERC20Mock(dai).balanceOf(ALICE);
+
+        assertEq(ALICE_FIRST_ETH_BALANCE, ALICE_ETH_BALANCE + BLESSING_ETH_DONATION);
+        assertEq(ALICE_FIRST_USDC_BALANCE, ALICE_USDC_BALANCE + BLESSING_FIRST_USDC_DONATION);
+        assertEq(ALICE_FIRST_DAI_BALANCE, ALICE_DAI_BALANCE);
+
+        // ============ SECOND DONATION PHASE -> $4000 =================
+        // first donation = $2100
+
+        // $2,700 + $2,100 = $4,800 > $4,000
+        uint256 BOB_DAI_DONATION = 2000e18; // $2000
+        uint256 BLESSING_SECOND_USDC_DONATION = 700e8; // $700
+
+        _approveAndDonateERC20(BOB, dai, BOB_DAI_DONATION);
+        _approveAndDonateERC20(BLESSING, usdc, BLESSING_SECOND_USDC_DONATION);
+
+        _shiftCurrentTimestampToAllowWithdraw(6 days + 1 seconds);
+
+        vm.prank(ALICE);
+        _listenToWithdrawnEmit(ALICE, usdc, BLESSING_SECOND_USDC_DONATION);
+        _listenToWithdrawnEmit(ALICE, dai, BOB_DAI_DONATION);
+        campaignDonation.withdraw(campaignID);
+
+        uint256 ALICE_SECOND_ETH_BALANCE = ALICE.balance;
+        uint256 ALICE_SECOND_USDC_BALANCE = ERC20Mock(usdc).balanceOf(ALICE);
+        uint256 ALICE_SECOND_DAI_BALANCE = ERC20Mock(dai).balanceOf(ALICE);
+
+        assertEq(ALICE_SECOND_ETH_BALANCE, ALICE_FIRST_ETH_BALANCE);
+        assertEq(ALICE_SECOND_USDC_BALANCE, ALICE_FIRST_USDC_BALANCE + BLESSING_SECOND_USDC_DONATION);
+        assertEq(ALICE_SECOND_DAI_BALANCE, ALICE_FIRST_DAI_BALANCE + BOB_DAI_DONATION);
+    }
+
+    function test_withdrawFailIfNotCampaignOwner() public {
+        _createAndFundCamapign(BLESSING, ETH_ADDRESS, 1 ether);
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(BOB);
+        vm.expectRevert(ICampaignDonation.CampaignDonation__NotCampaignOwner.selector);
+        campaignDonation.withdraw(0);
+    }
+
+    function test_withdrawFailIfRefundDeadlineIsActive() public {
+        _createAndFundCamapign(BLESSING, ETH_ADDRESS, 1 ether);
+
+        // deadline -> 4 days
+        // refund deadline -> 10 days
+        _shiftCurrentTimestampToAllowWithdraw(6 days);
+
+        vm.prank(ALICE);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ICampaignDonation.CampaignDonation__WithdrawNotAllowed.selector,
+                "Cannot withdraw before refund deadline"
+            )
+        );
+        campaignDonation.withdraw(0);
+    }
+
+    function test_getAllDonors() public {
+        // _createSuccessfulCampaign();
+        // uint256 campaignID = 0;
+
+        // vm.prank(BLESSING);
+        // uint256 BLESSING_DONATION = 2;
+        // campaignDonation.donateETH{value: BLESSING_DONATION}(campaignID);
+
+        // vm.prank(BOB);
+        // uint256 BOB_DONATION = 1;
+        // campaignDonation.donateETH{value: BOB_DONATION}(campaignID);
+
+        // (address[] memory donors, uint256[] memory contributions) = campaignDonation.getCampaignDonors(campaignID);
+
+        // assertEq(donors[0], BLESSING);
+        // assertEq(donors[1], BOB);
+
+        // assertEq(contributions[0], BLESSING_DONATION);
+        // assertEq(contributions[1], BOB_DONATION);
     }
 
     function test_donorSuccessfullyGetsRefund() public {
-        _createSuccessfulCampaign();
+        _createSuccessfulCampaign(ALICE, 4e18);
 
         uint256 campaignID = 0;
-        uint256 donation = 5 * ONE_ETH;
-        uint256 refundAmount = 3 * ONE_ETH;
+        uint256 ETH_DONATION = 4 ether;
+        uint256 ETH_REFUND = 3 ether;
+        uint256 USDC_DONATION = 1e8;
+        uint256 USDC_REFUND = 1e8;
+        uint256 DAI_DONATION = 3e18;
+        uint256 DAI_REFUND = 3e18;
 
-        vm.prank(BLESSING);
+        _approveAndDonateERC20(BLESSING, usdc, USDC_DONATION);
+        _approveAndDonateERC20(BLESSING, dai, DAI_DONATION);
+
+        vm.startPrank(BLESSING);
         vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, donation, "My Title");
-        campaignDonation.donate{value: donation}(campaignID);
+        emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
+        campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
 
-        vm.prank(BLESSING);
+        (, uint256[] memory amountRaised) = campaignDonation.getAmountRaisedPerCoin(0);
+        uint256 ETH_RAISED = amountRaised[0];
+        uint256 USDC_RAISED = amountRaised[1];
+        uint256 DAI_RAISED = amountRaised[2];
+
+        assertEq(ETH_RAISED, ETH_DONATION);
+        assertEq(USDC_RAISED, USDC_DONATION);
+        assertEq(DAI_RAISED, DAI_DONATION);
+
         vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, refundAmount);
-        campaignDonation.refund(campaignID, refundAmount);
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, ETH_REFUND);
+        campaignDonation.refundETH(campaignID, ETH_REFUND);
 
-        ICampaign.CampaignDetails memory campaign = campaignDonation.getCampaign(campaignID);
+        vm.expectEmit(true, false, false, false, address(campaignDonation));
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, USDC_REFUND);
+        campaignDonation.refundToken(campaignID, USDC_REFUND, usdc);
 
-        assertEq(campaign.amountRaised, (donation - refundAmount));
+        vm.expectEmit(true, false, false, false, address(campaignDonation));
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, DAI_REFUND);
+        campaignDonation.refundToken(campaignID, DAI_REFUND, dai);
+
+        (, uint256[] memory newAmountRaised) = campaignDonation.getAmountRaisedPerCoin(0);
+        uint256 NEW_ETH_RAISED = newAmountRaised[0];
+        uint256 NEW_USDC_RAISED = newAmountRaised[1];
+        uint256 NEW_DAI_RAISED = newAmountRaised[2];
+
+        assertEq(NEW_ETH_RAISED, ETH_RAISED - ETH_REFUND);
+        assertEq(NEW_USDC_RAISED, USDC_RAISED - USDC_REFUND);
+        assertEq(NEW_DAI_RAISED, DAI_RAISED - DAI_REFUND);
     }
 
-    function test_refundDonorsOfMilestonedCampaign() public {
-        _createCampignWithMilestones(ALICE); // goal -> 40 ether
-        uint256 amountNeeded = 40 * 1 ether; // gotten from _createCampignWithMilestones above
+    function test_noRefundIfFirstMilestoneHasBeenClaimed() public {
+        uint256 goal = 4000e18; // $4,000
+        uint256 firstMilestoneGoal = 2000e18;
+        uint256 secondMilestoneGoal = 4000e18;
+
+        ICampaign.BasicMilestone[] memory milestones = new ICampaign.BasicMilestone[](2);
+
+        milestones[0] = ICampaign.BasicMilestone({
+            targetAmount: firstMilestoneGoal,
+            deadline: 3, // days
+            description: "First milestone"
+        });
+
+        milestones[1] = ICampaign.BasicMilestone({
+            targetAmount: secondMilestoneGoal,
+            deadline: 6, // days
+            description: "Second milestone"
+        });
+
+        _createCampignWithMilestones(ALICE, goal, milestones);
 
         uint256 campaignID = 0;
-        uint8 firstMilestoneID = 0;
-        uint256 firstMilestoneTarget = 6 ether;
-        uint8 secondMilestoneID = 1;
-        uint256 secondMilestoneTarget = 16 ether;
-        uint8 thirdMilestoneID = 2;
-        // uint256 thirdMilestoneTarget = 16 ether;
 
-        uint256 BLESSING_DONATION = 15 ether;
-        uint256 BLESSING_FIRST_REQUESTED_REFUND = 5 ether;
-        uint256 BOB_DONATION = 12 ether;
+        uint256 BLESSING_ETH_DONATION = 0.5 ether; // $1500
+        uint256 BLESSING_FIRST_USDC_DONATION = 600e8; // $600
 
-        _donateToMilestoneCampaign(
-            campaignID, BLESSING, BLESSING_DONATION, firstMilestoneID, firstMilestoneTarget, secondMilestoneID
-        );
-        _donateToMilestoneCampaign(
-            campaignID, BOB, BOB_DONATION, secondMilestoneID, secondMilestoneTarget, thirdMilestoneID
-        );
+        _donate(BLESSING, ETH_ADDRESS, BLESSING_ETH_DONATION);
+        _approveAndDonateERC20(BLESSING, usdc, BLESSING_FIRST_USDC_DONATION);
 
-        uint256 BLESSING_FIRST_BALANCE = BLESSING.balance;
-
-        vm.prank(BLESSING);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, BLESSING_FIRST_REQUESTED_REFUND);
-        campaignDonation.refund(campaignID, BLESSING_FIRST_REQUESTED_REFUND);
-
-        assertEq(BLESSING.balance, BLESSING_FIRST_BALANCE + BLESSING_FIRST_REQUESTED_REFUND);
-        assertEq(
-            campaignDonation.getCampaign(campaignID).amountRaised,
-            BLESSING_DONATION + BOB_DONATION - BLESSING_FIRST_REQUESTED_REFUND
-        );
-
-        uint256 fee = (campaignDonation.getOwnerFee() * amountNeeded) / 1000;
-        uint256 firstAmountWithdrawn = firstMilestoneTarget - fee;
+        _shiftCurrentTimestampToAllowWithdraw(4 days);
 
         vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, ALICE, firstAmountWithdrawn);
-        campaignDonation.withdraw(campaignID); // first milestone is 6 ether
-
-        uint256 BLESSING_SECOND_REQUESTED_REFUND = 8 ether;
+        _listenToWithdrawnEmit(ALICE, ETH_ADDRESS, BLESSING_ETH_DONATION);
+        _listenToWithdrawnEmit(ALICE, usdc, BLESSING_FIRST_USDC_DONATION);
+        campaignDonation.withdraw(campaignID);
 
         vm.prank(BLESSING);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICampaign.Campaign__WithdrawNotAllowed.selector,
+                ICampaignDonation.CampaignDonation__WithdrawNotAllowed.selector,
                 "Refunds not allowed after the first milestone funds have been withdrawn"
             )
         );
-        campaignDonation.refund(campaignID, BLESSING_SECOND_REQUESTED_REFUND);
+        campaignDonation.refundETH(campaignID, BLESSING_ETH_DONATION);
     }
 
     function test_noRefundIfCampaignHasBeenClaimed() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
+        uint256 donation = 3 ether;
+        _createFundAndClaimCampaign(BLESSING, ETH_ADDRESS, donation);
 
-        // donate
         vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, ONE_ETH, "My Title");
-        campaignDonation.donate{value: ONE_ETH}(campaignID);
-
-        vm.warp(block.timestamp + 15 * ONE_DAY);
-
-        // withdraw
-        vm.prank(ALICE);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.CampaignFundWithdrawn(campaignID, BLESSING, ONE_ETH);
-        campaignDonation.withdraw(campaignID);
-
-        // refund
-        vm.prank(BLESSING);
-        vm.expectRevert(ICampaign.Campaign__CampaignAlreadyClaimed.selector);
-        campaignDonation.refund(campaignID, ONE_ETH);
+        vm.expectRevert(ICampaignDonation.CampaignDonation__CampaignAlreadyClaimed.selector);
+        campaignDonation.refundETH(0, donation);
     }
 
     function test_noRefundIfCampaignHasBeenClosed() public {
-        _createSuccessfulCampaign();
+        uint256 goal = 4000e18; // $4,000
+        _createSuccessfulCampaign(ALICE, goal);
+
+        vm.warp(block.timestamp + 17 * 1 days);
+
         uint256 campaignID = 0;
 
-        // donate
         vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, ONE_ETH, "My Title");
-        campaignDonation.donate{value: ONE_ETH}(campaignID);
-
-        vm.warp(block.timestamp + 17 * ONE_DAY);
-
-        // refund
-        vm.prank(BLESSING);
-        vm.expectRevert(abi.encodeWithSelector(ICampaign.Campaign__RefundDeadlineElapsed.selector, campaignID));
-        campaignDonation.refund(campaignID, ONE_ETH);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICampaignDonation.CampaignDonation__RefundDeadlineElapsed.selector, campaignID)
+        );
+        campaignDonation.refundETH(campaignID, 1 ether);
     }
 
     function test_noRefundIfDonorHasZeroDonations() public {
-        _createSuccessfulCampaign();
+        uint256 goal = 4000e18; // $4,000
+        _createSuccessfulCampaign(ALICE, goal);
+
         uint256 campaignID = 0;
 
         vm.prank(BLESSING);
         vm.expectRevert(
             abi.encodeWithSelector(ICampaignDonation.CampaignDonation__NoDonationFound.selector, campaignID)
         );
-        campaignDonation.refund(campaignID, ONE_ETH);
+        campaignDonation.refundETH(campaignID, 1 ether);
     }
 
     function test_noRefundIfDonorWantsMoreThanTheyDonated() public {
-        _createSuccessfulCampaign();
-        uint256 campaignID = 0;
-        uint256 donation = 5 * ONE_ETH;
-        uint256 refundAmount = donation + ONE_ETH;
+        uint256 donation = 1 ether;
+        uint256 refundAmount = 2 ether;
 
-        // donate
-        vm.prank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(BLESSING, campaignID, donation, "My Title");
-        campaignDonation.donate{value: donation}(campaignID);
+        _createAndFundCamapign(BLESSING, ETH_ADDRESS, donation);
+
+        uint256 campaignID = 0;
 
         // refund
         vm.prank(BLESSING);
@@ -746,23 +493,52 @@ contract CampaignDonationTest is Test, ConstantsTest {
                 ICampaignDonation.CampaignDonation__InsufficientDonation.selector, campaignID, refundAmount, donation
             )
         );
-        campaignDonation.refund(campaignID, refundAmount);
+        campaignDonation.refundETH(campaignID, refundAmount);
+    }
+
+    function test_getCoinPrice() public view {
+        // all prices is shifted to 18 decimals
+        uint256 expectedETHPRice = 3000e18; // $3000
+        uint256 expectedUSDCPRice = 1e18; // $1
+        uint256 expectedDAIPRice = 1e18; // $1
+        uint256 ETHPrice = campaignDonation.getCoinPrice(ETH_ADDRESS);
+        uint256 USDCPrice = campaignDonation.getCoinPrice(usdc);
+        uint256 DAIPrice = campaignDonation.getCoinPrice(dai);
+
+        assertEq(ETHPrice, expectedETHPRice);
+        assertEq(USDCPrice, expectedUSDCPRice);
+        assertEq(DAIPrice, expectedDAIPRice);
+    }
+
+    function test_getCoinValueInUSD() external view {
+        uint256 ethAmount = 3 ether;
+        uint256 ethExpectedValueInUsd = 9000e18;
+
+        uint256 usdcAmount = 6e8;
+        uint256 usdcExpectedValueInUsd = 6e18;
+
+        assertEq(ethExpectedValueInUsd, campaignDonation.coinValueInUSD(ETH_ADDRESS, ethAmount));
+        assertEq(usdcExpectedValueInUsd, campaignDonation.coinValueInUSD(usdc, usdcAmount));
     }
 
     function _shiftCurrentTimestampToAllowWithdraw() private {
-        uint256 _refundDeadline = 10; // gotten from createSuccessfulCampaign();
-        uint256 _deadline = 4; // gotten from createSuccessfulCampaign();
-        vm.warp(block.timestamp + ((_refundDeadline + _deadline) * ONE_DAY));
+        uint256 _refundDeadline = 10 days; // gotten from createSuccessfulCampaign();
+        uint256 _deadline = 4 days; // gotten from createSuccessfulCampaign();
+        vm.warp(block.timestamp + _refundDeadline + _deadline + 1 days);
     }
 
-    function _createSuccessfulCampaign() private {
-        uint256 _amountNeeded = 6;
+    function _shiftCurrentTimestampToAllowWithdraw(uint256 duration) private {
+        vm.warp(block.timestamp + duration);
+    }
+
+    function _createSuccessfulCampaign(address _owner, uint256 _amountNeeded) private {
+        // uint256 _amountNeeded = 6;
         uint256 _deadline = 4; // days
         uint256 _refundDeadline = 10; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
 
-        _createCampaign(ALICE, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
+        _createCampaign(_owner, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline);
     }
 
     function _createCampaign(
@@ -796,26 +572,14 @@ contract CampaignDonationTest is Test, ConstantsTest {
         vm.stopPrank();
     }
 
-    function _createCampignWithMilestones() private {
-        _createCampignWithMilestones(ALICE);
-    }
-
-    function _createCampignWithMilestones(address owner) private {
-        uint256 amountNeeded = 40 * 1 ether;
-        uint256 deadline = 15; // days
-        uint256 refundDeadline = 10; // days
+    function _createCampignWithMilestones(address owner, uint256 goal, ICampaign.BasicMilestone[] memory milestones)
+        private
+    {
+        uint256 duration = 6 days;
+        uint256 refundDeadline = 7 days;
 
         string[] memory categories = new string[](1);
         categories[0] = "Tester";
-        ICampaign.BasicMilestone[] memory _milestones = new ICampaign.BasicMilestone[](3);
-
-        _milestones[0] = ICampaign.BasicMilestone({targetAmount: 6 ether, deadline: 2, description: "First milestone"});
-
-        _milestones[1] =
-            ICampaign.BasicMilestone({targetAmount: 16 ether, deadline: 4, description: "Second milestone"});
-
-        _milestones[2] =
-            ICampaign.BasicMilestone({targetAmount: 40 ether, deadline: 4, description: "Second milestone"});
 
         vm.prank(owner);
         campaignDonation.createCampaign(
@@ -823,36 +587,80 @@ contract CampaignDonationTest is Test, ConstantsTest {
             SUMMARY,
             "My little description from my heart, soul and mind",
             "coverImage",
-            _milestones,
+            milestones,
             categories,
-            amountNeeded,
-            deadline,
+            goal,
+            duration,
             refundDeadline
         );
     }
 
-    function _donate(uint256 campaignID, address donor, uint256 amount) private {
-        vm.prank(donor);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(donor, campaignID, amount, "My Title");
-        campaignDonation.donate{value: amount}(campaignID);
+    function _createMilestones(uint256[] memory deadlines, uint256[] memory goals)
+        private
+        pure
+        returns (ICampaign.BasicMilestone[] memory milestones)
+    {
+        milestones = new ICampaign.BasicMilestone[](deadlines.length);
+
+        for (uint256 index = 0; index < deadlines.length; index++) {
+            milestones[index] = ICampaign.BasicMilestone({
+                targetAmount: goals[index],
+                deadline: deadlines[index],
+                description: "Description Description Description"
+            });
+        }
+
+        return milestones;
     }
 
-    function _donateToMilestoneCampaign(
-        uint256 campaignID,
-        address donor,
-        uint256 amount,
-        uint8 currentMilestoneID,
-        uint256 milestoneAmount,
-        uint8 nextMilestoneID
-    ) private {
+    function _donate(address donor, address coin, uint256 amount) private {
+        _donate(0, donor, coin, amount, "My Title");
+    }
+
+    function _donate(uint256 campaignID, address donor, address coin, uint256 amount, string memory campaignTitle)
+        private
+    {
         vm.prank(donor);
+
         vm.expectEmit(true, true, false, true, address(campaignDonation));
-        emit ICampaignDonation.NewDonation(donor, campaignID, amount, "My Title");
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.MilestoneReached(campaignID, currentMilestoneID, milestoneAmount);
-        vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaign.NextMilestoneStarted(campaignID, nextMilestoneID);
-        campaignDonation.donate{value: amount}(campaignID);
+        emit ICampaignDonation.NewDonation(donor, campaignID, coin, amount, campaignTitle);
+
+        coin == ETH_ADDRESS
+            ? campaignDonation.donateETH{value: amount}(campaignID)
+            : campaignDonation.donateToken(campaignID, amount, coin);
+    }
+
+    function _approveERC20(address owner, address coin, uint256 amount) private {
+        vm.prank(owner);
+        ERC20Mock(coin).approve(address(campaignDonation), amount);
+    }
+
+    function _approveAndDonateERC20(address owner, address coin, uint256 amount) private {
+        _approveERC20(owner, coin, amount);
+        _donate(owner, coin, amount);
+    }
+
+    function _listenToWithdrawnEmit(address owner, address coin, uint256 amount) private {
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
+        emit ICampaignDonation.CampaignFundWithdrawn(0, owner, coin, amount);
+    }
+
+    function _createAndFundCamapign(address donator, address coin, uint256 amount) private {
+        uint256 goal = 4000e18; // $4,000
+        _createSuccessfulCampaign(ALICE, goal);
+        _donate(donator, coin, amount);
+    }
+
+    function _createFundAndClaimCampaign(address donator, address coin, uint256 amount) private {
+        _createAndFundCamapign(donator, coin, amount);
+
+        uint256 campaignID = 0;
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(ALICE);
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
+        emit ICampaignDonation.CampaignFundWithdrawn(campaignID, ALICE, coin, amount);
+        campaignDonation.withdraw(campaignID);
     }
 }

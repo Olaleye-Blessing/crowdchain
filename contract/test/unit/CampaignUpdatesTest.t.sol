@@ -6,6 +6,7 @@ import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
 import {DeployCampaignUpdates, CampaignUpdatesCopy} from "./../../script/DeployCampaignUpdates.s.sol";
 import {ICampaignUpdates} from "./../../src/interfaces/IcampaignUpdates.sol";
+import {ICampaignDonation} from "./../../src/interfaces/ICampaignDonation.sol";
 
 contract CampaignUpdatesTest is Test, ConstantsTest {
     CampaignUpdatesCopy public campaignUpdates;
@@ -39,7 +40,7 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
 
         uint256 campaignID = 0;
 
-        vm.expectRevert(ICampaign.Campaign__NotCampaignOwner.selector);
+        vm.expectRevert(ICampaignDonation.CampaignDonation__NotCampaignOwner.selector);
         _createUpdate(BOB, campaignID, VALID_TITLE, VALID_CONTENT);
     }
 
@@ -118,6 +119,31 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
         assertEq(updates[1].content, string.concat(NUMBER_IN_WORDS[1], VALID_CONTENT));
     }
 
+    function test_postUpdateAfterWithdrawal() public {
+        uint256 donation = 23 ether;
+        _createAndFundCamapign(BOB, ETH_ADDRESS, donation);
+
+        uint256 campaignID = 0;
+        uint256 updateID = 0;
+        string memory updateTitle = "Owner made a withdrawal";
+        string memory updateContent = "";
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(ALICE);
+        emit ICampaignDonation.CampaignFundWithdrawn(campaignID, ALICE, ETH_ADDRESS, donation);
+        // confirm update event
+        vm.expectEmit(true, true, true, true, address(campaignUpdates));
+        emit ICampaignUpdates.NewUpdate(campaignID, updateID, ALICE, updateTitle);
+        campaignUpdates.withdraw(campaignID);
+
+        CampaignUpdatesCopy.Update memory update = campaignUpdates.getUpdate(campaignID, 0);
+
+        assertEq(update.id, 0);
+        assertEq(update.title, updateTitle);
+        assertEq(update.content, updateContent);
+    }
+
     function _createUpdate(address owner, uint256 campaignID, string memory title, string memory content) private {
         vm.prank(owner);
         campaignUpdates.postUpdate(campaignID, title, content);
@@ -131,9 +157,9 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
         ICampaign.BasicMilestone[] memory milestones;
         string[] memory categories = new string[](1);
         categories[0] = "Tester";
-        uint256 amountNeeded = 6 ether;
-        uint256 deadline = 15 days;
-        uint256 refundDeadline = 10 days;
+        uint256 amountNeeded = 6e18;
+        uint256 deadline = 15;
+        uint256 refundDeadline = 10;
 
         vm.startPrank(_owner);
 
@@ -142,5 +168,39 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
         );
 
         vm.stopPrank();
+    }
+
+    function _createFundAndClaimCampaign(address donator, address coin, uint256 amount) private {
+        _createAndFundCamapign(donator, coin, amount);
+
+        uint256 campaignID = 0;
+
+        _shiftCurrentTimestampToAllowWithdraw();
+
+        vm.prank(ALICE);
+        // vm.expectEmit(true, true, true, true, address(campaignDonation));
+        emit ICampaignDonation.CampaignFundWithdrawn(campaignID, ALICE, coin, amount);
+        campaignUpdates.withdraw(campaignID);
+    }
+
+    function _createAndFundCamapign(address donator, address coin, uint256 amount) private {
+        _createCampaign(ALICE);
+        _donate(donator, coin, amount);
+    }
+
+    function _donate(address donor, address coin, uint256 amount) private {
+        vm.prank(donor);
+
+        // vm.expectEmit(true, true, false, true, address(campaignDonation));
+        // vm.expectEmit(address(this));
+        emit ICampaignDonation.NewDonation(donor, 0, coin, amount, "My Title");
+
+        coin == ETH_ADDRESS ? campaignUpdates.donateETH{value: amount}(0) : campaignUpdates.donateToken(0, amount, coin);
+    }
+
+    function _shiftCurrentTimestampToAllowWithdraw() private {
+        uint256 _refundDeadline = 15 days; // gotten from createSuccessfulCampaign();
+        uint256 _deadline = 10 days; // gotten from createSuccessfulCampaign();
+        vm.warp(block.timestamp + _refundDeadline + _deadline + 1 days);
     }
 }
