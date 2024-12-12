@@ -1,8 +1,9 @@
 export enum MilestoneStatus {
   Pending = "PENDING",
-  InProgress = "IN PROGRESS",
+  Funding = "FUNDING",
+  Withdrawn = "WITHDRAWN",
+  Started = "STARTED",
   Completed = "COMPLETED",
-  Approved = "APPROVED",
   Rejected = "REJECTED",
 }
 

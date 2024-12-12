@@ -3,10 +3,11 @@ import { formatEther, formatUnits } from "viem";
 
 export const milestoneStatuses = {
   0: MilestoneStatus.Pending,
-  1: MilestoneStatus.InProgress,
-  2: MilestoneStatus.Completed,
-  3: MilestoneStatus.Approved,
-  4: MilestoneStatus.Rejected,
+  1: MilestoneStatus.Funding,
+  2: MilestoneStatus.Withdrawn,
+  3: MilestoneStatus.Started,
+  4: MilestoneStatus.Completed,
+  5: MilestoneStatus.Rejected,
 };
 
 export const constructMilestone = (_milestone: any): Milestone => {

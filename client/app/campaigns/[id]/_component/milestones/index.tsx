@@ -74,7 +74,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
                   >
                     {status.toLowerCase()}
                   </span>
-                  {index !== 4 && <span>-&gt;</span>}
+                  {index !== 5 && <span>-&gt;</span>}
                 </li>
               ))}
             </ul>

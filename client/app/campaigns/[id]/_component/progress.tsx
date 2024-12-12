@@ -18,8 +18,8 @@ export default function CampaignProgree({
         className="w-full h-4 border-primary border"
       />
       <div className="flex justify-between mt-2 text-sm sm:text-base">
-        <span className="font-medium">{amountRaised} ETH raised</span>
-        <span className="font-medium">{goal} ETH goal</span>
+        <span className="font-medium">{amountRaised} USD</span>
+        <span className="font-medium">{goal} USD</span>
       </div>
     </div>
   );
