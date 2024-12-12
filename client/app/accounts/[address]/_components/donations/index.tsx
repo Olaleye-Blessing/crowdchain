@@ -2,12 +2,19 @@ import { IAddress } from "@/interfaces/address";
 import { useFetchDonations } from "./use-fetch-donations";
 import Loading from "@/app/loading";
 import Link from "next/link";
-import { formatEther, parseEther } from "viem";
 import { formatAddress } from "@/utils/format-address";
+import { Button } from "@/components/ui/button";
+import { formatUnits } from "viem";
 
 export default function Donations({ account }: { account: IAddress }) {
-  const { data: donations, error } = useFetchDonations({ account });
-  const totalDonations = donations?.length;
+  const {
+    donations,
+    error,
+    loadMoreDonations,
+    isFetching,
+    latestBlock,
+    toBlock,
+  } = useFetchDonations({ account });
 
   return (
     <section className="overflow-hidden">
@@ -24,68 +31,71 @@ export default function Donations({ account }: { account: IAddress }) {
                     Amount
                   </th>
                   <th scope="col" className="w-1/4">
+                    Coin
+                  </th>
+                  <th scope="col" className="w-1/4">
                     Tx hash
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {donations ? (
-                  <>
-                    {totalDonations === 0 ? (
-                      <tr>
-                        <td className="text-center" colSpan={3}>
-                          No donations yet
+                {Boolean(
+                  !isFetching && !error && donations && donations.length === 0,
+                ) && (
+                  <tr>
+                    <td colSpan={4}>
+                      <span className="flex items-center justify-center w-full text-center pt-4">
+                        <span>There is no donations.</span>
+                      </span>
+                    </td>
+                  </tr>
+                )}
+                <>
+                  {donations?.map((donation) => {
+                    const formattedTxHash = formatAddress(
+                      donation.transactionHash,
+                    );
+
+                    console.log({ donation });
+
+                    return (
+                      <tr
+                        key={donation.transactionHash}
+                        className="[&>*]:!whitespace-normal"
+                      >
+                        <td className="">
+                          <Link
+                            href={`/campaigns/${donation.campaignId}`}
+                            className="text-primary"
+                          >
+                            {donation.campaignTitle}
+                          </Link>
+                        </td>
+                        <td>{donation.amount}</td>
+                        <td>{donation.coinUnit}</td>
+                        <td>
+                          {process.env.NODE_ENV === "production" ? (
+                            <Link href={`/`} className="text-primary">
+                              {formattedTxHash}
+                            </Link>
+                          ) : (
+                            <span>{formattedTxHash}</span>
+                          )}
                         </td>
                       </tr>
-                    ) : (
-                      <>
-                        {donations.map((donation) => {
-                          const formattedTxHash = formatAddress(
-                            donation.transactionHash,
-                          );
-
-                          return (
-                            <tr
-                              key={donation.transactionHash}
-                              className="[&>*]:!whitespace-normal"
-                            >
-                              <td className="">
-                                <Link
-                                  href={`/campaigns/${donation.campaignId}`}
-                                  className="text-primary"
-                                >
-                                  {donation.campaignTitle}
-                                </Link>
-                              </td>
-                              <td>
-                                {donation.amount
-                                  ? formatEther(donation.amount)
-                                  : "-"}
-                              </td>
-                              <td>
-                                {process.env.NODE_ENV === "production" ? (
-                                  <Link href={`/`} className="text-primary">
-                                    {formattedTxHash}
-                                  </Link>
-                                ) : (
-                                  <span>{formattedTxHash}</span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </>
-                    )}
-                  </>
-                ) : error ? (
+                    );
+                  })}
+                </>
+                {error && (
                   <tr>
-                    <td colSpan={3}>
+                    <td colSpan={4}>
                       <span className="flex items-center justify-center w-full text-center pt-4">
                         <span>There is an error</span>
                       </span>
                     </td>
                   </tr>
-                ) : (
+                )}
+                {isFetching && (
                   <tr>
                     <td colSpan={3}>
                       <span className="flex items-center justify-center w-full pt-4">
@@ -99,6 +109,31 @@ export default function Donations({ account }: { account: IAddress }) {
           </div>
         </div>
       </div>
+      <div className="flex flex-col items-center justify-center mt-4">
+        <p className="mr-3 text-sm text-muted-foreground">
+          <span className="">Current block: </span>
+          <span className="font-semibold">
+            {toBlock ? formatUnits(toBlock, 0) : "-"}
+          </span>
+        </p>
+        <p className="mr-3 text-sm text-muted-foreground">
+          <span className="">Lastest block: </span>
+          <span className="font-semibold">
+            {latestBlock ? formatUnits(latestBlock, 0) : "-"}
+          </span>
+        </p>
+      </div>
+      {!isFetching && (
+        <div className="flex items-center justify-center mt-4">
+          <Button
+            type="button"
+            className="w-full max-w-[15rem]"
+            onClick={loadMoreDonations}
+          >
+            Check for more donations
+          </Button>
+        </div>
+      )}
     </section>
   );
 }
