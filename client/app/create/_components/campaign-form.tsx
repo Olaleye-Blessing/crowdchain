@@ -136,7 +136,7 @@ const CampaignForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="goal">Funding Goal (in ETH)</Label>
+              <Label htmlFor="goal">Funding Goal (in USD)</Label>
               <Input
                 id="goal"
                 type="number"

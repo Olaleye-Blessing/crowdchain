@@ -169,7 +169,10 @@ export const useCreateCampaign = () => {
           data.description,
           ifpsImg.IpfsHash,
           milestones.map((milestone) => ({
-            targetAmount: parseEther(`${milestone.targetAmount}`),
+            targetAmount: parseUnits(
+              `${milestone.targetAmount}`,
+              CROWDCHAIN_DECIMAL_PRECISION,
+            ),
             deadline: parseUnits(
               String(differenceInDays(milestone.deadline!, fullNow)),
               0,
@@ -177,7 +180,7 @@ export const useCreateCampaign = () => {
             description: milestone.description,
           })),
           data.categories,
-          parseEther(String(data.goal)),
+          parseUnits(String(data.goal), CROWDCHAIN_DECIMAL_PRECISION),
           parseUnits(String(_deadline), 0),
           parseUnits(String(_refundDeadline), 0),
         ],

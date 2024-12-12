@@ -28,7 +28,7 @@ export default function Milestone({
           htmlFor={`milestone-target-${milestone.id}`}
           className="block text-sm font-medium text-gray-700"
         >
-          Target Amount
+          Target Amount (in USD)
         </label>
         <Input
           id={`milestone-target-${milestone.id}`}
