@@ -12,10 +12,6 @@ export const wagmiAbi = parseAbi([
 
   // =============== FUNCTIONS ==============
   "function createCampaign(string title, string summary, string description, string coverImage, BasicMilestone[] milestones, string[] categories, uint256 goal, uint256 duration, uint256 refundDeadline) external",
-  "function totalCampaigns() external view returns (uint256)",
-  "function getCampaigns(uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
-  "function getCampaignsByCategory(string category, uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
-  "function getOwnerCampaigns(address owner, uint256 page, uint256 perPage) view returns (CampaignDetails[], uint256)",
   "function getCampaign(uint256 campaignId) view returns (CampaignDetails)",
   "function getCampaignMileStones(uint256 campaignId) view returns (Milestone[], uint8, uint8)",
   "function donate(uint256 campaignId) external payable",

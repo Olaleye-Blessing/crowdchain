@@ -1,2 +1,5 @@
-export const formatDigit = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "decimal" }).format(value);
+export const formatUSD = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);

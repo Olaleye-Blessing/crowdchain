@@ -1,27 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatUnits, parseUnits } from "viem";
-import { useReadContract } from "wagmi";
 import { constructCampaign } from "@/app/campaigns/[id]/_utils/construct-campaign";
-import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { IAddress } from "@/interfaces/address";
-import { ICampaignDetail } from "@/interfaces/campaign";
-import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { ICampaignDetail, ICampaignsResult } from "@/interfaces/campaign";
 import PaginatedCampaigns from "@/components/campaigns/paginated";
-
-const perPage = process.env.NODE_ENV === "production" ? "20" : "2";
+import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
+import { arrayOfUniqueObjs } from "@/utils/unique-arr-objects";
 
 export default function Campaigns({ account }: { account: IAddress }) {
   const [page, setPage] = useState(0);
   const [totalCampaigns, setTotalCampaigns] = useState<number | null>(null);
   const [campaigns, setCampaigns] = useState<ICampaignDetail[]>([]);
-  const { data, isFetching, error } = useReadContract({
-    abi: wagmiAbi,
-    address: useCrowdchainAddress(),
-    functionName: "getOwnerCampaigns",
-    args: [account, parseUnits(String(page), 0), parseUnits(perPage, 0)],
-    query: {
+  const { data, isFetching, error } = useCrowdchainRequest<ICampaignsResult>({
+    url: `/crowdchain/campaigns/${account}?page=${page}`,
+    options: {
+      queryKey: ["campaigns", "account", { account, page }],
       refetchInterval: false,
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: false,
@@ -31,16 +25,21 @@ export default function Campaigns({ account }: { account: IAddress }) {
   useEffect(() => {
     if (!data) return;
 
-    const [_campaigns, _total] = data;
+    const { campaigns: _campaigns, total: _total } = data;
 
-    if (_campaigns.length === 0)
-      return setTotalCampaigns(+formatUnits(_total, 0));
+    setCampaigns((prev) => {
+      let newCampaigns = [
+        ...prev,
+        ..._campaigns.map((cam) => constructCampaign(cam)),
+      ];
 
-    setCampaigns(_campaigns.map((cam) => constructCampaign(cam)));
+      if (process.env.NODE_ENV !== "production")
+        newCampaigns = arrayOfUniqueObjs(newCampaigns, "id");
 
-    if (!totalCampaigns) setTotalCampaigns(+formatUnits(_total, 0));
+      return newCampaigns;
+    });
 
-    return () => {};
+    setTotalCampaigns(+_total);
   }, [data]);
 
   return (

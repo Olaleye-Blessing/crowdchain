@@ -11,6 +11,7 @@ export interface IDonation {
   campaignId: string;
   donor: IAddress;
   campaignTitle: string;
+  coinUnit: string;
 }
 
 interface SlideShowProps {
@@ -42,7 +43,7 @@ export default function SlideShow({ donations }: SlideShowProps) {
                 </span>{" "}
                 <span>donated </span>{" "}
                 <span className="rounded-sm bg-[#ebecf2] font-bold py-0.5 px-1">
-                  {donation.amount} ETH{" "}
+                  {donation.amount} {donation.coinUnit}{" "}
                 </span>{" "}
               </span>
               <span>

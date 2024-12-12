@@ -8,7 +8,7 @@ interface PaginatedCampaignsProps {
   totalCampaigns: number | null;
   campaigns: ICampaignDetail[];
   isFetching: boolean;
-  error: ReadContractErrorType | null;
+  error: ReadContractErrorType | Error | null;
   loadMore(): void;
   emptyCampaignsMsg: string;
 }

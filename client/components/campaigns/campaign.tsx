@@ -31,7 +31,7 @@ export default function Campaign({
   className,
   detailClassName,
 }: CampaignProps) {
-  const _progress = (campaign.amountRaised * 100) / campaign.goal;
+  const _progress = (+campaign.amountRaised * 100) / +campaign.goal;
 
   return (
     <li className={cn("group max-w-[23.4375rem] lg:h-[34rem]", className)}>
@@ -44,14 +44,14 @@ export default function Campaign({
           />
         </figure>
         <CardHeader className="p-3">
-          <CardTitle>{campaign.title}</CardTitle>
+          <CardTitle className="lg:truncate">{campaign.title}</CardTitle>
           <CardDescription className="!mt-1 h-24 overflow-y-auto">
             {campaign.summary}
           </CardDescription>
         </CardHeader>
         <div
           className={cn(
-            "flex flex-col h-full lg:absolute lg:top-[27rem] lg:group-hover:top-64 lg:pt-4 lg:left-0 lg:right-0 lg:group-hover:rounded-lg lg:bg-white lg:more__shadow lg:transition-all lg:duration-300 lg:h-auto",
+            "flex flex-col h-full lg:absolute lg:top-[27rem] lg:group-hover:top-[17.4rem] lg:pt-4 lg:left-0 lg:right-0 lg:group-hover:rounded-lg lg:bg-white lg:more__shadow lg:transition-all lg:duration-300 lg:h-auto",
             detailClassName,
           )}
         >
@@ -62,8 +62,8 @@ export default function Campaign({
                 className="w-full h-2 border-primary border"
               />
               <div className="flex justify-between text-muted-foreground font-bold text-sm sm:text-base">
-                <span className="font-medium">{campaign.amountRaised} ETH</span>
-                <span className="font-medium">{campaign.goal} ETH</span>
+                <span className="font-medium">{campaign.amountRaised} USD</span>
+                <span className="font-medium">{campaign.goal} USD</span>
               </div>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-4 text-sm sm:text-base">
@@ -71,7 +71,7 @@ export default function Campaign({
                 Icon={Clock}
                 iconClassName="text-blue-500"
                 title="Deadline"
-                body={new Date(campaign.deadline * 1000).toLocaleDateString()}
+                body={new Date(+campaign.deadline * 1000).toLocaleDateString()}
               />
               <CampaignInfo
                 Icon={Users}

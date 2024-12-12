@@ -6,6 +6,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PropsWithChildren } from "react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { hashFn } from "wagmi/query";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -16,6 +17,7 @@ function makeQueryClient() {
         staleTime: 60 * 1000,
         refetchInterval: 0,
         refetchOnWindowFocus: false,
+        queryKeyHashFn: hashFn,
       },
     },
   });

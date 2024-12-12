@@ -1,46 +1,25 @@
 "use client";
 
-import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
-import { useCrowdchainInstance } from "@/hooks/use-crowdchain-instance";
-import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
-import { useQuery } from "@tanstack/react-query";
-import { formatUnits } from "viem";
-import { useReadContract } from "wagmi";
-import { formatDigit } from "./format-digit";
+import { formatUSD } from "./format-digit";
+import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
 
 interface TotalStats {
   totalDonated: number;
   totalDonors: number;
+  totalCampaigns: number;
 }
 
 export default function Details() {
-  const { data } = useReadContract({
-    address: useCrowdchainAddress(),
-    functionName: "totalCampaigns",
-    abi: wagmiAbi,
-  });
-  const { crowdchainInstance } = useCrowdchainInstance();
-  const { data: totalStats } = useQuery({
-    queryKey: ["crowdchain-stats", "homepage"],
-    staleTime: 1000 * 60 * 59,
-    queryFn: async () => {
-      try {
-        const { data } = await crowdchainInstance().get<{ data: TotalStats }>(
-          "/crowdchain/totalStats",
-        );
-
-        return data.data;
-      } catch (error) {
-        throw new Error("Internal server error");
-      }
+  const { data: totalStats } = useCrowdchainRequest<TotalStats>({
+    url: "/crowdchain/totalStats",
+    options: {
+      queryKey: ["crowdchain-stats", "homepage"],
+      staleTime: 1000 * 60 * 59,
     },
   });
 
   const totalDonated = totalStats?.totalDonated
-    ? `~${formatDigit(totalStats.totalDonated)} ETH`
-    : "-";
-  const donors = totalStats?.totalDonors
-    ? `${formatDigit(totalStats.totalDonors)}`
+    ? `~${formatUSD(totalStats.totalDonated)}`
     : "-";
 
   return (
@@ -48,10 +27,10 @@ export default function Details() {
       <ul className="bg-primary grid grid-cols-1 gap-4 max-w-[75rem] mx-auto rounded-md py-10 px-5 md:grid-cols-3">
         <Detail
           title="Campaigns on Crowdchain"
-          body={data ? formatUnits(data, 0) : "-"}
+          body={totalStats?.totalCampaigns || "-"}
         />
         <Detail title="Amount Donated" body={totalDonated} />
-        <Detail title="Donators" body={donors} />
+        <Detail title="Donators" body={totalStats?.totalDonors || "-"} />
       </ul>
     </section>
   );
@@ -59,7 +38,7 @@ export default function Details() {
 
 interface DetailProps {
   title: string;
-  body: string;
+  body: string | number;
 }
 
 function Detail({ title, body }: DetailProps) {

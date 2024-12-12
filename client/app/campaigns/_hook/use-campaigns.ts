@@ -1,64 +1,27 @@
 import { useEffect, useState } from "react";
-import { formatUnits, parseUnits } from "viem";
-import { useReadContract } from "wagmi";
-import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { useSearchParameters } from "@/hooks/use-search-parameters";
-import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { constructCampaign } from "../[id]/_utils/construct-campaign";
-import { ICampaignDetail } from "@/interfaces/campaign";
-import { ICampaignResult } from "./interface";
+import { ICampaignDetail, ICampaignsResult } from "@/interfaces/campaign";
 import { arrayOfUniqueObjs } from "@/utils/unique-arr-objects";
-
-const perPage = process.env.NODE_ENV === "production" ? "20" : "2";
+import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
 
 type IMethod = "by" | "category";
 
-const constructFunctionAndArgs = (
-  category: string,
-  campaignTitle: string,
-  method: IMethod,
-  page: number,
-) => {
-  // TODO: Modify this function to include search by title.
-  if (method === "category" && category !== "all") {
-    return {
-      functionName: "getCampaignsByCategory",
-      args: [category, parseUnits(String(page), 0), parseUnits(perPage, 0)],
-    };
-  }
-
-  return {
-    functionName: "getCampaigns",
-    args: [parseUnits(String(page), 0), parseUnits(perPage, 0)],
-  };
-};
-
-// Cache result in order to reduce RPC calls
 export const useCampaigns = () => {
   const { getParam } = useSearchParameters();
   const category = getParam("category") || "all";
   const campaignTitle = getParam("title") || "";
   const method = (getParam("by") || "category") as IMethod;
-
   const [page, setPage] = useState(0);
   const [totalCampaigns, setTotalCampaigns] = useState<number | null>(null);
   const [campaigns, setCampaigns] = useState<ICampaignDetail[]>([]);
 
   const loadMore = () => setPage((prev) => prev + 1);
 
-  const { args, functionName } = constructFunctionAndArgs(
-    category,
-    campaignTitle,
-    method,
-    page,
-  );
-
-  const { data, error, isFetching } = useReadContract({
-    abi: wagmiAbi,
-    address: useCrowdchainAddress(),
-    functionName: functionName as any,
-    args: args as any,
-    query: {
+  const { data, isFetching, error } = useCrowdchainRequest<ICampaignsResult>({
+    url: `/crowdchain/campaigns?page=${page}&category=${category}`,
+    options: {
+      queryKey: ["campaigns", { category, page }],
       refetchInterval: false,
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: false,
@@ -74,10 +37,7 @@ export const useCampaigns = () => {
   useEffect(() => {
     if (!data) return;
 
-    const [_campaigns, _total] = data as unknown as ICampaignResult;
-
-    if (_campaigns.length === 0)
-      return setTotalCampaigns(+formatUnits(_total, 0));
+    const { campaigns: _campaigns, total: _total } = data;
 
     setCampaigns((prev) => {
       let newCampaigns = [
@@ -91,7 +51,7 @@ export const useCampaigns = () => {
       return newCampaigns;
     });
 
-    if (!totalCampaigns) setTotalCampaigns(+formatUnits(_total, 0));
+    setTotalCampaigns(+_total);
   }, [data]);
 
   return { campaigns, error, isFetching, totalCampaigns, loadMore };

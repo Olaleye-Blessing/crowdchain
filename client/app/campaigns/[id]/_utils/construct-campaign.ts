@@ -17,7 +17,6 @@ export const constructCampaign = (_campaign: any): ICampaignDetail => {
     totalDonors: +formatUnits(_campaign.totalDonors, 0),
     totalMilestones: _campaign.totalMilestones,
     currentMilestone: _campaign.currentMilestone,
-    nextWithdrawableMilestone: _campaign.nextWithdrawableMilestone,
     categories: _campaign.categories,
   };
 };
