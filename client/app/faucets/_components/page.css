@@ -1,0 +1,13 @@
+.faucets__page {
+  a {
+      @apply text-primary underline;
+    }
+
+  li {
+      @apply list-decimal list-inside;
+    }
+
+  section > ul > li {
+      @apply list-disc;
+    }
+}

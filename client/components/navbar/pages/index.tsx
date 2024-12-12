@@ -66,6 +66,18 @@ const Pages = () => {
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
+
+          <NavigationMenuItem className="w-full">
+            <Link href="/faucets" legacyBehavior passHref>
+              <NavigationMenuLink
+                className={navigationMenuTriggerStyle({
+                  className: "!w-full !justify-start",
+                })}
+              >
+                Faucets
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
     </>

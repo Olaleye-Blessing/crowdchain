@@ -102,6 +102,10 @@
     font-size: 0.67em;
   }
 
+  button {
+    @apply disabled:cursor-not-allowed;
+  }
+
   .error {
     @apply text-red-700 font-semibold;
   }
