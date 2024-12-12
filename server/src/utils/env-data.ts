@@ -16,6 +16,7 @@ const envSchema = z.object({
   CROWDCHAIN_DEPLOYMENT_BLOCK: z.coerce.number(),
   ANVIL_RPC: z.string(),
   REDIS_URL: z.string(),
+  BASE_SEPOLIA_ALCHEMY_RPC_URL: z.string(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

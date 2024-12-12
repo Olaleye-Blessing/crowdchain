@@ -1,15 +1,15 @@
 import { catchAsync } from '../../utils/catch-async';
 import { sendResponse } from '../../utils/send-response';
-import { CrowdchainEventService } from './service';
+import { CrowdchainStatsService } from './services/stats';
 
 export const getRecentDonations = catchAsync(async (req, res) => {
-  sendResponse(res, 200, await CrowdchainEventService.getRecentDonations());
+  sendResponse(res, 200, await CrowdchainStatsService.getRecentDonations());
 });
 
 export const getRecentUpdates = catchAsync(async (req, res) => {
-  sendResponse(res, 200, await CrowdchainEventService.getRecentUpdates());
+  sendResponse(res, 200, await CrowdchainStatsService.getRecentUpdates());
 });
 
 export const getTotalStats = catchAsync(async (req, res) => {
-  sendResponse(res, 200, await CrowdchainEventService.getTotalStats());
+  sendResponse(res, 200, await CrowdchainStatsService.getTotalStats());
 });

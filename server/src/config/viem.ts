@@ -1,5 +1,5 @@
-import { createPublicClient, defineChain, http } from 'viem';
-import { sepolia } from 'viem/chains';
+import { createPublicClient, defineChain, fallback, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 import { envVars } from '../utils/env-data';
 
 const anvil = defineChain({
@@ -12,7 +12,15 @@ const anvil = defineChain({
   testnet: true,
 });
 
+// TODO: Include other possible RPC URLs
 export const publicClient = createPublicClient({
-  chain: envVars.NODE_ENV === 'production' ? sepolia : anvil,
-  transport: http(),
+  chain: envVars.NODE_ENV === 'production' ? baseSepolia : anvil,
+  transport: fallback(
+    envVars.NODE_ENV === 'production'
+      ? [http(envVars.BASE_SEPOLIA_ALCHEMY_RPC_URL), http()]
+      : [http()],
+  ),
+  batch: {
+    multicall: true,
+  },
 });

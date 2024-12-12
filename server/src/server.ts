@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import './utils/global-patches';
 import app from './app';
 import { connectDBs } from './dbs/init';
-import { CrowdchainEventService } from './contract/crowdchain/service';
+import { CrowdchainStatsService } from './contract/crowdchain/services/stats';
 
 const port = process.env.PORT || 7000;
 
@@ -14,13 +15,13 @@ const main = async () => {
 
   await connectDBs();
 
-  await CrowdchainEventService.startPeriodicUpdates();
+  await CrowdchainStatsService.startPeriodicUpdates();
 
   process.on('unhandledRejection', (err: Error) => {
     console.log('____ 🔥 Unhandled rejection ____');
     console.log(err.message);
     server.close(() => {
-      CrowdchainEventService.stopPeriodicUpdates();
+      CrowdchainStatsService.stopPeriodicUpdates();
 
       process.exit(1);
     });
