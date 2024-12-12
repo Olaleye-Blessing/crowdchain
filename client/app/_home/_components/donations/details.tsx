@@ -1,13 +1,8 @@
 "use client";
 
+import { TotalStats } from "../../interfaces";
 import { formatUSD } from "./format-digit";
 import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
-
-interface TotalStats {
-  totalDonated: number;
-  totalDonors: number;
-  totalCampaigns: number;
-}
 
 export default function Details() {
   const { data: totalStats } = useCrowdchainRequest<TotalStats>({
