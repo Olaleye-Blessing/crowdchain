@@ -1,93 +1,69 @@
 "use client";
 
-import Loading from "@/app/loading";
+import TablePagination from "@/components/table-pagination";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+import { useSupportedCoins } from "@/hooks/use-supported-coins";
 import { ICampaignDetail } from "@/interfaces/campaign";
-import { IContributionSystem } from "@/interfaces/contribution-system";
+import { IDonation } from "@/interfaces/donation";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
-import { formatAddress } from "@/utils/format-address";
-import { Copy } from "lucide-react";
-import { formatEther } from "viem";
+import { constructDonation } from "@/utils/construct-donation";
+import { useEffect, useState } from "react";
+import { formatUnits } from "viem";
 import { useReadContract } from "wagmi";
+import Table from "./table";
 
 export default function Donations({ campaign }: { campaign: ICampaignDetail }) {
-  const { data, isFetching, error, refetch } = useReadContract({
+  const supportedCoins = useSupportedCoins();
+  const [page, setPage] = useState(0);
+  const [perPage, setPerPage] = useState(2);
+  const [totalDonations, setTotalDonations] = useState<number | null>(null);
+  const [donations, setDonations] = useState<IDonation[]>([]);
+  const { data, error, isFetching } = useReadContract({
     abi: wagmiAbi,
     address: useCrowdchainAddress(),
-    functionName: "getCampaignDonors",
-    args: [BigInt(campaign.id)],
+    functionName: "getCampaignDonations",
+    args: [BigInt(campaign.id), BigInt(page), BigInt(perPage)],
   });
 
-  const [_donors, _contributions] = data || [];
+  useEffect(() => {
+    setPage(0);
+    setTotalDonations(null);
+    setDonations([]);
+  }, [perPage]);
 
-  const _contributionSystem = _donors?.reduce<IContributionSystem>(
-    (db, current, index) => {
-      db[current] = +formatEther(_contributions![index]);
+  useEffect(() => {
+    if (isFetching) return;
+    if (error) return;
 
-      return db;
-    },
-    {} as IContributionSystem,
-  );
+    const [_donations, _totalDonations] = data || [];
 
-  const donorsList = _contributionSystem && Object.entries(_contributionSystem);
+    setTotalDonations(+formatUnits(_totalDonations || 0n, 0));
+
+    setDonations(
+      (_donations || []).map((d) =>
+        constructDonation(d, supportedCoins.supportedTokens || {}),
+      ),
+    );
+  }, [data, isFetching]);
+
+  const onPageChange = (diff: number) => setPage((prev) => prev + diff);
 
   return (
-    <div className="my-4 flow-root">
-      <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-          <table className="simple_table">
-            <thead>
-              <tr>
-                <th scope="col">Donor</th>
-                <th scope="col">Amount</th>
-                <th scope="col">USD Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data ? (
-                <>
-                  {donorsList?.map((donor) => {
-                    const [account, amount] = donor;
-
-                    return (
-                      <tr key={account}>
-                        <td>
-                          <span className="flex items-center justify-start">
-                            <span className="mr-0.5">
-                              {formatAddress(account)}
-                            </span>
-                            <button className="">
-                              <Copy className="w-4 h-4" />
-                            </button>
-                          </span>
-                        </td>
-                        <td>{amount}</td>
-                        <td>3,000</td>
-                      </tr>
-                    );
-                  })}
-                </>
-              ) : error ? (
-                <tr>
-                  <td colSpan={3}>
-                    <span className="flex items-center justify-center w-full text-center pt-4">
-                      <span>There is an error</span>
-                    </span>
-                  </td>
-                </tr>
-              ) : (
-                <tr>
-                  <td colSpan={3}>
-                    <span className="flex items-center justify-center w-full pt-4">
-                      <Loading />
-                    </span>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    <div>
+      <Table error={error} donations={donations} isFetching={isFetching} />
+      {!!totalDonations && (
+        <div>
+          {
+            <TablePagination
+              perPage={perPage}
+              totalItems={totalDonations}
+              currentPage={page}
+              onSelectPerPage={(page) => setPerPage(page)}
+              onPageChange={onPageChange}
+            />
+          }
         </div>
-      </div>
+      )}
     </div>
   );
 }

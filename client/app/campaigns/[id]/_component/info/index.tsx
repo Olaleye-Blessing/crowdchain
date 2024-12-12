@@ -27,7 +27,6 @@ export default function Info({ campaign }: { campaign: ICampaignDetail }) {
   }
 
   return (
-    // <section className="mt-4 border text-card-foreground shadow bg-card p-4 rounded-lg">
     <section className="mt-4 border text-card-foreground shadow bg-card p-4 rounded-lg">
       <Tabs defaultValue={selectedTab}>
         <TabsList className="w-full overflow-x-auto">
