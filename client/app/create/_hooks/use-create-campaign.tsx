@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { parseEther, parseUnits } from "viem";
+import { parseUnits } from "viem";
 import {
   useAccount,
   useChainId,
@@ -18,6 +18,7 @@ import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { clientEnv } from "@/constants/env/client";
+import { CROWDCHAIN_DECIMAL_PRECISION } from "@/constants/contracts";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
