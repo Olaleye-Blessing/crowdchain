@@ -32,3 +32,22 @@ export type ISupportedCoinsDetails = {
     decimal: number;
   };
 };
+
+export type ICampaignDetailsChain = {
+  id: bigint;
+  amountRaised: bigint;
+  deadline: bigint;
+  refundDeadline: bigint;
+  goal: bigint;
+  totalDonors: bigint;
+  tokensAllocated: bigint;
+  totalMilestones: number;
+  currentMilestone: number;
+  owner: `0x${string}`;
+  title: string;
+  summary: string;
+  description: string;
+  coverImage: string;
+  claimed: boolean;
+  categories: readonly string[];
+};
