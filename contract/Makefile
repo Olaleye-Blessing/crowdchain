@@ -10,6 +10,9 @@ local_rpc_url := http://127.0.0.1:$(local_port)
 deploy-to-sepolia:
 	forge script script/DeployCrowdfunding.s.sol --rpc-url $(ETH_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
 
+deploy-to-base-sepolia:
+	forge script script/DeployCrowdfunding.s.sol --rpc-url $(BASE_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
+
 .PHONY: virtual-tenderly-sepolia
 virtual-tenderly-sepolia:
 	forge script script/DeployCrowdfunding.s.sol --rpc-url $(TENDERLY_SEPOLIA_RPC_URL) --private-key $(METAMASK_PRIVATE_KEY) --broadcast
