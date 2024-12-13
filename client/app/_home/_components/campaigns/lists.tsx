@@ -11,6 +11,8 @@ export default function Lists() {
     url: `/crowdchain/campaigns?page=0&category=all`,
     options: {
       queryKey: ["campaigns", { category: "all", page: 0 }],
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
     },
   });
 

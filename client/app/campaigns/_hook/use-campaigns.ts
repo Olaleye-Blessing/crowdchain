@@ -25,6 +25,7 @@ export const useCampaigns = () => {
       refetchInterval: false,
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: false,
+      refetchOnMount: "always",
     },
   });
 
