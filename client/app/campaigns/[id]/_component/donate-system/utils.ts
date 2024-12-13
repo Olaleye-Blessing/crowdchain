@@ -1,8 +1,42 @@
-import { Address, parseEther, parseUnits } from "viem";
+import { Address, erc20Abi, parseEther, parseUnits } from "viem";
 import { Config } from "wagmi";
 import { WriteContractMutateAsync } from "wagmi/query";
 import { ETH_ADDRESS } from "@/constants/contracts";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import { toast } from "@/hooks/use-toast";
+
+export const approveAllowance = async ({
+  tokenDecimal,
+  writeContractAsync,
+  contractAddress,
+  token,
+  amount,
+  config,
+}: {
+  tokenDecimal: number;
+  writeContractAsync: WriteContractMutateAsync<Config, unknown>;
+  contractAddress: Address;
+  token: Address;
+  amount: string;
+  config: Config;
+}) => {
+  toast({ title: "Approving allowance" });
+
+  const approvalTxHash = await writeContractAsync({
+    abi: erc20Abi,
+    address: token,
+    functionName: "approve",
+    args: [contractAddress, parseUnits(amount, tokenDecimal)],
+  });
+
+  toast({ title: "Confirming tx hash" });
+
+  await waitForTransactionReceipt(config, {
+    hash: approvalTxHash,
+    confirmations: 1,
+  });
+};
 
 export const donate = async ({
   tokenDecimal,
@@ -19,12 +53,6 @@ export const donate = async ({
   campaignId: number;
   amount: string;
 }) => {
-  console.log({
-    tokenDecimal,
-    amountSent: parseUnits(amount, tokenDecimal),
-    token,
-  });
-
   const txHash = await writeContractAsync({
     abi: wagmiAbi,
     address: contractAddress,

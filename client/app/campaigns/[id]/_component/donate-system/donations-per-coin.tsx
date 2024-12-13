@@ -34,7 +34,7 @@ export default function DonationsPerCoin({
 
     const coin = supportedTokens[currentCoin];
 
-    console.log({ coin, currentCoin });
+    // console.log({ coin, currentCoin });
 
     _donations.push({
       coin: coin?.name || "-",

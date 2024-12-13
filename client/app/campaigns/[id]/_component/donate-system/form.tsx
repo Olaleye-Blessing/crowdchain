@@ -24,13 +24,11 @@ interface FormProps {
   type?: "refund" | "donate";
   setToken: Dispatch<SetStateAction<Address>>;
   token: Address;
-  children?: ReactNode;
 }
 
 export default function Form({
   token,
   setToken,
-  children,
   type = "refund",
   supportedCoins,
   ...props
@@ -89,7 +87,6 @@ export default function Form({
         </p>
       )}
       <div className="flex">
-        {children}
         <Button type="submit" disabled={props.disabledBtn} className="w-full">
           {props.btnText}
         </Button>

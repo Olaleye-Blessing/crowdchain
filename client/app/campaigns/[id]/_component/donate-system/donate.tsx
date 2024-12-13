@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Address, formatUnits, parseUnits } from "viem";
+import { Address } from "viem";
 import { ISupportedCoins } from "@/hooks/use-supported-coins";
-import { Button } from "@/components/ui/button";
 import { ETH_ADDRESS } from "@/constants/contracts";
-import { useAllowance } from "@/hooks/use-allowance";
-import { useApproval } from "@/hooks/use-approval";
 import Form from "./form";
 import { useConfig, useWriteContract } from "wagmi";
-import { donate } from "./utils";
+import { approveAllowance, donate } from "./utils";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { toast } from "@/hooks/use-toast";
@@ -24,43 +21,26 @@ export default function Donate({ supportedCoins, campaignId }: DonateProps) {
   const [token, setToken] = useState<Address>(ETH_ADDRESS);
   const [donating, setDonating] = useState(false);
   const { writeContractAsync } = useWriteContract();
-  const {
-    data: allowance,
-    refetch: refetchAllowance,
-    isFetching: fetchingAllowance,
-  } = useAllowance({
-    token,
-    unique: true,
-  });
-  const {
-    approve,
-    approvalResult: { isFetching: fetchingApproval },
-  } = useApproval({
-    token,
-    amount: donationAmount,
-    enabled: allowance !== undefined,
-  });
   const coinDecimals = supportedCoins.supportedTokens?.[token]?.decimal;
 
-  const approveDonation = async () => {
-    await approve(token, parseUnits(donationAmount, coinDecimals));
-
-    refetchAllowance();
-  };
-
   const _donate = async () => {
-    console.log("_ DONATE _");
-    if (!donationAmount) return;
-
-    if (token !== ETH_ADDRESS) {
-      if (!coinDecimals || !allowance) return;
-      if (+formatUnits(allowance, coinDecimals) < +donationAmount) return;
-    }
-
-    toast({ title: "Donating.." });
-
     try {
-      const txHash = await donate({
+      setDonating(true);
+
+      if (token !== ETH_ADDRESS) {
+        await approveAllowance({
+          tokenDecimal: coinDecimals,
+          token,
+          contractAddress: crowdchainAddress,
+          writeContractAsync,
+          amount: donationAmount,
+          config,
+        });
+      }
+
+      toast({ title: "Donating" });
+
+      const donateTxHash = await donate({
         tokenDecimal: coinDecimals,
         token,
         contractAddress: crowdchainAddress,
@@ -69,16 +49,19 @@ export default function Donate({ supportedCoins, campaignId }: DonateProps) {
         amount: donationAmount,
       });
 
+      toast({ title: "Confirming tx hash" });
+
       await waitForTransactionReceipt(config, {
-        hash: txHash,
+        hash: donateTxHash,
         confirmations: 1,
       });
 
-      toast({ title: "Donated" });
-      setDonating(false);
+      toast({ title: "Donation successful" });
     } catch (error) {
-      console.log("__ ERROR __");
-      console.log(error);
+      console.error("__ There is an error __", error);
+      toast({ title: "Donation failed" });
+    } finally {
+      setDonating(false);
     }
   };
 
@@ -90,34 +73,13 @@ export default function Donate({ supportedCoins, campaignId }: DonateProps) {
       supportedCoins={supportedCoins}
       title="Make a Donation"
       description="You can contribute to the goal of this campaign. The more the contribution, the less time to achieve its goal."
-      disabledBtn={
-        token === ETH_ADDRESS
-          ? !donationAmount
-          : Boolean(coinDecimals) &&
-            (donating ||
-              fetchingAllowance ||
-              fetchingApproval ||
-              !donationAmount ||
-              !allowance ||
-              +formatUnits(allowance, coinDecimals) < +donationAmount)
-      }
+      disabledBtn={+donationAmount <= 0 || donating}
       inputValue={donationAmount}
       handleInputChange={(val) => {
         setDonationAmount(val);
       }}
       handleSubmit={() => _donate()}
       btnText="Donate"
-    >
-      {token !== ETH_ADDRESS && (
-        <Button
-          type="button"
-          disabled={!donationAmount || fetchingAllowance || fetchingApproval}
-          onClick={approveDonation}
-          className="mr-2 w-full"
-        >
-          Approve
-        </Button>
-      )}
-    </Form>
+    />
   );
 }
