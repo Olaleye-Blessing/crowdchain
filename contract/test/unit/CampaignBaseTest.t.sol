@@ -182,7 +182,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         _moreCategories[5] = "Tester5";
 
         vm.expectRevert(
-            abi.encodeWithSelector(ICampaign.Campaign__CampaignCreationFailed.selector, "Maximum of 5 categories")
+            abi.encodeWithSelector(ICampaign.Campaign__CampaignCreationFailed.selector, "Maximum of 4 categories")
         );
         _createCampaign(ALICE, _title, SUMMARY, _description, _amountNeeded, 4, 5, _moreCategories);
 
@@ -328,9 +328,12 @@ contract CampaignBaseTest is Test, ConstantsTest {
         uint256 _refundDeadline = 7; // days
         string memory _title = "My Title";
         string memory _description = "My little description from my heart, soul and mind";
-        string[] memory categories = new string[](1);
+        string[] memory categories = new string[](2);
         categories[0] = "Cat 1";
+        categories[1] = "Cat 2";
 
+        vm.expectEmit(true, true, true, true, address(campaignBase));
+        emit ICampaign.CampaignCreated(ALICE, 0, "My Title", 1, "Cat 1,Cat 2");
         _createCampaign(ALICE, _title, SUMMARY, _description, _amountNeeded, _deadline, _refundDeadline, categories);
 
         ICampaign.CampaignDetails memory campaign = campaignBase.getCampaign(0);
@@ -347,7 +350,7 @@ contract CampaignBaseTest is Test, ConstantsTest {
         assertEq(campaign.claimed, false);
         assertEq(campaign.totalDonors, 0);
         assertEq(campaign.tokensAllocated, 0);
-        assertEq(campaign.categories.length, 1);
+        assertEq(campaign.categories.length, categories.length);
         assertEq(campaign.categories[0], categories[0]);
     }
 

@@ -123,14 +123,17 @@ abstract contract CampaignBase is ICampaign {
             }
         }
         newCampaign.totalMilestones = totalMilestones;
+        newCampaign.categories = categories;
 
         uint256 totalCategories = categories.length;
+        string memory strCategories = "";
         for (uint256 i = 0; i < totalCategories; i++) {
-            newCampaign.categories.push(categories[i]);
             campaignsByCategory[categories[i]].push(campaignId);
+            strCategories = i == 0 ? categories[i] : string.concat(strCategories, ",", categories[i]);
         }
 
         campaignsOwner[msg.sender].push(campaignId);
+        emit CampaignCreated(msg.sender, campaignId, title, campaigns.length, strCategories);
     }
 
     /// @inheritdoc ICampaign
@@ -293,7 +296,7 @@ abstract contract CampaignBase is ICampaign {
 
         if (totalCategories == 0) revert Campaign__CampaignCreationFailed("Provide at least one category");
 
-        if (totalCategories > 5) revert Campaign__CampaignCreationFailed("Maximum of 5 categories");
+        if (totalCategories > 4) revert Campaign__CampaignCreationFailed("Maximum of 4 categories");
 
         // check for duplicate categories
         for (uint256 i = 0; i < totalCategories; i++) {
