@@ -19,6 +19,7 @@ export interface ITotalStats {
   totalDonated: number;
   totalDonors: number;
   totalCampaigns: number;
+  lastProcessedBlock: number;
 }
 
 export type IBLOCK_RANGES = {

@@ -259,25 +259,26 @@ export class CrowdchainStatsService {
     donations: IDonation[];
   }> {
     try {
-      const [
-        existingStatsJson,
-        lastProcessedBlockStr,
-        currentBlock,
-        supportedCoins,
-      ] = await Promise.all([
-        redisClient.get(this.CACHE_KEYS.totalStats),
-        redisClient.get(this.CACHE_KEYS.lastProcessedBlock),
-        publicClient.getBlockNumber(),
-        this.getSupportedCoins(),
-      ]);
+      const [existingStatsJson, currentBlock, supportedCoins] =
+        await Promise.all([
+          redisClient.get(this.CACHE_KEYS.totalStats),
+          publicClient.getBlockNumber(),
+          this.getSupportedCoins(),
+        ]);
 
-      const existingStats: ITotalStats = existingStatsJson
-        ? JSON.parse(existingStatsJson)
-        : { totalDonated: 0, totalDonors: 0, totalCampaigns: 0 };
+      let existingStats: ITotalStats;
+      if (existingStatsJson) {
+        existingStats = JSON.parse(existingStatsJson) as ITotalStats;
+      } else {
+        existingStats = (await TotalStats.findOne({})) || {
+          totalDonated: 0,
+          totalDonors: 0,
+          totalCampaigns: 0,
+          lastProcessedBlock: 0,
+        };
+      }
 
-      const lastProcessedBlock = lastProcessedBlockStr
-        ? BigInt(lastProcessedBlockStr)
-        : 0n;
+      const lastProcessedBlock = BigInt(existingStats.lastProcessedBlock);
 
       const fromBlock = lastProcessedBlock;
       let toBlock = lastProcessedBlock + this.MAX_BLOCK_RANGE;
@@ -349,6 +350,7 @@ export class CrowdchainStatsService {
         totalDonated:
           +formatUnits(totalAmount, this.DECIMAL_PRECISION) +
           existingStats.totalDonated,
+        lastProcessedBlock: +toBlock.toString(),
       };
 
       await Promise.all([
@@ -357,15 +359,8 @@ export class CrowdchainStatsService {
           JSON.stringify(recentDonations),
         ),
         redisClient.set(this.CACHE_KEYS.totalStats, JSON.stringify(stats)),
-        redisClient.set(this.CACHE_KEYS.lastProcessedBlock, toBlock.toString()),
         // mongoose for backup for when redis keys are cleared because of the free version of Redis service
-        TotalStats.findOneAndUpdate(
-          {},
-          {
-            ...stats,
-            lastProcessedBlock: Number(currentBlock),
-          },
-        ),
+        TotalStats.findOneAndUpdate({}, stats, { upsert: true }),
       ]);
 
       return { stats, donations: recentDonations };
