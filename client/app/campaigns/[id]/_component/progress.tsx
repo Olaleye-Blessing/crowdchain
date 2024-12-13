@@ -4,7 +4,7 @@ import { ICampaignDetail } from "@/interfaces/campaign";
 interface CampaignProgreeProps
   extends Pick<ICampaignDetail, "amountRaised" | "goal"> {}
 
-export default function CampaignProgree({
+export default function CampaignProgress({
   amountRaised,
   goal,
 }: CampaignProgreeProps) {
