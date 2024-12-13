@@ -13,7 +13,9 @@ interface ICampaignDonation {
     /// @param coin Address of the donated token
     /// @param amount The amount donated
     /// @param campaignTitle The title of the campaign
-    event NewDonation(address indexed donor, uint256 indexed campaignId, address coin, uint256 amount, string campaignTitle);
+    event NewDonation(
+        address indexed donor, uint256 indexed campaignId, address coin, uint256 amount, string campaignTitle
+    );
 
     /// @notice Emitted when a donation is refunded
     /// @param donor The address of the donor receiving the refund

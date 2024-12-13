@@ -85,7 +85,9 @@ interface ICampaign {
     /// @param campaignId The id of the new campaign
     /// @param title The title of the new campaign
     /// @param totalCampaigns The total campaigns created
-    event CampaignCreated(address owner, uint256 campaignId, string title, uint256 totalCampaigns, string strCategories);
+    event CampaignCreated(
+        address owner, uint256 campaignId, string title, uint256 totalCampaigns, string strCategories
+    );
 
     /// @notice Emitted when a campaign reached a milestone
     /// @dev The next milestone, if available, is started immediately the current one ends
