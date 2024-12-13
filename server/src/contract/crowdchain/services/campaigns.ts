@@ -69,11 +69,11 @@ export class CrowdchainCampaignService {
     if (result[0].length === 0)
       return { campaigns: [], total: result[1].toString() };
 
-    const oneDay = 1 * 24 * 60 * 60;
-
     const data = { campaigns: result[0], total: result[1].toString() };
 
-    await redisClient.set(cacheKey, JSON.stringify(data), { EX: oneDay });
+    await redisClient.set(cacheKey, JSON.stringify(data), {
+      EX: 5 * 60, // 5 mins,
+    });
 
     return { ...data };
   }

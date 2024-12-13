@@ -11,7 +11,11 @@ import {
   IBLOCK_RANGES,
   ISupportedCoinsDetails,
 } from '../interface';
-import { DONATION_EVENT, UPDATE_EVENT } from '../utils/abi';
+import {
+  CAMPAIGN_CREATED_EVENT,
+  DONATION_EVENT,
+  UPDATE_EVENT,
+} from '../utils/abi';
 import { envVars } from '../../../utils/env-data';
 import { crowdchainContract } from '../utils/contract';
 import TotalStats from '../utils/stats.schema';
@@ -142,6 +146,49 @@ export class CrowdchainStatsService {
 
     clearInterval(this.updateInterval);
     this.updateInterval = null;
+  }
+
+  public static async listenForNewCampaigns() {
+    publicClient.watchEvent({
+      address: CROWDCHAIN_ADDRESS,
+      event: parseAbiItem(CAMPAIGN_CREATED_EVENT),
+      fromBlock: BigInt(envVars.CROWDCHAIN_DEPLOYMENT_BLOCK),
+      onLogs: async ([{ args: campaign }]) => {
+        let stats: ITotalStats | null;
+        const cachedStatsStr = await redisClient.get(
+          this.CACHE_KEYS.totalStats,
+        );
+
+        if (cachedStatsStr) {
+          stats = JSON.parse(cachedStatsStr);
+        } else {
+          stats = await TotalStats.findOne({});
+        }
+
+        if (!stats) return;
+
+        const totalCampaigns = +campaign.totalCampaigns!.toString();
+        stats.totalCampaigns = totalCampaigns;
+
+        const cachedCampaignsAllCategory = await redisClient.keys(
+          `crowdchain:campaigns_all_*`,
+        );
+
+        await Promise.all([
+          redisClient.set(this.CACHE_KEYS.totalStats, JSON.stringify(stats)),
+          // Deleting all keys means cached pages get reset cause there is a "total" key in each cached page. Deleting only the last cached page will leave previous pages incorrect.
+          cachedCampaignsAllCategory.length > 0 &&
+            redisClient.del([...cachedCampaignsAllCategory]),
+          ...campaign.strCategories!.split(',').map(async (category) => {
+            const cachedKeys = await redisClient.keys(
+              `crowdchain:campaigns_${category}_*`,
+            );
+
+            if (cachedKeys.length > 0) return redisClient.del([...cachedKeys]);
+          }),
+        ]);
+      },
+    });
   }
 
   private static async updateAllData(): Promise<void> {

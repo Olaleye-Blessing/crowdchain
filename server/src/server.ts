@@ -15,7 +15,10 @@ const main = async () => {
 
   await connectDBs();
 
-  await CrowdchainStatsService.startPeriodicUpdates();
+  await Promise.all([
+    CrowdchainStatsService.startPeriodicUpdates(),
+    CrowdchainStatsService.listenForNewCampaigns(),
+  ]);
 
   process.on('unhandledRejection', (err: Error) => {
     console.log('____ 🔥 Unhandled rejection ____');

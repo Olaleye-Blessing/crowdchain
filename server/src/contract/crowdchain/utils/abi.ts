@@ -6,6 +6,9 @@ export const DONATION_EVENT =
 export const UPDATE_EVENT =
   'event NewUpdate(uint256 indexed campaignId, uint256 indexed updateId, address indexed owner, string title)';
 
+export const CAMPAIGN_CREATED_EVENT =
+  'event CampaignCreated(address owner, uint256 campaignId, string title, uint256 totalCampaigns, string strCategories)';
+
 export const crowdchainAbi = parseAbi([
   // ============= Structs ==========
   'struct CampaignDetails { uint256 id; uint256 amountRaised; uint256 deadline; uint256 refundDeadline; uint256 goal; uint256 totalDonors; uint256 tokensAllocated; uint8 totalMilestones; uint8 currentMilestone; address owner; string title; string summary; string description; string coverImage; bool claimed; string[] categories; }',
@@ -21,4 +24,5 @@ export const crowdchainAbi = parseAbi([
   // =============== Events ==============
   DONATION_EVENT,
   UPDATE_EVENT,
+  CAMPAIGN_CREATED_EVENT,
 ]);
