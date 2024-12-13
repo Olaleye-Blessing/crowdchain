@@ -8,6 +8,7 @@ import {ICampaign} from "./../../src/interfaces/ICampaign.sol";
 import {DeployCampaignBase} from "./../../script/DeployCampaignBase.s.sol";
 import {ConstantsTest} from "./../utils/Constants.sol";
 import {ERC20Mock} from "./../mocks/ERC20Mock.sol";
+import {MockV3Aggregator} from "./../mocks/MockV3Aggregator.sol";
 
 contract CampaignBaseTest is Test, ConstantsTest {
     CampaignBase public campaignBase;
@@ -31,13 +32,6 @@ contract CampaignBaseTest is Test, ConstantsTest {
         address[] memory supportedCoins = campaignBase.getSupportedCoins();
         usdc = supportedCoins[1];
         dai = supportedCoins[2];
-
-        // ERC20Mock(usdc).mint(BLESSING, 1000e18);
-        // ERC20Mock(dai).mint(BLESSING, 1000e18);
-        // ERC20Mock(usdc).mint(BOB, 1000e18);
-        // ERC20Mock(dai).mint(BOB, 1000e18);
-        // ERC20Mock(usdc).mint(ALICE, 1000e18);
-        // ERC20Mock(dai).mint(ALICE, 1000e18);
     }
 
     function test_contractBelongsToTheCorrectOwner() public view {
@@ -60,10 +54,13 @@ contract CampaignBaseTest is Test, ConstantsTest {
 
         vm.startBroadcast();
         ERC20Mock usdt = new ERC20Mock("USDT", "usdt", msg.sender, intialSupply, decimals);
+        MockV3Aggregator usdtPriceFeed = new MockV3Aggregator(8, 1_00_000_000);
         vm.stopBroadcast();
 
         vm.prank(DEPLOYER);
-        campaignBase.addSupportedCoin(address(usdt));
+        vm.expectEmit(true, false, false, false, address(campaignBase));
+        emit ICampaign.NewCoinSupported(address(usdt));
+        campaignBase.addSupportedCoin(address(usdt), address(usdtPriceFeed));
 
         assertEq(campaignBase.getSupportedCoins().length, totalSupportedCoins + 1);
     }

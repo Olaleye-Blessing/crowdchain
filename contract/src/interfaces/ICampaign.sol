@@ -89,6 +89,10 @@ interface ICampaign {
         address owner, uint256 campaignId, string title, uint256 totalCampaigns, string strCategories
     );
 
+    /// @notice Emmitted when a new coin is being supported
+    /// @param coin Address of the new coin
+    event NewCoinSupported(address coin);
+
     /// @notice Emitted when a campaign reached a milestone
     /// @dev The next milestone, if available, is started immediately the current one ends
     /// @param campaignId The id of the campaign
@@ -183,7 +187,8 @@ interface ICampaign {
 
     /// @notice Add a new supported coin
     /// @param coin Address of the coin to add
-    function addSupportedCoin(address coin) external;
+    /// @param priceFeed Chainlink aggregrator address to get the price of the coin
+    function addSupportedCoin(address coin, address priceFeed) external;
 
     /// @notice Get list of supported stablecoins
     /// @return Array of supported stablecoin addresses

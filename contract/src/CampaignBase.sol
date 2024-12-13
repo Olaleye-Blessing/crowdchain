@@ -215,10 +215,12 @@ abstract contract CampaignBase is ICampaign {
     }
 
     /// @inheritdoc ICampaign
-    function addSupportedCoin(address coin) external onlyOwner {
+    function addSupportedCoin(address coin, address priceFeed) external onlyOwner {
         if (_isCoinSupported(coin, supportedCoins)) return;
 
         supportedCoins.push(coin);
+        coinPriceFeeds[coin] = priceFeed;
+        emit NewCoinSupported(coin);
     }
 
     /// @inheritdoc ICampaign
