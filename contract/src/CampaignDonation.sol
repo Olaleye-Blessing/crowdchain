@@ -37,7 +37,7 @@ abstract contract CampaignDonation is CampaignBase, ICampaignDonation {
         uint256 coinValue = coinValueInUSD(coin, amount);
 
         if (coinValue < MINIMUM_DONATION) {
-            revert CampaignDonation__DonationFailed("Donate at least 50 cent worth of your coin");
+            revert CampaignDonation__DonationFailed("Donate at least 1 dollar worth of your coin");
         }
 
         Campaign storage campaign = campaigns[campaignId];
