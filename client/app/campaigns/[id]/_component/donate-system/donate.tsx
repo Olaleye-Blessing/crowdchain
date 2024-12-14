@@ -8,6 +8,7 @@ import { approveAllowance, donate } from "./utils";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { toast } from "@/hooks/use-toast";
+import { getDonateErrorMsg } from "../../_utils/getErrorMsg";
 
 interface DonateProps {
   supportedCoins: ISupportedCoins;
@@ -58,8 +59,10 @@ export default function Donate({ supportedCoins, campaignId }: DonateProps) {
 
       toast({ title: "Donation successful" });
     } catch (error) {
-      console.error("__ There is an error __", error);
-      toast({ title: "Donation failed" });
+      toast({
+        title: getDonateErrorMsg(error, coinDecimals),
+        variant: "destructive",
+      });
     } finally {
       setDonating(false);
     }
