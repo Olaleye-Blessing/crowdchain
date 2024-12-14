@@ -1,5 +1,6 @@
 import Loading from "@/app/loading";
 import { IDonation } from "@/interfaces/donation";
+import { copyToClipboard } from "@/utils/copy-to-clipboard";
 import { humanReadAbleDate } from "@/utils/dates";
 import { formatAddress } from "@/utils/format-address";
 import { ReadContractErrorType } from "@wagmi/core";
@@ -62,7 +63,11 @@ export default function Table({ donations, error, isFetching }: TableProps) {
                             <span className="mr-0.5">
                               {formatAddress(donation.donor)}
                             </span>
-                            <button className="">
+                            <button
+                              className=""
+                              type="button"
+                              onClick={() => copyToClipboard(donation.donor)}
+                            >
                               <Copy className="w-4 h-4" />
                             </button>
                           </span>
