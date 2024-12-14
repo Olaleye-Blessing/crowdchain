@@ -268,7 +268,7 @@ const CampaignForm = () => {
                           >
                             <Checkbox
                               id={value}
-                              disabled={selectedCategories.length >= 5}
+                              checked={selectedCategories.includes(value)}
                               className="mr-1"
                               onCheckedChange={(checked) =>
                                 onChangeCategory(value, checked as boolean)

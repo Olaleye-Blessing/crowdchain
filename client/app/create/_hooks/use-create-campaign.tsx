@@ -50,6 +50,11 @@ export const useCreateCampaign = () => {
   function onChangeCategory(category: string, checked: boolean) {
     let categories = [...(form.getValues("categories") || [])];
 
+    if (checked && categories.length === 4)
+      return form.setError("categories", {
+        message: "Maximum of 4 categories",
+      });
+
     if (checked) {
       categories.push(category);
     } else {
@@ -58,7 +63,7 @@ export const useCreateCampaign = () => {
 
     form.setValue("categories", categories);
 
-    if (categories.length > 0 && categories.length <= 5)
+    if (categories.length > 0 && categories.length <= 4)
       form.clearErrors("categories");
   }
 
