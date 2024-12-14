@@ -2,7 +2,7 @@
 
 import { defineChain } from "viem";
 import { http, createConfig } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { baseSepolia } from "wagmi/chains";
 import { coinbaseWallet, injected, metaMask } from "wagmi/connectors";
 import { clientEnv } from "@/constants/env/client";
 import { getDefaultConfig } from "connectkit";
@@ -15,19 +15,6 @@ const anvil = defineChain({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: { http: [clientEnv.NEXT_PUBLIC_ANVIL_RPC_URL] },
-  },
-  testnet: true,
-});
-
-// https://dashboard.tenderly.co/
-const tenderly = defineChain({
-  id: 11155111,
-  name: "Tenderly",
-  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: {
-      http: [clientEnv.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL],
-    },
   },
   testnet: true,
 });
@@ -47,13 +34,16 @@ export const wagmiConfig = createConfig(
       coinbaseWallet(),
     ],
     chains: (() =>
-      process.env.NODE_ENV === "production" ? [sepolia] : [anvil, tenderly])(),
+      process.env.NODE_ENV === "production" ? [baseSepolia] : [anvil])(),
     transports:
       process.env.NODE_ENV === "production"
-        ? { [sepolia.id]: http(clientEnv.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL) }
+        ? {
+            [baseSepolia.id]: http(
+              clientEnv.NEXT_PUBLIC_BASE_SEPOLIA_ALCHEMY_RPC_URL,
+            ),
+          }
         : {
             [anvil.id]: http(),
-            [tenderly.id]: http(clientEnv.NEXT_PUBLIC_ETH_SEPOLIA_RPC_URL),
           },
 
     // Required API Keys
