@@ -32,6 +32,8 @@ export const wagmiAbi = parseAbi([
   "event CampaignFundWithdrawn(uint256 indexed campaignId, address indexed owner, address indexed coin, uint256 amount)",
 
   // ============= ERRORS =============
+  "error Campaign__CampaignCreationFailed(string reason)",
+
   "error CampaignDonation__EmptyDonation()",
   "error Campaign__CoinNotSupported(address coin)",
   "error CampaignDonation__DonationFailed(string reason)",

@@ -19,6 +19,7 @@ import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { clientEnv } from "@/constants/env/client";
 import { CROWDCHAIN_DECIMAL_PRECISION } from "@/constants/contracts";
+import { getCreateErrMsg } from "../_utils/error-msg";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
@@ -153,8 +154,6 @@ export const useCreateCampaign = () => {
       update: (props: ToasterToast) => void;
     } | null = null;
 
-    console.log("__ Submit form __");
-
     try {
       txToast = toast({
         title: "Uploading image",
@@ -229,9 +228,7 @@ export const useCreateCampaign = () => {
       // TODO: Learn how to handle errors
       txToast!.update({
         id: txToast!.id,
-        title:
-          (error as Error).message ||
-          "There is an error creating your campaign",
+        title: getCreateErrMsg(error),
         variant: "destructive",
       });
     } finally {
