@@ -19,6 +19,7 @@ import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { Controller, useForm } from "react-hook-form";
 import { useConfig, useWriteContract } from "wagmi";
+import { postErrMsg } from "./get-error-msg";
 
 type IUpdateForm = Pick<IUpdate, "title" | "content">;
 
@@ -80,11 +81,9 @@ export default function PostUpdates({
 
       form.reset();
     } catch (error) {
-      console.log("__ ERROR __", error);
       txToast!.update({
         id: txToast!.id,
-        title:
-          (error as Error).message || "There is an error posting your update.",
+        title: postErrMsg(error),
         variant: "destructive",
       });
     } finally {

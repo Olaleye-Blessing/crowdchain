@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { ICampaignDetail } from "@/interfaces/campaign";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { useWriteContract } from "wagmi";
+import { getWithdrawErrMsg } from "../_utils/getErrorMsg";
 
 interface WithdrawFundsProps extends Pick<ICampaignDetail, "id"> {
   buttonProps?: ButtonProps;
@@ -32,8 +33,10 @@ export default function WithdrawFunds({ id, buttonProps }: WithdrawFundsProps) {
         title: "Funds has been sent to your wallet",
       });
     } catch (error) {
-      console.log("__ THERE IS AN ERROR __");
-      console.log(error);
+      toast({
+        description: getWithdrawErrMsg(error),
+        variant: "destructive",
+      });
     }
   };
 

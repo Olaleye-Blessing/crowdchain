@@ -223,7 +223,6 @@ export const useCreateCampaign = () => {
       form.reset();
       setPreview(null);
     } catch (error) {
-      // TODO: Learn how to handle errors
       txToast!.update({
         id: txToast!.id,
         title: getCreateErrMsg(error),

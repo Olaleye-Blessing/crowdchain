@@ -33,6 +33,7 @@ export const wagmiAbi = parseAbi([
 
   // ============= ERRORS =============
   "error Campaign__CampaignCreationFailed(string reason)",
+  "error CampaignDonation__NotCampaignOwner()",
 
   "error CampaignDonation__EmptyDonation()",
   "error Campaign__CoinNotSupported(address coin)",
@@ -46,4 +47,8 @@ export const wagmiAbi = parseAbi([
   "error CampaignDonation__NoDonationFound(uint256 campaignId)",
   "error CampaignDonation__InsufficientDonation(uint256 campaignId, uint256 amountToRefund, uint256 amountDonated)",
   "error CampaignDonation__RefundFailed(uint256 campaignId)",
+  "error CampaignDonation__WithdrawalFailed()",
+
+  "error CampaignUpdates__IvalidData(string reason)",
+  "error CampaignUpdates__UpdateNotExist(uint256 updateId)",
 ]);

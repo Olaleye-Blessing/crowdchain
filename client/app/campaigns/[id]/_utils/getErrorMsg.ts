@@ -103,3 +103,36 @@ export const getRefundErrorMsg = (error: unknown, coinDecimals: number) => {
 
   return "Refund failed. An unknown contract error occurred. Contact support if issue persist.";
 };
+
+type CustomWithdrawErrorType =
+  | "CampaignDonation__CampaignAlreadyClaimed"
+  | "CampaignDonation__NotCampaignOwner"
+  | "CampaignDonation__WithdrawalFailed"
+  | "CampaignDonation__WithdrawNotAllowed";
+
+export const getWithdrawErrMsg = (error: unknown) => {
+  const originalError = getGeneralContractError(error);
+
+  if (typeof originalError === "string") return originalError;
+
+  const errorName = originalError.data?.errorName as CustomWithdrawErrorType;
+  const defaultMsg = "Withdraw Failed. Try again later or contact support.";
+
+  if (errorName === "CampaignDonation__CampaignAlreadyClaimed") {
+    return "This campaign has already been claimed.";
+  }
+
+  if (errorName === "CampaignDonation__NotCampaignOwner") {
+    return "This campaign does not belong to the current address.";
+  }
+
+  if (errorName === "CampaignDonation__WithdrawalFailed") {
+    return defaultMsg;
+  }
+
+  if (errorName === "CampaignDonation__WithdrawNotAllowed") {
+    return (originalError.data?.args?.[0] as string) || defaultMsg;
+  }
+
+  return defaultMsg;
+};
