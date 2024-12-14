@@ -321,7 +321,7 @@ export class CrowdchainStatsService {
           totalDonated: 0,
           totalDonors: 0,
           totalCampaigns: 0,
-          lastProcessedBlock: 0,
+          lastProcessedBlock: envVars.CROWDCHAIN_DEPLOYMENT_BLOCK,
         };
       }
 
