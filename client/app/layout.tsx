@@ -4,6 +4,7 @@ import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/toaster";
 import Footer from "@/components/footer";
 import Providers from "@/components/providers";
+import WrongNetworkAlert from "./wrong-network-alert";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <Navbar />
+          <WrongNetworkAlert />
           {children}
           <Toaster />
           <Footer />

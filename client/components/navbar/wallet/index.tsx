@@ -49,7 +49,6 @@ const Wallet = () => {
             <div className="h-[0.1px] w-full bg-muted" />
             <ul className="flex flex-col text-left mt-2">
               {connetedPages.map((page) => {
-                const href = "";
                 return (
                   <li key={page.label} className="mb-2">
                     <Link
