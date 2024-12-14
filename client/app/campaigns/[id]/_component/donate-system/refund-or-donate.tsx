@@ -6,13 +6,17 @@ import { ICampaignDetail } from "@/interfaces/campaign";
 import { ISupportedCoins } from "@/hooks/use-supported-coins";
 import Donate from "./donate";
 import Refund from "./refund";
+import { shareLink } from "@/utils/share-link";
 
 interface RefundOrDonateProps {
   campaign: ICampaignDetail;
   supportedCoins: ISupportedCoins;
 }
 
-export default function RefundOrDonate({ campaign, supportedCoins }: RefundOrDonateProps) {
+export default function RefundOrDonate({
+  campaign,
+  supportedCoins,
+}: RefundOrDonateProps) {
   const currentTime = Date.now() / 1000;
   const canDonate = currentTime < campaign.deadline;
   const canRefund = currentTime < campaign.refundDeadline;
@@ -58,7 +62,18 @@ export default function RefundOrDonate({ campaign, supportedCoins }: RefundOrDon
           )}
         </TabsContent>
       </Tabs>
-      <Button variant="outline" className="w-full mt-4">
+      <Button
+        variant="outline"
+        className="w-full mt-4"
+        type="button"
+        onClick={() =>
+          shareLink({
+            title: `Crowdchain`,
+            text: `Share ${campaign.title} with potential donors`,
+            url: window.location.href,
+          })
+        }
+      >
         Share Campaign
       </Button>
     </section>
