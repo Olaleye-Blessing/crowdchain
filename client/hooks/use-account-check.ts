@@ -23,12 +23,12 @@ export const useAccountCheck = () => {
     try {
       await switchChainAsync({ chainId: configChainId });
 
-      toast({ title: `Switched to the ${supportedNetwork.name}.` });
+      toast({ title: `Switched to ${supportedNetwork.name} network.` });
 
       return true;
     } catch (error) {
       toast({
-        title: `Manually switch to the ${supportedNetwork.name} in your wallet.`,
+        title: `Manually switch to ${supportedNetwork.name} network in your wallet.`,
         variant: "destructive",
       });
 
@@ -38,5 +38,17 @@ export const useAccountCheck = () => {
 
   const isCorrectNetwork = () => currentChainId === configChainId;
 
-  return { isCorrectNetwork, isAccountConnected, switchToCorrectNetwork };
+  const isAccountAndCorrectNetwork = async () => {
+    return (
+      (isAccountConnected() && isCorrectNetwork()) ||
+      (await switchToCorrectNetwork())
+    );
+  };
+
+  return {
+    isCorrectNetwork,
+    isAccountConnected,
+    switchToCorrectNetwork,
+    isAccountAndCorrectNetwork,
+  };
 };

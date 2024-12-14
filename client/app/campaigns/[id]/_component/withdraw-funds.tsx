@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, ButtonProps } from "@/components/ui/button";
+import { useAccountCheck } from "@/hooks/use-account-check";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { toast } from "@/hooks/use-toast";
 import { ICampaignDetail } from "@/interfaces/campaign";
@@ -12,11 +13,14 @@ interface WithdrawFundsProps extends Pick<ICampaignDetail, "id"> {
 }
 
 export default function WithdrawFunds({ id, buttonProps }: WithdrawFundsProps) {
+  const { isAccountAndCorrectNetwork } = useAccountCheck();
   const { writeContractAsync } = useWriteContract();
   const contractAddress = useCrowdchainAddress();
 
   const withdraw = async () => {
     try {
+      if (!(await isAccountAndCorrectNetwork())) return;
+
       await writeContractAsync({
         abi: wagmiAbi,
         address: contractAddress,

@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAccountCheck } from "@/hooks/use-account-check";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { toast, ToasterToast } from "@/hooks/use-toast";
 import { IUpdate } from "@/interfaces/update";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { Controller, useForm } from "react-hook-form";
-import { useAccount, useConfig, useWriteContract } from "wagmi";
+import { useConfig, useWriteContract } from "wagmi";
 
 type IUpdateForm = Pick<IUpdate, "title" | "content">;
 
@@ -30,8 +31,8 @@ export default function PostUpdates({
   campaignId,
   className,
 }: PostUpdatesProps) {
+  const { isAccountAndCorrectNetwork } = useAccountCheck();
   const config = useConfig();
-  const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const contractAddress = useCrowdchainAddress();
   const form = useForm<IUpdateForm>({
@@ -47,8 +48,7 @@ export default function PostUpdates({
   } = form;
 
   const onPostUpdate = async (data: IUpdateForm) => {
-    if (!address)
-      return toast({ title: "Connect your wallet", variant: "destructive" });
+    if (!(await isAccountAndCorrectNetwork())) return;
 
     let txToast: {
       id: string;

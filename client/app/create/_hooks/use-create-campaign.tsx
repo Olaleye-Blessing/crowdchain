@@ -20,10 +20,12 @@ import { waitForTransactionReceipt } from "@wagmi/core";
 import { clientEnv } from "@/constants/env/client";
 import { CROWDCHAIN_DECIMAL_PRECISION } from "@/constants/contracts";
 import { getCreateErrMsg } from "../_utils/error-msg";
+import { useAccountCheck } from "@/hooks/use-account-check";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
 export const useCreateCampaign = () => {
+  const { isAccountAndCorrectNetwork } = useAccountCheck();
   const chains = useChains();
   const chainId = useChainId();
   const config = useConfig();
@@ -89,12 +91,6 @@ export const useCreateCampaign = () => {
   }
 
   const onSubmit = async (data: ICampaignForm) => {
-    if (!accountAddress)
-      return toast({
-        title: "Connect your wallet",
-        variant: "destructive",
-      });
-
     if (!data.coverImage)
       return toast({
         title: "Add your campaign cover image",
@@ -147,6 +143,8 @@ export const useCreateCampaign = () => {
           variant: "destructive",
         });
     }
+
+    if (!(await isAccountAndCorrectNetwork())) return;
 
     let txToast: {
       id: string;

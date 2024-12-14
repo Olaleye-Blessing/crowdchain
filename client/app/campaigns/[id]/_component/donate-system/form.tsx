@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Address } from "viem";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ISupportedCoins } from "@/hooks/use-supported-coins";
+import { useAccountCheck } from "@/hooks/use-account-check";
 
 interface FormProps {
   title: string;
@@ -33,6 +34,7 @@ export default function Form({
   supportedCoins,
   ...props
 }: FormProps) {
+  const { isAccountAndCorrectNetwork } = useAccountCheck();
   const { supportedTokens, isFetching, error } = supportedCoins;
   const amountLabel = token
     ? supportedTokens[token as keyof typeof supportedTokens]?.name
@@ -41,9 +43,12 @@ export default function Form({
   return (
     <form
       className="flex flex-col space-y-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (!token) return;
+
+        if (!token || !(await isAccountAndCorrectNetwork())) {
+          return;
+        }
 
         props.handleSubmit();
       }}
