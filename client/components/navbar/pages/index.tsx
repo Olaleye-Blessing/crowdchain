@@ -41,6 +41,18 @@ const Pages = () => {
             </Link>
           </NavigationMenuItem>
 
+          <NavigationMenuItem className="w-full">
+            <Link href="/create" legacyBehavior passHref>
+              <NavigationMenuLink
+                className={navigationMenuTriggerStyle({
+                  className: "!w-full !justify-start md:hidden",
+                })}
+              >
+                Create Campaign
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
           <NavigationMenuItem className="hidden md:inline-flex">
             <NavigationMenuTrigger>Campaigns</NavigationMenuTrigger>
             <NavigationMenuContent className="px-3 py-2">
