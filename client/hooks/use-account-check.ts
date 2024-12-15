@@ -39,10 +39,9 @@ export const useAccountCheck = () => {
   const isCorrectNetwork = () => currentChainId === configChainId;
 
   const isAccountAndCorrectNetwork = async () => {
-    return (
-      (isAccountConnected() && isCorrectNetwork()) ||
-      (await switchToCorrectNetwork())
-    );
+    if (!isAccountConnected()) return false;
+
+    return isCorrectNetwork() || (await switchToCorrectNetwork());
   };
 
   return {
