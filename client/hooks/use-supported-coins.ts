@@ -1,5 +1,5 @@
 import { Address } from "viem";
-import { QueryObserverResult } from "@tanstack/react-query";
+import { QueryObserverResult, UseQueryOptions } from "@tanstack/react-query";
 import { useCrowdchainRequest } from "./use-crowdchain-request";
 
 export type ISupportedTokensDetails = {
@@ -16,7 +16,9 @@ export type ISupportedCoins = {
   refetch: () => Promise<QueryObserverResult<ISupportedTokensDetails, Error>>;
 };
 
-export const useSupportedCoins = (): ISupportedCoins => {
+export const useSupportedCoins = (
+  options?: Omit<UseQueryOptions<ISupportedTokensDetails>, "queryKey">,
+): ISupportedCoins => {
   const {
     data: supportedTokens = {},
     isFetching,
@@ -25,6 +27,7 @@ export const useSupportedCoins = (): ISupportedCoins => {
   } = useCrowdchainRequest<ISupportedTokensDetails>({
     url: `/crowdchain/coins`,
     options: {
+      ...options,
       queryKey: ["list-of-supported-coins"],
     },
   });

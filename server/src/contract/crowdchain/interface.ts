@@ -17,7 +17,7 @@ export interface IUpdate {
 
 export interface ITotalStats {
   totalDonated: number;
-  totalDonors: number;
+  // totalDonors: number;
   totalCampaigns: number;
   lastProcessedBlock: number;
 }

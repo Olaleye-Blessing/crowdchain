@@ -1,5 +1,6 @@
 "use client";
 
+import { useSupportedCoins } from "@/hooks/use-supported-coins";
 import { TotalStats } from "../../interfaces";
 import { formatUSD } from "./format-digit";
 import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
@@ -11,6 +12,10 @@ export default function Details() {
       queryKey: ["crowdchain-stats", "homepage"],
       staleTime: 1000 * 60 * 59,
     },
+  });
+  const { supportedTokens } = useSupportedCoins({
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const totalDonated = totalStats?.totalDonated
@@ -25,7 +30,10 @@ export default function Details() {
           body={totalStats?.totalCampaigns || "-"}
         />
         <Detail title="Amount Donated" body={totalDonated} />
-        <Detail title="Donators" body={totalStats?.totalDonors || "-"} />
+        <Detail
+          title="Supported Tokens"
+          body={Object.keys(supportedTokens).length || "-"}
+        />
       </ul>
     </section>
   );

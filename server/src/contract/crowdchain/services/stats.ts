@@ -319,7 +319,7 @@ export class CrowdchainStatsService {
       } else {
         existingStats = (await TotalStats.findOne({})) || {
           totalDonated: 0,
-          totalDonors: 0,
+          // totalDonors: 0,
           totalCampaigns: 0,
           lastProcessedBlock: envVars.CROWDCHAIN_DEPLOYMENT_BLOCK,
         };
@@ -392,7 +392,7 @@ export class CrowdchainStatsService {
       );
 
       const stats = {
-        totalDonors: uniqueDonors.size + existingStats.totalDonors,
+        // totalDonors: uniqueDonors.size + existingStats.totalDonors,
         totalCampaigns: +formatUnits(totalCampaigns, 0),
         totalDonated:
           +formatUnits(totalAmount, this.DECIMAL_PRECISION) +
