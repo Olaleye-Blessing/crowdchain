@@ -4,12 +4,15 @@ import Lists from "./lists";
 
 export default function Campaigns() {
   return (
-    <section className="mt-10">
+    <section>
       <div className="layout">
-        <header className="flex items-center justify-between flex-wrap">
-          <h2>Featured Campaigns</h2>
+        <header className="flex items-center justify-between flex-wrap mb-4 sm:mb-2">
+          <h2 className="mb-1">Featured Campaigns</h2>
           <Link
-            className={buttonVariants({ variant: "link", className: "!pr-0" })}
+            className={buttonVariants({
+              variant: "link",
+              className: "!p-0 !mb-1",
+            })}
             href="/campaigns"
           >
             Explore More

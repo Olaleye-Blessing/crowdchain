@@ -3,7 +3,7 @@ import { causes } from "./utils";
 
 export default function Cause() {
   return (
-    <section className="bg-white mt-8 py-8">
+    <section>
       <div className="layout">
         <ul className="lg:max-w-[60rem] lg:mx-auto">
           {causes.map((cause) => {

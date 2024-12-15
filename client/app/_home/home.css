@@ -1,0 +1,7 @@
+.homePage > section:nth-child(odd) {
+  @apply bg-white;
+}
+
+.homePage > section {
+  @apply py-12 md:py-20 lg:py-24;
+}

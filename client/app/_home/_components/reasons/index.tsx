@@ -2,7 +2,7 @@ import { reasons } from "./reasons";
 
 export default function Reasons() {
   return (
-    <section className="py-12 bg-white">
+    <section>
       <div className="layout">
         <header className="flex items-center justify-center text-center mb-8">
           <h2>Why Choose ČrôwdChǎin?</h2>

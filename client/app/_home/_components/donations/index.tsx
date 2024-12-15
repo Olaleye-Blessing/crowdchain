@@ -3,7 +3,7 @@ import Recent from "./recent";
 
 export default function Donations() {
   return (
-    <section className="bg-white mt-12 py-12">
+    <section className="mt-12">
       <Details />
       <Recent />
     </section>

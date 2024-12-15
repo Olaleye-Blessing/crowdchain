@@ -4,7 +4,7 @@ import TotalCampaigns from "./total-campaigns";
 
 export default function Ready() {
   return (
-    <section className="bg-[#e9fbe9] py-12">
+    <section className="!bg-[#e9fbe9]">
       <div className="layout">
         <header className="text-center mb-8">
           <h2>Ready to Make a Difference?</h2>

@@ -2,7 +2,7 @@ import { steps } from "./steps";
 
 export default function HowItWorks() {
   return (
-    <section className="py-12">
+    <section>
       <div className="layout">
         <header className="flex items-center justify-center text-center mb-8">
           <h2>How It Works</h2>

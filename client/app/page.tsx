@@ -6,12 +6,13 @@ import Reasons from "./_home/_components/reasons";
 import Donations from "./_home/_components/donations";
 import Cause from "./_home/_components/cause";
 import RecentUpdates from "./_home/_components/recent-updates";
+import "./_home/home.css";
 
 export default function Home() {
   return (
     <>
       <Header />
-      <main className="pb-4">
+      <main className="homePage">
         <Donations />
         <Campaigns />
         <Cause />

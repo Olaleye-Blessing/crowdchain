@@ -29,7 +29,7 @@ export default function RecentUpdates() {
   if (isFetching || error || !updates || updates?.length === 0) return null;
 
   return (
-    <section className="mt-6">
+    <section>
       <header className="text-center">
         <h2>Recent Updates</h2>
       </header>
