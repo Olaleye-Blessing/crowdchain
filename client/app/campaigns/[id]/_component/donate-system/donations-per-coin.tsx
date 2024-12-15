@@ -1,4 +1,5 @@
 import Loading from "@/app/loading";
+import { publicConfig } from "@/configs/public";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
 import { ISupportedCoins } from "@/hooks/use-supported-coins";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
@@ -22,6 +23,7 @@ export default function DonationsPerCoin({
   });
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "NewDonation",
@@ -31,6 +33,7 @@ export default function DonationsPerCoin({
   });
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "DonationRefunded",

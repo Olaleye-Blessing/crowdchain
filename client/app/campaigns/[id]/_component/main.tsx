@@ -6,6 +6,7 @@ import Loading from "@/app/loading";
 import { useReadContract, useWatchContractEvent } from "wagmi";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+import { publicConfig } from "@/configs/public";
 
 export default function Main({ id }: { id: string }) {
   const { data, error, refetch } = useReadContract({
@@ -18,6 +19,7 @@ export default function Main({ id }: { id: string }) {
   const campaign = data && constructCampaign(data);
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "NewDonation",
@@ -27,6 +29,7 @@ export default function Main({ id }: { id: string }) {
   });
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "DonationRefunded",

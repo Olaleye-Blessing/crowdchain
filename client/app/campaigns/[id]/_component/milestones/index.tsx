@@ -12,6 +12,7 @@ import { useReadContract, useWatchContractEvent } from "wagmi";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import Loading from "@/app/loading";
 import { useCrowdchainAddress } from "@/hooks/use-crowdchain-address";
+import { publicConfig } from "@/configs/public";
 
 interface MilestonesProps {
   campaignId: ICampaignDetail["id"];
@@ -32,6 +33,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
   const withdrawable = data?.[2];
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "NewDonation",
@@ -42,6 +44,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
   });
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "DonationRefunded",
@@ -51,6 +54,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
   });
 
   useWatchContractEvent({
+    config: publicConfig,
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "CampaignFundWithdrawn",
@@ -127,7 +131,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
                           Target:{" "}
                         </span>
                         <span className="text-sm mt-[0.1rem]">
-                          {milestone.targetAmount} ETH
+                          {milestone.targetAmount} USD
                         </span>
                       </p>
                       <p className="flex items-center justify-start">
