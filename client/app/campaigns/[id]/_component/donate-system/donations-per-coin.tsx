@@ -14,35 +14,12 @@ export default function DonationsPerCoin({
   campaignId,
   supportedCoins,
 }: DonationsPerCoinProps) {
-  const { supportedTokens } = supportedCoins;
-
   const { data, isFetching, error, refetch } = useReadContract({
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     functionName: "getAmountRaisedPerCoin",
     args: [BigInt(campaignId)],
   });
-
-  const [_coins, _amounts] = data || [];
-
-  const _donations: { coin: string; amount: number }[] = [];
-
-  _coins?.reduce((prev, currentCoin, index) => {
-    const amount = _amounts?.[index];
-
-    if (!amount) return prev;
-
-    const coin = supportedTokens[currentCoin];
-
-    // console.log({ coin, currentCoin });
-
-    _donations.push({
-      coin: coin?.name || "-",
-      amount: +formatUnits(amount, coin?.decimal || 18),
-    });
-
-    return _donations;
-  }, _donations);
 
   useWatchContractEvent({
     address: useCrowdchainAddress(),
@@ -61,6 +38,40 @@ export default function DonationsPerCoin({
       refetch();
     },
   });
+
+  if (supportedCoins.isFetching || supportedCoins.error) {
+    return (
+      <section className="border text-card-foreground shadow bg-card p-4 pt-3 rounded-lg">
+        <header>
+          <h2>Donation Per Coin</h2>
+        </header>
+        {supportedCoins.isFetching ? (
+          <Loading />
+        ) : (
+          <p className="error">Unable to load data</p>
+        )}
+      </section>
+    );
+  }
+
+  const [_coins, _amounts] = data || [];
+
+  const _donations: { coin: string; amount: number }[] = [];
+
+  _coins?.reduce((prev, currentCoin, index) => {
+    const amount = _amounts?.[index];
+
+    if (!amount) return prev;
+
+    const coin = supportedCoins.supportedTokens[currentCoin];
+
+    _donations.push({
+      coin: coin?.name || "-",
+      amount: +formatUnits(amount, coin?.decimal || 18),
+    });
+
+    return _donations;
+  }, _donations);
 
   return (
     <section className="border text-card-foreground shadow bg-card p-4 pt-3 rounded-lg">
