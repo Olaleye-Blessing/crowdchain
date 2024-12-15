@@ -66,11 +66,11 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
   return (
     <>
       <section className="mt-2">
-        <header className="mb-4">
+        <header className="mb-3 mt-1">
           <h2 className="sr-only">Milestones</h2>
-          <div className="-mt-2 flex items-center justify-start">
+          <div className="flex items-center justify-start flex-wrap">
             <p className="mr-2">Statuses: </p>
-            <ul className="inline-flex items-center justify-start">
+            <ul className="inline-flex items-center justify-start flex-wrap">
               {Object.values(milestoneStatuses).map((status, index) => (
                 <li key={status} className="text-xs mr-2 mt-[0.1rem]">
                   <span
@@ -125,7 +125,7 @@ export default function Milestones({ campaignId, owned }: MilestonesProps) {
                     <p className="text-gray-600 mb-2 max-h-56 overflow-auto">
                       {milestone.description}
                     </p>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm flex-wrap">
                       <p className="flex items-center justify-start">
                         <span className="text-lg font-semibold mr-1">
                           Target:{" "}
