@@ -14,7 +14,7 @@ export default function Donations({ account }: { account: IAddress }) {
     loadMoreDonations,
     isFetching,
     latestBlock,
-    toBlock,
+    lastFetchedBlock,
   } = useFetchDonations({ account });
 
   return (
@@ -114,7 +114,9 @@ export default function Donations({ account }: { account: IAddress }) {
         <p className="mr-3 text-sm text-muted-foreground">
           <span className="">Current block: </span>
           <span className="font-semibold">
-            {toBlock ? formatNumber(+formatUnits(toBlock, 0)) : "-"}
+            {lastFetchedBlock
+              ? formatNumber(+formatUnits(lastFetchedBlock, 0))
+              : "-"}
           </span>
         </p>
         <p className="mr-3 text-sm text-muted-foreground">
