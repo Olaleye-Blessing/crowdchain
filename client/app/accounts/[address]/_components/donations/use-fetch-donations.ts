@@ -38,7 +38,7 @@ export const useFetchDonations = ({ account }: { account: IAddress }) => {
     fromBlock: bigint,
     _latestBlock: bigint | null,
     _donations: IAddressDonation[] = [],
-  ) => {
+  ): Promise<IAddressDonation[]> => {
     if (attempt > 5) {
       setLastFetchedBlock(fromBlock);
       setLatestBlock(_latestBlock);
