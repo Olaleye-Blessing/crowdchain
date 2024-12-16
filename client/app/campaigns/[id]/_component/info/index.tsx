@@ -9,13 +9,15 @@ import Donations from "./donations";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Updates from "./updates";
 
-const tabs = ["about", "donations", "milestones", "updates"];
+const tabs = ["about", "donations", "updates", "milestones"];
 
 export default function Info({ campaign }: { campaign: ICampaignDetail }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { address } = useAccount();
+  const _tabs = [...tabs];
+  if (campaign.totalMilestones === 0) _tabs.pop();
 
   const selectedTab = searchParams.get("tab") || tabs[0];
 
@@ -30,7 +32,7 @@ export default function Info({ campaign }: { campaign: ICampaignDetail }) {
     <section className="mt-4 border text-card-foreground shadow bg-card p-4 rounded-lg">
       <Tabs defaultValue={selectedTab}>
         <TabsList className="w-full overflow-x-auto">
-          {tabs.map((tab) => {
+          {_tabs.map((tab) => {
             return (
               <TabsTrigger
                 key={tab}
@@ -51,15 +53,17 @@ export default function Info({ campaign }: { campaign: ICampaignDetail }) {
         <TabsContent value="donations">
           <Donations campaign={campaign} />
         </TabsContent>
-        <TabsContent value="milestones">
-          <Milestones
-            campaignId={campaign.id}
-            owned={campaign.owner.toLowerCase() === address?.toLowerCase()}
-          />
-        </TabsContent>
         <TabsContent value="updates">
           <Updates campaign={campaign} />
         </TabsContent>
+        {campaign.totalMilestones > 0 && (
+          <TabsContent value="milestones">
+            <Milestones
+              campaignId={campaign.id}
+              owned={campaign.owner.toLowerCase() === address?.toLowerCase()}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </section>
   );
