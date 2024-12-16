@@ -21,6 +21,7 @@ import { Progress } from "../ui/progress";
 import { ICampaignDetail } from "@/interfaces/campaign";
 import { cn } from "@/lib/utils";
 import CampaignInfo from "./campaign-info";
+import { formatUsd } from "@/utils/format-USD";
 
 interface CampaignProps {
   campaign: ICampaignDetail;
@@ -69,8 +70,10 @@ export default function Campaign({
                 className="w-full h-2 border-primary border"
               />
               <div className="flex justify-between text-muted-foreground font-bold text-sm sm:text-base">
-                <span className="font-medium">{campaign.amountRaised} USD</span>
-                <span className="font-medium">{campaign.goal} USD</span>
+                <span className="font-medium">
+                  {formatUsd(campaign.amountRaised)}
+                </span>
+                <span className="font-medium">{formatUsd(campaign.goal)}</span>
               </div>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-4 text-sm sm:text-base">

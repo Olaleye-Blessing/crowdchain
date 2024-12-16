@@ -1,5 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { ICampaignDetail } from "@/interfaces/campaign";
+import { formatUsd } from "@/utils/format-USD";
 
 interface CampaignProgreeProps
   extends Pick<ICampaignDetail, "amountRaised" | "goal"> {}
@@ -18,8 +19,8 @@ export default function CampaignProgress({
         className="w-full h-4 border-primary border"
       />
       <div className="flex justify-between mt-2 text-sm sm:text-base">
-        <span className="font-medium">{amountRaised} USD</span>
-        <span className="font-medium">{goal} USD</span>
+        <span className="font-medium">{formatUsd(amountRaised)}</span>
+        <span className="font-medium">{formatUsd(goal)}</span>
       </div>
     </div>
   );
