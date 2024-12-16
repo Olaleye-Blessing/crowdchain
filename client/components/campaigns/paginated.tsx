@@ -1,8 +1,8 @@
 import { ReadContractErrorType } from "viem";
 import { ICampaignDetail } from "@/interfaces/campaign";
 import Loading from "@/app/loading";
-import Campaign from "./campaign";
 import { Button } from "../ui/button";
+import Campaigns from ".";
 
 interface PaginatedCampaignsProps {
   totalCampaigns: number | null;
@@ -24,15 +24,11 @@ export default function PaginatedCampaigns({
   return (
     <>
       {Boolean(totalCampaigns) && (
-        <ul className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(18rem,_1fr))] md:grid-cols-[repeat(auto-fit,minmax(21rem,_1fr))]">
-          {campaigns.map((cam) => (
-            <Campaign
-              key={cam.id}
-              campaign={cam}
-              className="max-w-96 md:max-w-[28rem]"
-            />
-          ))}
-        </ul>
+        <Campaigns
+          type="paginated"
+          campaigns={campaigns}
+          emptyClass="text-sm"
+        />
       )}
       {!isFetching && !error && totalCampaigns === 0 && (
         <p className="text-center">{emptyCampaignsMsg}</p>

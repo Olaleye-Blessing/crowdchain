@@ -5,6 +5,7 @@ import { ISupportedCoins } from "@/hooks/use-supported-coins";
 import { wagmiAbi } from "@/lib/contracts/crowd-chain/abi";
 import { formatUnits } from "viem";
 import { useReadContract, useWatchContractEvent } from "wagmi";
+import AnimatedNumber from "@/components/animated-number";
 
 interface DonationsPerCoinProps {
   campaignId: number;
@@ -93,7 +94,9 @@ export default function DonationsPerCoin({
                   className="flex items-center justify-between mb-2 last:mb-0"
                 >
                   <p>{don.coin}</p>
-                  <p className="font-semibold">{don.amount}</p>
+                  <p className="font-semibold">
+                    <AnimatedNumber key={don.coin} value={don.amount} />
+                  </p>
                 </li>
               ))}
             </ul>

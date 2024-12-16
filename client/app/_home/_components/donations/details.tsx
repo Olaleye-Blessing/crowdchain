@@ -2,53 +2,43 @@
 
 import { useSupportedCoins } from "@/hooks/use-supported-coins";
 import { TotalStats } from "../../interfaces";
-import { formatUSD } from "./format-digit";
 import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
+import Detail from "./detail";
 
 export default function Details() {
-  const { data: totalStats } = useCrowdchainRequest<TotalStats>({
-    url: "/crowdchain/totalStats",
-    options: {
-      queryKey: ["crowdchain-stats", "homepage"],
-      staleTime: 1000 * 60 * 59,
-    },
-  });
-  const { supportedTokens } = useSupportedCoins({
+  const { data: totalStats, isFetching: isFetchingTotalStats } =
+    useCrowdchainRequest<TotalStats>({
+      url: "/crowdchain/totalStats",
+      options: {
+        queryKey: ["crowdchain-stats", "homepage"],
+        staleTime: 1000 * 60 * 59,
+      },
+    });
+  const { supportedTokens, isFetching: isFetchingCoins } = useSupportedCoins({
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
-
-  const totalDonated = totalStats?.totalDonated
-    ? `~${formatUSD(totalStats.totalDonated)}`
-    : "-";
 
   return (
     <section className="layout">
       <ul className="bg-primary grid grid-cols-1 gap-4 max-w-[75rem] mx-auto rounded-md py-10 px-5 md:grid-cols-3">
         <Detail
           title="Campaigns on Crowdchain"
-          body={totalStats?.totalCampaigns || "-"}
+          body={totalStats?.totalCampaigns || 0}
+          isLoading={isFetchingTotalStats}
         />
-        <Detail title="Amount Donated" body={totalDonated} />
+        <Detail
+          title="Amount Donated"
+          body={totalStats?.totalDonated || 0}
+          isLoading={isFetchingTotalStats}
+          type="amount"
+        />
         <Detail
           title="Supported Tokens"
-          body={Object.keys(supportedTokens).length || "-"}
+          body={Object.keys(supportedTokens).length}
+          isLoading={isFetchingCoins}
         />
       </ul>
     </section>
-  );
-}
-
-interface DetailProps {
-  title: string;
-  body: string | number;
-}
-
-function Detail({ title, body }: DetailProps) {
-  return (
-    <li className="flex items-center justify-center flex-col text-white">
-      <p className="text-base font-light">{title}</p>
-      <p className="text-[2rem] font-bold">{body}</p>
-    </li>
   );
 }

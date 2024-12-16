@@ -1,4 +1,6 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
+import { motion } from "motion/react";
 import {
   Clock,
   Users,
@@ -34,7 +36,12 @@ export default function Campaign({
   const _progress = (+campaign.amountRaised * 100) / +campaign.goal;
 
   return (
-    <li className={cn("group max-w-[23.4375rem] lg:h-[34rem]", className)}>
+    <motion.li
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className={cn("group lg:h-[34rem]", className)}
+    >
       <Card className="h-full flex flex-col relative overflow-hidden">
         <figure className="w-full h-36 rounded-lg rounded-b-none overflow-hidden block items-center justify-center flex-shrink-0 sm:h-64">
           <img
@@ -51,7 +58,7 @@ export default function Campaign({
         </CardHeader>
         <div
           className={cn(
-            "flex flex-col h-full lg:absolute lg:top-[27rem] lg:group-hover:top-[17.4rem] lg:pt-4 lg:left-0 lg:right-0 lg:group-hover:rounded-lg lg:bg-white lg:more__shadow lg:transition-all lg:duration-300 lg:h-auto",
+            "flex flex-col h-full lg:absolute lg:top-[27rem] lg:group-hover:top-[15rem] lg:pt-4 lg:left-0 lg:right-0 lg:group-hover:rounded-lg lg:bg-white lg:more__shadow lg:transition-all lg:duration-300 lg:h-auto xl:group-hover:top-[16rem]",
             detailClassName,
           )}
         >
@@ -116,6 +123,6 @@ export default function Campaign({
           </CardFooter>
         </div>
       </Card>
-    </li>
+    </motion.li>
   );
 }

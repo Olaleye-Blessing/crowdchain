@@ -30,6 +30,7 @@
     "ethers": "^5",
     "immer": "^10.1.1",
     "lucide-react": "^0.428.0",
+    "motion": "^11.14.4",
     "nanoid": "^5.0.7",
     "next": "14.2.5",
     "react": "^18",

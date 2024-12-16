@@ -2,6 +2,7 @@
 
 import { useCrowdchainRequest } from "@/hooks/use-crowdchain-request";
 import { TotalStats } from "../../interfaces";
+import AnimatedNumber from "@/components/animated-number";
 
 export default function TotalCampaigns() {
   const { data } = useCrowdchainRequest<TotalStats>({
@@ -16,7 +17,11 @@ export default function TotalCampaigns() {
     <p className="text-sm text-center mt-8 text-gray-500">
       Total Campaigns on CrowdChain:{" "}
       <span className="font-bold">
-        {typeof data !== "undefined" ? data.totalCampaigns : "-"}
+        {typeof data !== "undefined" ? (
+          <AnimatedNumber value={data.totalCampaigns} />
+        ) : (
+          "-"
+        )}
       </span>
     </p>
   );

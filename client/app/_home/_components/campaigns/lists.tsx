@@ -16,7 +16,9 @@ export default function Lists() {
     },
   });
 
-  const campaigns = data?.campaigns.map((cam) => constructCampaign(cam));
+  const campaigns = data?.campaigns
+    .slice(0, 3)
+    .map((cam) => constructCampaign(cam));
 
   return (
     <div className="layout">
@@ -25,13 +27,7 @@ export default function Lists() {
       ) : error ? (
         <p>Error</p>
       ) : campaigns ? (
-        <Campaigns
-          campaigns={campaigns}
-          emptyClass="text-sm"
-          ulClass="flex flex-col sm:flex-row sm:justify-between sm:flex-wrap"
-          liClass="max-w-none sm:flex-1 sm:min-w-[20rem] sm:max-w-[21rem]"
-          detailClassName="lg:group-hover:top-60"
-        />
+        <Campaigns campaigns={campaigns} emptyClass="text-sm" />
       ) : null}
     </div>
   );
