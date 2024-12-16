@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatAddress } from "@/utils/format-address";
 import { Button } from "@/components/ui/button";
 import { formatUnits } from "viem";
+import { formatNumber } from "@/utils/format-number";
 
 export default function Donations({ account }: { account: IAddress }) {
   const {
@@ -97,7 +98,7 @@ export default function Donations({ account }: { account: IAddress }) {
                 )}
                 {isFetching && (
                   <tr>
-                    <td colSpan={3}>
+                    <td colSpan={4}>
                       <span className="flex items-center justify-center w-full pt-4">
                         <Loading />
                       </span>
@@ -113,18 +114,18 @@ export default function Donations({ account }: { account: IAddress }) {
         <p className="mr-3 text-sm text-muted-foreground">
           <span className="">Current block: </span>
           <span className="font-semibold">
-            {toBlock ? formatUnits(toBlock, 0) : "-"}
+            {toBlock ? formatNumber(+formatUnits(toBlock, 0)) : "-"}
           </span>
         </p>
         <p className="mr-3 text-sm text-muted-foreground">
           <span className="">Lastest block: </span>
           <span className="font-semibold">
-            {latestBlock ? formatUnits(latestBlock, 0) : "-"}
+            {latestBlock ? formatNumber(+formatUnits(latestBlock, 0)) : "-"}
           </span>
         </p>
       </div>
       {!isFetching && (
-        <div className="flex items-center justify-center mt-4">
+        <div className="flex items-center justify-center my-4">
           <Button
             type="button"
             className="w-full max-w-[15rem]"

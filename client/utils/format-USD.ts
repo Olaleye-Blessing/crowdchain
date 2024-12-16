@@ -1,4 +1,7 @@
+import { formatNumber } from "./format-number";
+
 export const formatUsd = (amount: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-    amount,
-  );
+  formatNumber(amount, {
+    locales: "en-US",
+    options: { style: "currency", currency: "USD" },
+  });

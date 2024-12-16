@@ -45,7 +45,7 @@ export const useFetchDonations = ({ account }: { account: IAddress }) => {
         const totalBlocks = _latestBlock - startBlock;
         const blocksPerPage = Math.ceil(
           Number(totalBlocks) /
-            (process.env.NODE_ENV === "production" ? 50 : 10),
+            (process.env.NODE_ENV === "production" ? 2000 : 10),
         );
 
         const fromBlock = startBlock + BigInt((page - 1) * blocksPerPage);

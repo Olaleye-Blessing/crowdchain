@@ -1,3 +1,8 @@
+import {
+  formatNumber as _formatNumber,
+  INumberFormatter,
+} from "@/utils/format-number";
+
 // https://stackoverflow.com/a/17369245
 const countDecimals = (value: number) => {
   if (Math.floor(value) === value) return 0;
@@ -13,11 +18,7 @@ const countDecimals = (value: number) => {
   return +str.split("-")[1] || 0;
 };
 
-export type IFormatter = {
-  // locales?: Intl.LocalesArgument;
-  locales?: string | string[];
-  options?: Intl.NumberFormatOptions;
-};
+export type IFormatter = INumberFormatter;
 
 export const formatNumber = (
   latest: number,
@@ -26,8 +27,5 @@ export const formatNumber = (
 ) => {
   let value = +latest.toFixed(countDecimals(original));
 
-  return new Intl.NumberFormat(
-    formatter?.locales ?? "en-US",
-    formatter?.options,
-  ).format(value);
+  return _formatNumber(value, formatter);
 };
