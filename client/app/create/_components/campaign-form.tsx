@@ -1,8 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useRef } from "react";
-import { MDXEditorMethods } from "@mdxeditor/editor";
 import { Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +20,7 @@ import ImportantNotice from "./important-notice";
 import { useCreateCampaign } from "../_hooks/use-create-campaign";
 import { categories } from "@/utils/categories";
 import { Textarea } from "@/components/ui/textarea";
+import Sample from "./sample";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
 
@@ -38,9 +37,16 @@ const validateCategories = (cats: string[]) => {
 };
 
 const CampaignForm = () => {
-  const mdxRef = useRef<MDXEditorMethods>(null);
-  const { form, onChangeCategory, handleChangeImage, onSubmit, preview } =
-    useCreateCampaign();
+  const {
+    totalSample,
+    mdxRef,
+    form,
+    onChangeCategory,
+    handleChangeImage,
+    onSubmit,
+    preview,
+    loadSample,
+  } = useCreateCampaign();
   const {
     formState: { errors },
     control,
@@ -50,6 +56,7 @@ const CampaignForm = () => {
 
   return (
     <div className="mx-auto px-4 py-8">
+      <Sample totalSample={totalSample} loadSample={loadSample} />
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="max-w-2xl mx-auto"

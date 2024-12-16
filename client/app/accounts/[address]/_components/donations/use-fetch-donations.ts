@@ -12,7 +12,6 @@ import {
 import { useState } from "react";
 import { IDonation } from "@/interfaces/donation";
 import { arrayOfUniqueObjs } from "@/utils/unique-arr-objects";
-import { sleep } from "@/utils/sleep";
 
 interface IAddressDonation extends Omit<IDonation, "timestamp" | "campaignId"> {
   campaignTitle: string;

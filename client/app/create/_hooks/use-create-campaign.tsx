@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import { parseUnits } from "viem";
 import {
   useAccount,
@@ -21,15 +21,24 @@ import { clientEnv } from "@/constants/env/client";
 import { CROWDCHAIN_DECIMAL_PRECISION } from "@/constants/contracts";
 import { getCreateErrMsg } from "../_utils/error-msg";
 import { useAccountCheck } from "@/hooks/use-account-check";
+import { pickRandomArrItem } from "@/utils/pick-random-arr-item";
+import {
+  sampleCampaignsWithMilestones,
+  sampleCampaignsWithoutMilestones,
+} from "../_utils/sample";
+import { MDXEditorMethods } from "@mdxeditor/editor";
 
 const oneDay = 1 * 24 * 60 * 60 * 1000;
+const totalSample =
+  sampleCampaignsWithMilestones.length +
+  sampleCampaignsWithoutMilestones.length;
 
 export const useCreateCampaign = () => {
+  const mdxRef = useRef<MDXEditorMethods>(null);
   const { isAccountAndCorrectNetwork } = useAccountCheck();
   const chains = useChains();
   const chainId = useChainId();
   const config = useConfig();
-  const { address: accountAddress } = useAccount();
   const contractAddress = useCrowdchainAddress();
   const { writeContractAsync } = useWriteContract();
   const { crowdchainInstance } = useCrowdchainInstance();
@@ -89,6 +98,26 @@ export const useCreateCampaign = () => {
     form.setValue("coverImage", file);
     setPreview(preview);
   }
+
+  const loadSample = (type: "with" | "without" | "random") => {
+    let options: ICampaignForm[] = [];
+
+    if (type === "with") {
+      options = [...sampleCampaignsWithMilestones];
+    } else if (type === "without") {
+      options = [...sampleCampaignsWithoutMilestones];
+    } else {
+      options = [
+        ...sampleCampaignsWithMilestones,
+        ...sampleCampaignsWithoutMilestones,
+      ];
+    }
+
+    const cam = pickRandomArrItem(options);
+
+    form.reset(cam);
+    mdxRef.current?.setMarkdown(cam.description);
+  };
 
   const onSubmit = async (data: ICampaignForm) => {
     if (!data.coverImage)
@@ -235,5 +264,14 @@ export const useCreateCampaign = () => {
     }
   };
 
-  return { form, preview, onChangeCategory, handleChangeImage, onSubmit };
+  return {
+    totalSample,
+    mdxRef,
+    form,
+    preview,
+    onChangeCategory,
+    handleChangeImage,
+    onSubmit,
+    loadSample,
+  };
 };
