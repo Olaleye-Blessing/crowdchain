@@ -14,6 +14,7 @@ import {
 import {
   CAMPAIGN_CREATED_EVENT,
   DONATION_EVENT,
+  REFUND_EVENT,
   UPDATE_EVENT,
 } from '../utils/abi';
 import { envVars } from '../../../utils/env-data';
@@ -331,10 +332,16 @@ export class CrowdchainStatsService {
       let toBlock = lastProcessedBlock + this.MAX_BLOCK_RANGE;
       if (toBlock > currentBlock) toBlock = currentBlock;
 
-      const [logs, totalCampaigns] = await Promise.all([
+      const [donationLogs, refundLogs, totalCampaigns] = await Promise.all([
         publicClient.getLogs({
           address: CROWDCHAIN_ADDRESS,
           event: parseAbiItem(DONATION_EVENT),
+          fromBlock,
+          toBlock,
+        }),
+        publicClient.getLogs({
+          address: CROWDCHAIN_ADDRESS,
+          event: parseAbiItem(REFUND_EVENT),
           fromBlock,
           toBlock,
         }),
@@ -356,7 +363,7 @@ export class CrowdchainStatsService {
       Object.keys(supportedCoins).forEach((key) => {
         coinsValue[key] = 0n;
       });
-      logs.forEach((log) => {
+      donationLogs.forEach((log) => {
         const donor = log.args.donor as Address;
 
         uniqueDonors.add(donor);
@@ -371,6 +378,11 @@ export class CrowdchainStatsService {
           campaignTitle: log.args.campaignTitle! as string,
           coinUnit: coin?.name || 'ETH',
         });
+      });
+
+      refundLogs.forEach((log) => {
+        coinsValue[log.args.coin!] -= log.args.amount!;
+        // TODO: Cache recent refunds
       });
 
       // maintain latest 10 donations

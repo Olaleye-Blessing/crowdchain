@@ -14,14 +14,15 @@ interface ICampaignDonation {
     /// @param amount The amount donated
     /// @param campaignTitle The title of the campaign
     event NewDonation(
-        address indexed donor, uint256 indexed campaignId, address coin, uint256 amount, string campaignTitle
+        address indexed donor, uint256 indexed campaignId, address indexed coin, uint256 amount, string campaignTitle
     );
 
     /// @notice Emitted when a donation is refunded
     /// @param donor The address of the donor receiving the refund
     /// @param campaignId The ID of the campaign from which the refund is made
+    /// @param coin Address of the token to refund
     /// @param amount The amount refunded
-    event DonationRefunded(address indexed donor, uint256 indexed campaignId, uint256 amount);
+    event DonationRefunded(address indexed donor, uint256 indexed campaignId, address indexed coin, uint256 amount);
 
     /// @notice Emitted when campaign funds are withdrawn by the owner
     /// @param campaignId The ID of the campaign

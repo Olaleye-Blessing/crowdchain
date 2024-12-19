@@ -1,7 +1,10 @@
 import { parseAbi } from 'viem';
 
 export const DONATION_EVENT =
-  'event NewDonation(address indexed donor, uint256 indexed campaignId, address coin, uint256 amount, string campaignTitle)';
+  'event NewDonation(address indexed donor, uint256 indexed campaignId, address indexed coin, uint256 amount, string campaignTitle)';
+
+export const REFUND_EVENT =
+  'event DonationRefunded(address indexed donor, uint256 indexed campaignId, address indexed coin, uint256 amount)';
 
 export const UPDATE_EVENT =
   'event NewUpdate(uint256 indexed campaignId, uint256 indexed updateId, address indexed owner, string title)';

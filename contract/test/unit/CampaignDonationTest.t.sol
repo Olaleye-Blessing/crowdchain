@@ -54,15 +54,15 @@ contract CampaignDonationTest is Test, ConstantsTest {
 
         vm.startPrank(BLESSING);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
         campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, usdc, USDC_DONATION, "My Title");
         campaignDonation.donateToken(campaignID, USDC_DONATION, usdc);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, dai, DAI_DONATION, "My Title");
         campaignDonation.donateToken(campaignID, DAI_DONATION, dai);
 
@@ -117,13 +117,13 @@ contract CampaignDonationTest is Test, ConstantsTest {
         uint256 DAI_DONATION = 3e18;
 
         vm.startPrank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
         campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
 
         ERC20Mock(usdc).approve(address(campaignDonation), USDC_DONATION);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, usdc, USDC_DONATION, "My Title");
         campaignDonation.donateToken(campaignID, USDC_DONATION, usdc);
 
@@ -132,7 +132,7 @@ contract CampaignDonationTest is Test, ConstantsTest {
         vm.startPrank(BOB);
         ERC20Mock(dai).approve(address(campaignDonation), DAI_DONATION);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BOB, campaignID, dai, DAI_DONATION, "My Title");
         campaignDonation.donateToken(campaignID, DAI_DONATION, dai);
 
@@ -360,7 +360,7 @@ contract CampaignDonationTest is Test, ConstantsTest {
         _approveAndDonateERC20(BLESSING, dai, DAI_DONATION);
 
         vm.startPrank(BLESSING);
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(BLESSING, campaignID, ETH_ADDRESS, ETH_DONATION, "My Title");
         campaignDonation.donateETH{value: ETH_DONATION}(campaignID);
 
@@ -374,15 +374,15 @@ contract CampaignDonationTest is Test, ConstantsTest {
         assertEq(DAI_RAISED, DAI_DONATION);
 
         vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, ETH_REFUND);
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, ETH_ADDRESS, ETH_REFUND);
         campaignDonation.refundETH(campaignID, ETH_REFUND);
 
         vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, USDC_REFUND);
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, usdc, USDC_REFUND);
         campaignDonation.refundToken(campaignID, USDC_REFUND, usdc);
 
         vm.expectEmit(true, false, false, false, address(campaignDonation));
-        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, DAI_REFUND);
+        emit ICampaignDonation.DonationRefunded(BLESSING, campaignID, dai, DAI_REFUND);
         campaignDonation.refundToken(campaignID, DAI_REFUND, dai);
 
         (, uint256[] memory newAmountRaised) = campaignDonation.getAmountRaisedPerCoin(0);
@@ -622,7 +622,7 @@ contract CampaignDonationTest is Test, ConstantsTest {
     {
         vm.prank(donor);
 
-        vm.expectEmit(true, true, false, true, address(campaignDonation));
+        vm.expectEmit(true, true, true, true, address(campaignDonation));
         emit ICampaignDonation.NewDonation(donor, campaignID, coin, amount, campaignTitle);
 
         coin == ETH_ADDRESS

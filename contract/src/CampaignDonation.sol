@@ -114,7 +114,7 @@ abstract contract CampaignDonation is CampaignBase, ICampaignDonation {
 
         if (!success) revert CampaignDonation__RefundFailed(campaignId);
 
-        emit DonationRefunded(msg.sender, campaignId, amount);
+        emit DonationRefunded(msg.sender, campaignId, coin, amount);
     }
 
     /// @notice Withdraw from campaigns without milestones

@@ -1,7 +1,7 @@
 import { parseAbi } from "viem";
 
 export const donationEvent =
-  "event NewDonation(address indexed donor, uint256 indexed campaignId, address coin, uint256 amount, string campaignTitle)";
+  "event NewDonation(address indexed donor, uint256 indexed campaignId, address indexed coin, uint256 amount, string campaignTitle)";
 
 export const wagmiAbi = parseAbi([
   // ============= Structs ==========
