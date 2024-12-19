@@ -23,6 +23,7 @@ export default function Main({ id }: { id: string }) {
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "NewDonation",
+    args: { campaignId: BigInt(id) },
     onLogs() {
       refetch();
     },
@@ -33,10 +34,12 @@ export default function Main({ id }: { id: string }) {
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "DonationRefunded",
+    args: { campaignId: BigInt(id) },
     onLogs() {
       refetch();
     },
   });
+
 
   return (
     <div>

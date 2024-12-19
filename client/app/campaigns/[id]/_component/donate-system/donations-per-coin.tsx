@@ -28,6 +28,7 @@ export default function DonationsPerCoin({
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "NewDonation",
+    args: { campaignId: BigInt(campaignId) },
     onLogs() {
       refetch();
     },
@@ -38,6 +39,7 @@ export default function DonationsPerCoin({
     address: useCrowdchainAddress(),
     abi: wagmiAbi,
     eventName: "DonationRefunded",
+    args: { campaignId: BigInt(campaignId) },
     onLogs() {
       refetch();
     },
@@ -95,7 +97,10 @@ export default function DonationsPerCoin({
                 >
                   <p>{don.coin}</p>
                   <p className="font-semibold">
-                    <AnimatedNumber key={don.coin} value={don.amount} />
+                    <AnimatedNumber
+                      key={`${don.coin}-${don.amount}`}
+                      value={don.amount}
+                    />
                   </p>
                 </li>
               ))}
