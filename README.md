@@ -2,9 +2,10 @@
 
 CrowdChain is a decentralized crowdfunding platform built on the Ethereum blockchain. It allows users to create and contribute to various campaigns, with the option to set up milestones for the campaigns.
 
-![UI screenshot](images/desktop_home.png)
+![Desktop Screenshot](images/desktop.png)
 
 ## Table Of Content
+
 - [CrowdChain](#crowdchain)
   - [Table Of Content](#table-of-content)
   - [About](#about)
@@ -16,19 +17,22 @@ CrowdChain is a decentralized crowdfunding platform built on the Ethereum blockc
   - [Project Structure](#project-structure)
     - [Contracts](#contracts)
       - [CampaignBase Contract](#campaignbase-contract)
+      - [CampaignDonation Contract](#campaigndonation-contract)
+      - [CampaignUpdates Contract](#campaignupdates-contract)
       - [Crowdfunding Contract](#crowdfunding-contract)
-      - [CrowdfundingUpdates Contract](#crowdfundingupdates-contract)
       - [CrowdchainToken Contract](#crowdchaintoken-contract)
     - [Client](#client)
     - [Server](#server)
   - [Testing](#testing)
   - [Deployment](#deployment)
   - [Upcoming Features](#upcoming-features)
-  - [Screenshots](#screenshots)
+  - [GIFs](#gifs)
+    - [Desktop](#desktop)
+    - [Mobile](#mobile)
 
 ## About
 
-CrowdChain is designed to provide a decentralized and transparent platform for crowdfunding. Users can create campaigns with or without milestones. Milestones can be `Pending`, `InProgress`, `Completed`, `Approved`, `Rejected`.
+CrowdChain is designed to provide a decentralized and transparent platform for crowdfunding. Users can create campaigns with or without milestones. Milestones can be `Pending`, `Funding`, `Withdrawn`, `Started`, `Completed`, `Rejected`.
 
 For campaign without milestones, donors can request for a refund before the campaign refund deadline has passed. Campaign owner can withdraw the campaign funds once the refund deadline is over.
 
@@ -36,16 +40,16 @@ For campaigns with milestone, donors can request for a refund before the first m
 
 Campaign owners can update their donors about the current status of their campaign by posting updates.
 
-Tokens are awarded to donors at the end of each successful campaign. Also, a fee of 2% is paid to the creator of the contract(me of course😅).
+~~Tokens are awarded to donors at the end of each successful campaign. Also, a fee of 2% is paid to the creator of the contract(me of course😅).~~
 
 ## Features
 
 - **Campaign Creation**: Users can create crowdfunding campaigns with or without milestones.
-- **Donations**: Donors can contribute to active campaigns using Ether (ETH).
+- **Donations**: Donors can contribute to active campaigns by donating any ERC20 token, including Ether.
 - **Milestones**: Campaigns can be set up with up to 4 milestones, each with its own target amount and deadline.
 - **Withdrawal**: Campaign owners can withdraw the funds once the campaign's goal is reached or a milestone is completed.
 - **Refunds**: Donors can request refunds for their contributions before the campaign's refund deadline.
-- **Token Distribution**: Successful campaigns will distribute a CrowdChain (CC) token to all donors proportional to their contributions.
+- ~~**Token Distribution**: Successful campaigns will distribute a CrowdChain (CC) token to all donors proportional to their contributions.~~
 
 ## Technologies Used
 
@@ -70,6 +74,7 @@ Tokens are awarded to donors at the end of each successful campaign. Also, a fee
 - **`Express.js`**: Backend server.
 - **`Pinata-web3`**: Library for uploading campaign cover images to the IPFS decentralized storage network.
 - **`Redis`**: To cache some information displayed on the home page.
+- **`MongoDb`**: To persist some of the cached data.
 - **`Viem`**: To communicate with the blockchain.
 
 ## Project Structure
@@ -82,19 +87,23 @@ The contract folder contains the smart contracts for the CrowdChain platform. Th
 
 #### CampaignBase Contract
 
-This is an abstract contract that provides the core functionality to create a campaign, withdraw from a campaign and request refunds.
+This is an abstract contract that provides the core functionality to create campaigns.
+
+#### CampaignDonation Contract
+
+It is an abstract contract that extends the `CampaignBase` contract and provides the core functionality to donate, request refund and withdraw funds from campaigns.
+
+#### CampaignUpdates Contract
+
+It is an abstract contract extends the `CampaignDonation` contract and adds functionality to post and get updates.
 
 #### Crowdfunding Contract
 
-This contract extends the CampaignBase contract and adds the donation and refund functions.
-
-#### CrowdfundingUpdates Contract
-
-This contract extends the Crowdfunding contract and adds functionality to post and get updates.
+This is the main contract that get deployed. It extends the `CampaignDonation` contract.
 
 #### CrowdchainToken Contract
 
-This contract is an ERC20 token that is distributed to successful campaign donors.
+~~This contract is an ERC20 token that is distributed to successful campaign donors.~~
 
 ### Client
 
@@ -112,41 +121,28 @@ The important functions in the smart contracts have been thoroughly tested using
 
 ## Deployment
 
-CrowdChain is currently deployed on the Sepolia Ethereum test network.
+CrowdChain is currently deployed on the Base Sepolia test network.
 
-Address: `0x33b8AA943D007A5b39e2f56BF3bb6575e7EEB487`
+- Crowdfunding: `0x37A4EE129D495a884d6077c4C61e74Fb77A3B783`
+- Crowdfunding Token: `0xa8eca398be7507d8854bf9645b8118f7ea45c4d8`
 
 ## Upcoming Features
 
-- [x] Display total donations and donors on the home page
-- [x] Display recent donations on the home page
+- [x] Display total donations, campaigns and supported tokens on the home page
+- [x] Display recent donations, updates and refunds on the home page
 - [x] Allow campaign owners to post updates
 - [ ] Allow donors to claim their CrowdChain (CC) tokens.
 - [ ] Allow donors with `CC` tokens to vote in a milestoned campaign.
 - [ ] Allow donors with `CC` tokens to vote for urgent withdraw of campaign funds.
-- [ ] Allow donors to also donate `USDT` as it's a stablecoin.
-- [ ] Provide a means to get current price of `ETH`.
+- [x] Allow stablecoins donations.
+- [x] Provide a means to get current price of supported coins/tokens.
 
-## Screenshots
+## GIFs
 
-Mobile -> home page
+### Desktop
 
-![Mobile home page](images/mobile_home_1.png)
+![UI GIF](images/dektop.gif)
 
----
+### Mobile
 
-Mobile -> create campaign page
-
-![Mobile create campaign page](images/mobile_create.png)
-
----
-
-Desktop -> home page
-
-![Desktop home page](images/desktop_home.png)
-
----
-
-Desktop -> create campaign page
-
-![Desktop -> create campaign page](images/desktop_create.png)
+![UI GIF](images/mobile.gif)
