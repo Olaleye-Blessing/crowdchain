@@ -6,6 +6,7 @@ import Reasons from "./_home/_components/reasons";
 import Donations from "./_home/_components/donations";
 import Cause from "./_home/_components/cause";
 import RecentUpdates from "./_home/_components/recent-updates";
+import Refunds from "./_home/_components/refunds";
 import "./_home/home.css";
 
 export default function Home() {
@@ -19,6 +20,7 @@ export default function Home() {
         <HowItWorks />
         <RecentUpdates />
         <Reasons />
+        <Refunds />
         <Ready />
       </main>
     </>

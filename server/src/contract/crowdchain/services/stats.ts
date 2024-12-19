@@ -10,6 +10,7 @@ import {
   ITotalStats,
   IBLOCK_RANGES,
   ISupportedCoinsDetails,
+  IRefund,
 } from '../interface';
 import {
   CAMPAIGN_CREATED_EVENT,
@@ -32,6 +33,7 @@ export class CrowdchainStatsService {
 
   private static readonly RECENT_CACHE_KEYS = {
     recentDonations: 'crowdchain:recentDonations',
+    recentRefunds: 'crowdchain:recentRefunds',
     recentUpdates: 'crowdchain:recentUpdates',
   };
 
@@ -52,6 +54,14 @@ export class CrowdchainStatsService {
       'recentDonations',
       () => (async () => (await this.updateStats()).donations)(),
       'Failed to fetch recent donations',
+    );
+  }
+
+  public static async getRecentRefunds(): Promise<IRefund[]> {
+    return await this.getData<IRefund[]>(
+      'recentRefunds',
+      () => (async () => (await this.updateStats()).refunds)(),
+      'Failed to fetch recent refunds',
     );
   }
 
@@ -228,31 +238,6 @@ export class CrowdchainStatsService {
     };
   }
 
-  // This is no longer needed as updateStats also updates donations
-  // private static async updateRecentDonations(): Promise<IDonation[]> {
-  //   const supportedCoins = await this.getSupportedCoins();
-
-  //   const parseDonation = (data: any) => {
-  //     const coin = supportedCoins[data.coin];
-
-  //     return {
-  //       donor: data.donor! as Address,
-  //       campaignId: Number(data.campaignId!),
-  //       amount: formatUnits(data.amount!, coin?.decimal || 18),
-  //       campaignTitle: data.campaignTitle! as string,
-  //       coinUnit: coin?.name || 'ETH',
-  //     };
-  //   };
-
-  //   const donations = await this.updateRecentEvent<IDonation>(
-  //     'recentDonations',
-  //     parseAbiItem(DONATION_EVENT),
-  //     parseDonation,
-  //   );
-
-  //   return donations;
-  // }
-
   private static async updateRecentUpdates(): Promise<IUpdate[]> {
     const parseUpdate = (data: any) => ({
       campaignId: Number(data.campaignId!),
@@ -305,6 +290,7 @@ export class CrowdchainStatsService {
   private static async updateStats(): Promise<{
     stats: ITotalStats;
     donations: IDonation[];
+    refunds: IRefund[];
   }> {
     try {
       const [existingStatsJson, currentBlock, supportedCoins] =
@@ -320,7 +306,6 @@ export class CrowdchainStatsService {
       } else {
         existingStats = (await TotalStats.findOne({})) || {
           totalDonated: 0,
-          // totalDonors: 0,
           totalCampaigns: 0,
           lastProcessedBlock: envVars.CROWDCHAIN_DEPLOYMENT_BLOCK,
         };
@@ -351,28 +336,28 @@ export class CrowdchainStatsService {
         }),
       ]);
 
-      const recentDonationsStr = await redisClient.get(
-        this.CACHE_KEYS.recentDonations,
-      );
+      const [recentDonationsStr, recentRefundsStr] = await Promise.all([
+        redisClient.get(this.CACHE_KEYS.recentDonations),
+        redisClient.get(this.CACHE_KEYS.recentRefunds),
+      ]);
       let recentDonations: IDonation[] = recentDonationsStr
         ? JSON.parse(recentDonationsStr)
         : [];
-      const uniqueDonors = new Set<string>();
+      let recentRefunds: IRefund[] = recentRefundsStr
+        ? JSON.parse(recentRefundsStr)
+        : [];
       const coinsValue: { [key: PropertyKey]: bigint } = {};
 
       Object.keys(supportedCoins).forEach((key) => {
         coinsValue[key] = 0n;
       });
       donationLogs.forEach((log) => {
-        const donor = log.args.donor as Address;
-
-        uniqueDonors.add(donor);
         coinsValue[log.args.coin!] += log.args.amount!;
 
         const coin = supportedCoins[log.args.coin!];
 
         recentDonations.unshift({
-          donor,
+          donor: log.args.donor!,
           campaignId: Number(log.args.campaignId!),
           amount: formatUnits(log.args.amount!, coin?.decimal || 18),
           campaignTitle: log.args.campaignTitle! as string,
@@ -382,11 +367,20 @@ export class CrowdchainStatsService {
 
       refundLogs.forEach((log) => {
         coinsValue[log.args.coin!] -= log.args.amount!;
-        // TODO: Cache recent refunds
+
+        const coin = supportedCoins[log.args.coin!];
+
+        recentRefunds.unshift({
+          donor: log.args.donor!,
+          campaignId: Number(log.args.campaignId!),
+          amount: formatUnits(log.args.amount!, coin?.decimal || 18),
+          coinUnit: coin?.name || 'ETH',
+        });
       });
 
       // maintain latest 10 donations
       recentDonations = recentDonations.slice(0, 10);
+      recentRefunds = recentDonations.slice(0, 10);
 
       const coinValuesInUsd = await Promise.all(
         Object.entries(coinsValue).map(([coinAddress, amount]) => {
@@ -404,7 +398,6 @@ export class CrowdchainStatsService {
       );
 
       const stats = {
-        // totalDonors: uniqueDonors.size + existingStats.totalDonors,
         totalCampaigns: +formatUnits(totalCampaigns, 0),
         totalDonated:
           +formatUnits(totalAmount, this.DECIMAL_PRECISION) +
@@ -417,12 +410,16 @@ export class CrowdchainStatsService {
           this.CACHE_KEYS.recentDonations,
           JSON.stringify(recentDonations),
         ),
+        redisClient.set(
+          this.CACHE_KEYS.recentRefunds,
+          JSON.stringify(recentRefunds),
+        ),
         redisClient.set(this.CACHE_KEYS.totalStats, JSON.stringify(stats)),
         // mongoose for backup for when redis keys are cleared because of the free version of Redis service
         TotalStats.findOneAndUpdate({}, stats, { upsert: true }),
       ]);
 
-      return { stats, donations: recentDonations };
+      return { stats, donations: recentDonations, refunds: recentRefunds };
     } catch (error) {
       console.error('Error updating total stats:', error);
       throw error;

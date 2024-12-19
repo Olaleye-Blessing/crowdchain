@@ -3,6 +3,7 @@ import * as crowdchainController from './controller';
 
 const router = express.Router();
 
+router.get('/recentRefunds', crowdchainController.getRecentRefunds);
 router.get('/recentDonations', crowdchainController.getRecentDonations);
 router.get('/recentUpdates', crowdchainController.getRecentUpdates);
 router.get('/totalStats', crowdchainController.getTotalStats);

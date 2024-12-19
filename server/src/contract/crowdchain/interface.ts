@@ -8,6 +8,13 @@ export interface IDonation {
   coinUnit: string;
 }
 
+export interface IRefund {
+  donor: Address;
+  campaignId: number;
+  amount: string;
+  coinUnit: string;
+}
+
 export interface IUpdate {
   campaignId: number;
   updateId: number;

@@ -3,6 +3,10 @@ import { sendResponse } from '../../utils/send-response';
 import { CrowdchainStatsService } from './services/stats';
 import { CrowdchainCampaignService } from './services/campaigns';
 
+export const getRecentRefunds = catchAsync(async (req, res) => {
+  sendResponse(res, 200, await CrowdchainStatsService.getRecentRefunds());
+});
+
 export const getRecentDonations = catchAsync(async (req, res) => {
   sendResponse(res, 200, await CrowdchainStatsService.getRecentDonations());
 });
