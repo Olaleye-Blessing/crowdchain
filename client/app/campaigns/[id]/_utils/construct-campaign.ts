@@ -2,6 +2,12 @@ import { ICampaignDetail } from "@/interfaces/campaign";
 import { formatEther, formatUnits } from "viem";
 
 export const constructCampaign = (_campaign: any): ICampaignDetail => {
+  let coverImage = _campaign.coverImage as string;
+  // IPFS service provider was switched to another service at some point
+  if (!coverImage.startsWith("https")) {
+    coverImage = `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/${_campaign.coverImage || "QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS"}`;
+  }
+
   return {
     id: +formatUnits(_campaign.id, 0),
     amountRaised: +formatEther(_campaign.amountRaised),
@@ -12,7 +18,7 @@ export const constructCampaign = (_campaign: any): ICampaignDetail => {
     title: _campaign.title,
     summary: _campaign.summary,
     description: _campaign.description,
-    coverImage: `https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/${_campaign.coverImage || "QmZK7UDVm4EpSzvwWjGDvBfvrCduyPW5vHWwtC9u5wjULS"}`,
+    coverImage,
     claimed: _campaign.claimed,
     totalDonors: +formatUnits(_campaign.totalDonors, 0),
     totalMilestones: _campaign.totalMilestones,

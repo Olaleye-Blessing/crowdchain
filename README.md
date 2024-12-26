@@ -72,7 +72,7 @@ Campaign owners can update their donors about the current status of their campai
 ### Backend (Server)
 
 - **`Express.js`**: Backend server.
-- **`Pinata-web3`**: Library for uploading campaign cover images to the IPFS decentralized storage network.
+- **`@filebase/sdk`**: Library for uploading campaign cover images to the IPFS decentralized storage network.
 - **`Redis`**: To cache some information displayed on the home page.
 - **`MongoDb`**: To persist some of the cached data.
 - **`Viem`**: To communicate with the blockchain.

@@ -1,39 +1,38 @@
-import { PinataSDK } from 'pinata-web3';
-import { sampleImgsHashes } from './utils/pinata';
+import { ObjectManager } from '@filebase/sdk';
+import { sampleIpfsImgs } from './utils/sample';
 import { envVars } from '../utils/env-data';
 
-const pinata = new PinataSDK({
-  pinataJwt: envVars.PINATA_JWT,
-  pinataGateway: envVars.PINATA_GATEWAY,
-});
+const objectManager = new ObjectManager(
+  envVars.FILEBASE_S3_KEY,
+  envVars.FILEBASE_S3_SECRET,
+  {
+    bucket: envVars.FILEBASE_BUCKET_NAME,
+  },
+);
 
 export const uploadImage = async (image: Express.Multer.File) => {
   if (process.env.NODE_ENV !== 'production') {
-    const imgIndex = Math.floor(Math.random() * sampleImgsHashes.length);
+    const imgIndex = Math.floor(Math.random() * sampleIpfsImgs.length);
 
-    const data = {
-      image: {
-        IpfsHash: sampleImgsHashes[imgIndex],
-        PinSize: 419402,
-        Timestamp: new Date().toISOString(),
-      },
-      imgBaseUrl:
-        'https://aquamarine-definite-canidae-414.mypinata.cloud/ipfs/',
-    };
+    const data = { image: sampleIpfsImgs[imgIndex] };
 
     return { data, error: null };
   }
 
   try {
-    const file = new File([image.buffer], image.originalname, {
-      type: image.mimetype,
-    });
+    const upload = await objectManager.upload(
+      image.originalname,
+      image.buffer,
+      undefined,
+      undefined,
+    );
 
-    const uploadedImage = await pinata.upload.file(file);
-
-    const data = { image: { ...uploadedImage } };
-
-    return { data, error: null };
+    return {
+      data: {
+        image: `https://dark-scarlet-puma.myfilebase.com/ipfs/${upload.cid}`,
+      },
+      error: null,
+    };
   } catch (error) {
     console.log('_ ERROR __', error);
     return { data: null, error: 'Internal server error' };

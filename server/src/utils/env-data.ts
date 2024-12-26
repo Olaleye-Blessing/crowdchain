@@ -10,14 +10,15 @@ const envSchema = z.object({
       z.literal('production'),
     ])
     .default('development'),
-  PINATA_JWT: z.string(),
-  PINATA_GATEWAY: z.string(),
   CROWDCHAIN_ADDRESS: z.string(),
   CROWDCHAIN_DEPLOYMENT_BLOCK: z.coerce.number(),
   ANVIL_RPC: z.string(),
   REDIS_URL: z.string(),
   MONGO_URL: z.string(),
   BASE_SEPOLIA_ALCHEMY_RPC_URL: z.string(),
+  FILEBASE_BUCKET_NAME: z.string(),
+  FILEBASE_S3_KEY: z.string(),
+  FILEBASE_S3_SECRET: z.string(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

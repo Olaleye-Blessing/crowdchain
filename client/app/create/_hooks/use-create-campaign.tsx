@@ -1,12 +1,6 @@
 import { ChangeEvent, useRef, useState } from "react";
 import { parseUnits } from "viem";
-import {
-  useAccount,
-  useChainId,
-  useChains,
-  useConfig,
-  useWriteContract,
-} from "wagmi";
+import { useChainId, useChains, useConfig, useWriteContract } from "wagmi";
 import { useForm } from "react-hook-form";
 import { differenceInDays } from "date-fns";
 import { ToasterToast, useToast } from "@/hooks/use-toast";
@@ -199,7 +193,7 @@ export const useCreateCampaign = () => {
           data.title,
           data.summary,
           data.description,
-          ifpsImg.IpfsHash,
+          ifpsImg,
           milestones.map((milestone) => ({
             targetAmount: parseUnits(
               `${milestone.targetAmount}`,

@@ -1,20 +1,11 @@
 import { AxiosInstance, isAxiosError } from "axios";
 
-// from Pinata
-interface UploadResponse {
-  IpfsHash: string;
-  PinSize: number;
-  Timestamp: string;
-  isDuplicate?: boolean;
-  imgBaseUrl?: string;
-}
-
 export const uploadImage = async (image: File, _axios: AxiosInstance) => {
   try {
     const formData = new FormData();
     formData.set("image", image);
 
-    const { data } = await _axios.post<{ data: { image: UploadResponse } }>(
+    const { data } = await _axios.post<{ data: { image: string } }>(
       "/ipfs/image",
       formData,
     );
