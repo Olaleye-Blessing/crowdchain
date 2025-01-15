@@ -11,6 +11,8 @@ import {CampaignDonation, Donation} from "./../../src/CampaignDonation.sol";
 import {ERC20Mock} from "./../mocks/ERC20Mock.sol";
 
 contract CampaignDonationTest is Test, ConstantsTest {
+    uint256 internal constant MINIMUM_DONATION = 1e18; // $1
+    uint256 internal constant INITIAL_ETH_BALANCE = 100 ether;
     CampaignDonationCopy public campaignDonation;
     CrowdchainToken public crowdchainToken;
     address ALICE = makeAddr("alice");
@@ -20,14 +22,14 @@ contract CampaignDonationTest is Test, ConstantsTest {
     address dai;
 
     function setUp() external {
-        vm.deal(DEPLOYER, 100 ether);
+        vm.deal(DEPLOYER, INITIAL_ETH_BALANCE);
         vm.prank(DEPLOYER);
         DeployCampaignDonation deployCampaign = new DeployCampaignDonation();
         (campaignDonation, crowdchainToken) = deployCampaign.run();
 
-        vm.deal(ALICE, 100 ether);
-        vm.deal(BOB, 100 ether);
-        vm.deal(BLESSING, 100 ether);
+        vm.deal(ALICE, INITIAL_ETH_BALANCE);
+        vm.deal(BOB, INITIAL_ETH_BALANCE);
+        vm.deal(BLESSING, INITIAL_ETH_BALANCE);
 
         address[] memory supportedCoins = campaignDonation.getSupportedCoins();
         usdc = supportedCoins[1];
@@ -297,52 +299,35 @@ contract CampaignDonationTest is Test, ConstantsTest {
         assertEq(ALICE_SECOND_DAI_BALANCE, ALICE_FIRST_DAI_BALANCE + BOB_DAI_DONATION);
     }
 
-    function test_withdrawFailIfNotCampaignOwner() public {
+    function test_withdrawFailIfNotCampaignOwner(address withdrawer) public {
+        if (withdrawer == BLESSING) return;
+
         _createAndFundCamapign(BLESSING, ETH_ADDRESS, 1 ether);
 
         _shiftCurrentTimestampToAllowWithdraw();
 
-        vm.prank(BOB);
+        vm.prank(withdrawer);
         vm.expectRevert(ICampaignDonation.CampaignDonation__NotCampaignOwner.selector);
         campaignDonation.withdraw(0);
     }
 
-    function test_withdrawFailIfRefundDeadlineIsActive() public {
-        _createAndFundCamapign(BLESSING, ETH_ADDRESS, 1 ether);
-
+    function test_withdrawFailIfDeadlineIsActive(uint96 shiftTimeBy) public {
+        uint256 timestamp = uint256(shiftTimeBy) * 1 days;
         // deadline -> 4 days
         // refund deadline -> 10 days
-        _shiftCurrentTimestampToAllowWithdraw(6 days);
+        if (timestamp >= 14 days) return;
+        _createAndFundCamapign(BLESSING, ETH_ADDRESS, 1 ether);
+
+        _shiftCurrentTimestampToAllowWithdraw(timestamp);
 
         vm.prank(ALICE);
         vm.expectRevert(
             abi.encodeWithSelector(
                 ICampaignDonation.CampaignDonation__WithdrawNotAllowed.selector,
-                "Cannot withdraw before refund deadline"
+                timestamp < 4 days ? "Cannot withdraw before deadline" : "Cannot withdraw before refund deadline"
             )
         );
         campaignDonation.withdraw(0);
-    }
-
-    function test_getAllDonors() public {
-        // _createSuccessfulCampaign();
-        // uint256 campaignID = 0;
-
-        // vm.prank(BLESSING);
-        // uint256 BLESSING_DONATION = 2;
-        // campaignDonation.donateETH{value: BLESSING_DONATION}(campaignID);
-
-        // vm.prank(BOB);
-        // uint256 BOB_DONATION = 1;
-        // campaignDonation.donateETH{value: BOB_DONATION}(campaignID);
-
-        // (address[] memory donors, uint256[] memory contributions) = campaignDonation.getCampaignDonors(campaignID);
-
-        // assertEq(donors[0], BLESSING);
-        // assertEq(donors[1], BOB);
-
-        // assertEq(contributions[0], BLESSING_DONATION);
-        // assertEq(contributions[1], BOB_DONATION);
     }
 
     function test_donorSuccessfullyGetsRefund() public {
@@ -478,9 +463,10 @@ contract CampaignDonationTest is Test, ConstantsTest {
         campaignDonation.refundETH(campaignID, 1 ether);
     }
 
-    function test_noRefundIfDonorWantsMoreThanTheyDonated() public {
-        uint256 donation = 1 ether;
-        uint256 refundAmount = 2 ether;
+    function test_noRefundIfDonorWantsMoreThanTheyDonated(uint256 donation, uint256 refundAmount) public {
+        if (donation == 0 || donation < MINIMUM_DONATION || donation > INITIAL_ETH_BALANCE || refundAmount < donation) {
+            return;
+        }
 
         _createAndFundCamapign(BLESSING, ETH_ADDRESS, donation);
 

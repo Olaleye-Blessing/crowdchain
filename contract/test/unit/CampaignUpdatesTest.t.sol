@@ -35,33 +35,33 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
         campaignUpdates.postUpdate(campaignID, VALID_TITLE, VALID_CONTENT);
     }
 
-    function test_revertUpdateIfNotFromCampaignOwner() external {
+    function test_revertUpdateIfNotFromCampaignOwner(address updater) external {
+        if (updater == ALICE) return;
+
         _createCampaign(ALICE);
 
         uint256 campaignID = 0;
 
         vm.expectRevert(ICampaignDonation.CampaignDonation__NotCampaignOwner.selector);
-        _createUpdate(BOB, campaignID, VALID_TITLE, VALID_CONTENT);
+        _createUpdate(updater, campaignID, VALID_TITLE, VALID_CONTENT);
     }
 
-    function test_revertIfTitleContentIsshort() external {
+    function test_revertIfTitleContentIsshort(string memory title, string memory content) external {
+        uint256 titleLength = bytes(title).length;
+        uint256 contentLength = bytes(content).length;
+        if (titleLength >= 10 && contentLength >= 10) return;
+
         _createCampaign(ALICE);
 
         uint256 campaignID = 0;
-        string memory title = "T";
-        string memory content = "C";
 
-        // short title
         vm.expectRevert(
-            abi.encodeWithSelector(ICampaignUpdates.CampaignUpdates__IvalidData.selector, "Title is too short")
+            abi.encodeWithSelector(
+                ICampaignUpdates.CampaignUpdates__IvalidData.selector,
+                titleLength < 10 ? "Title is too short" : "Content is too short"
+            )
         );
         _createUpdate(ALICE, campaignID, title, content);
-
-        // short description
-        vm.expectRevert(
-            abi.encodeWithSelector(ICampaignUpdates.CampaignUpdates__IvalidData.selector, "Content is too short")
-        );
-        _createUpdate(ALICE, campaignID, VALID_TITLE, content);
     }
 
     function test_getUpdate() external {
@@ -80,13 +80,13 @@ contract CampaignUpdatesTest is Test, ConstantsTest {
         assertEq(update.timestamp, currentTime);
     }
 
-    function test_getUpdateFailsIfIdDoesNotExist() external {
+    function test_getUpdateFailsIfIdDoesNotExist(uint256 updateId) external {
         uint256 campaignID = 0;
 
         _createCampaign(ALICE);
 
-        vm.expectRevert(abi.encodeWithSelector(ICampaignUpdates.CampaignUpdates__UpdateNotExist.selector, 0));
-        campaignUpdates.getUpdate(campaignID, 0);
+        vm.expectRevert(abi.encodeWithSelector(ICampaignUpdates.CampaignUpdates__UpdateNotExist.selector, updateId));
+        campaignUpdates.getUpdate(campaignID, updateId);
     }
 
     function test_getCorrectNumberOfUpdates() external {
