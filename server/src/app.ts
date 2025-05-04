@@ -27,6 +27,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/ipfs', ipfsRoute);
 app.use('/api/v1/crowdchain', crowdchainRoute);
 
+app.get('/keep-alive', (req, res) => {
+  res.status(200).json({ status: 'success' });
+});
+
 app.use(globalErrorHanlder);
 
 export default app;
